@@ -425,7 +425,7 @@ async function loadRealtimeRegion(reg){
   const dn2=Object.entries(IMPL).filter(([,c])=>c[cond]==='DN2').map(([f])=>f);
   document.getElementById(`fam-realtime-${reg.id}`).innerHTML=`
     ${up2.length?`<div class="rc-ftitle">⬆⬆ A mettre en avant</div><div class="fpills">${up2.map(f=>`<span class="fpill fp-up2">${f}</span>`).join('')}${up1.map(f=>`<span class="fpill fp-up1">${f}</span>`).join('')}</div>`:''}
-    ${dn2.length?`<div class="rc-ftitle" style="margin-top:6px">⬇⬇ A replier</div><div class="fpills">${dn2.map(f=>`<span class="fpill fp-dn2">${f}</span>`).join('')}</div>`:''}`;
+    ${dn2.length?`<div class="rc-ftitle" style="margin-top:6px">⬇⬇ Période défavorable</div><div class="fpills">${dn2.map(f=>`<span class="fpill fp-dn2">${f}</span>`).join('')}</div>`:''}`;
 }
 
 // ── COMPARATIF ────────────────────────────────────────────────────────
