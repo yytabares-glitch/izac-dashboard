@@ -998,9 +998,40 @@ function init(){
   document.getElementById('date-p2').value=`${y}-${m}-01`;
   document.getElementById('date-p2-fin').value=`${y}-${m}-${new Date(y,now.getMonth()+1,0).getDate()}`;
   renderTempsReel();
-  detectBoutiqueSolo();
 }
 init();
+
+// Détection QR code après chargement complet du DOM
+window.addEventListener('load', function() {
+  const params = new URLSearchParams(window.location.search);
+  const boutique = params.get('boutique');
+  if (boutique) {
+    // Chercher la boutique
+    let found = null, foundReg = null;
+    for (const reg of REGIONS) {
+      for (const b of reg.boutiques) {
+        const nomClean = b.nom.replace(/[\s']/g,'_').toUpperCase();
+        const paramClean = boutique.toUpperCase();
+        if (nomClean === paramClean || b.nom.toUpperCase() === boutique.replace(/_/g,' ').toUpperCase()) {
+          found = b; foundReg = reg; break;
+        }
+      }
+      if (found) break;
+    }
+    if (!found) {
+      document.body.innerHTML = '<div style="padding:20px;font-family:sans-serif;color:#0D2750"><h2>Boutique non trouvée</h2><p>Paramètre : ' + boutique + '</p></div>';
+      return;
+    }
+    // Masquer le shell, afficher la vue solo
+    document.querySelector('.shell').style.display = 'none';
+    const soloView = document.getElementById('view-boutique-solo');
+    soloView.style.display = 'block';
+    document.getElementById('bsolo-nom').textContent = found.nom;
+    document.getElementById('bsolo-region').textContent = foundReg.nom;
+    document.title = 'IZAC Météo · ' + found.nom;
+    loadBoutiqueSolo(found, foundReg);
+  }
+});
 </script>
 
 <!-- VUE BOUTIQUE SOLO (mode QR code) -->
