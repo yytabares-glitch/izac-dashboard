@@ -93,6 +93,36 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
 .cmp-p-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px}
 .cmp-delta-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px}
 
+
+/* PRÉVISIONNEL */
+.prev-layout{display:flex;flex-direction:column;gap:14px}
+.prev-header-bar{background:#fff;border:1px solid #E5E9F2;border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.prev-days-header{display:grid;gap:6px;margin-bottom:4px}
+.prev-region-block{background:#fff;border:1px solid #E5E9F2;border-radius:12px;overflow:hidden}
+.prev-region-title{background:#0D2750;color:#fff;padding:10px 16px;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:space-between}
+.prev-table{width:100%;border-collapse:collapse;font-size:11px}
+.prev-table th{background:#F5F7FA;padding:8px 10px;text-align:center;border-bottom:1px solid #E5E9F2;font-size:10px;font-weight:600;color:#6B7280;white-space:nowrap}
+.prev-table th.th-bout{text-align:left;width:140px}
+.prev-table td{padding:6px 10px;border-bottom:1px solid #F0F2F7;vertical-align:middle}
+.prev-table tr:last-child td{border-bottom:none}
+.prev-table tr:nth-child(even) td{background:#FAFBFC}
+.prev-cell{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:70px}
+.prev-cell-icon{font-size:14px;line-height:1}
+.prev-cell-temp{font-size:10px;font-weight:600;font-family:'DM Mono',monospace}
+.prev-cell-conseil{font-size:9px;font-weight:600;padding:1px 5px;border-radius:3px;text-align:center;white-space:nowrap}
+.pc-up2{background:#EAF3DE;color:#27500A}
+.pc-up1{background:#E6F1FB;color:#0C447C}
+.pc-neu{background:#F1EFE8;color:#444441}
+.pc-dn1{background:#FAEEDA;color:#633806}
+.pc-dn2{background:#FEF3C7;color:#92400E}
+.bout-cell{font-size:11px;font-weight:500;color:#1A1F36}
+.prev-loading{text-align:center;padding:30px;color:#9CA3AF;font-size:13px}
+.day-header{display:flex;flex-direction:column;align-items:center;gap:2px}
+.day-header-label{font-size:11px;font-weight:700;color:#0D2750}
+.day-header-date{font-size:10px;color:#9CA3AF;font-family:'DM Mono',monospace}
+.day-header-meteo{font-size:13px}
+.day-header-temp{font-size:10px;font-weight:600;font-family:'DM Mono',monospace}
+
 /* CARTE */
 .carte-layout{display:grid;grid-template-columns:1fr 320px;gap:14px;align-items:start}
 .carte-container{background:#fff;border:1px solid #E5E9F2;border-radius:12px;overflow:hidden;position:relative}
@@ -136,6 +166,7 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
   <button class="tab-btn active" onclick="setTab('temps-reel')">🌤 Temps réel</button>
   <button class="tab-btn" onclick="setTab('comparatif')">📅 Comparatif</button>
   <button class="tab-btn" onclick="setTab('carte')">🗺 Carte France</button>
+  <button class="tab-btn" onclick="setTab('previsionnel')">📈 Prévisionnel 7j</button>
 </div>
 
 <!-- VUE TEMPS RÉEL -->
@@ -176,6 +207,19 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
     <div class="cmp-summary-grid" id="cmp-summary-grid"></div>
   </div>
   <div class="rgrid" id="rgrid-cmp"></div>
+</div>
+
+
+<!-- VUE PRÉVISIONNEL -->
+<div class="view" id="view-previsionnel">
+  <div class="prev-layout">
+    <div class="prev-header-bar">
+      <span style="font-size:13px;font-weight:600;color:#0D2750">📈 Prévisionnel météo × implantation — 7 prochains jours</span>
+      <span style="font-size:11px;color:#6B7280">Par boutique · Conseils adaptés à la météo prévue chaque jour</span>
+      <span class="cb-info" id="prev-status" style="margin-left:auto"></span>
+    </div>
+    <div id="prev-body"><div class="prev-loading">Cliquez sur l'onglet pour charger les prévisions...</div></div>
+  </div>
 </div>
 
 <!-- VUE CARTE -->
@@ -354,6 +398,7 @@ function setTab(tab){
   event.target.classList.add('active');
   document.getElementById('view-'+tab).classList.add('active');
   if(tab==='temps-reel') renderTempsReel();
+  else if(tab==='previsionnel') renderPrevisionnel();
   else if(tab==='carte'){
     renderCarte();
     // Forcer Leaflet à recalculer la taille après affichage
@@ -655,6 +700,168 @@ async function renderCarte() {
     </div>`;
   }).join('');
 }
+
+
+// ── PRÉVISIONNEL 7 JOURS ─────────────────────────────────────────────
+let prevRendered = false;
+
+const CONSEIL = {
+  UP2: {label:"Mettre en avant",  cls:"pc-up2"},
+  UP1: {label:"Avancer en rayon", cls:"pc-up1"},
+  NEU: {label:"Maintenir",        cls:"pc-neu"},
+  DN1: {label:"Réduire",          cls:"pc-dn1"},
+  DN2: {label:"Période défavorable", cls:"pc-dn2"},
+};
+
+// Top familles par condition météo
+const TOP_FAMILLES_COND = {
+  0: ["PULL","BLOUSON","VESTE VILLE","GILET","ECHARPE"],        // Grand froid
+  1: ["PULL","BLOUSON","VESTE CASUAL","GILET","JEANS"],         // Froid
+  2: ["CHEMISE VILLE","PANTALON CASUAL","CHAUSSURE VILLE","POLO","JEANS"], // Frais
+  3: ["POLO","TSHIRT","PANTALON CASUAL","CHAUSSURE CASUAL","BERMUDA"],     // Chaud
+  4: ["TSHIRT","BERMUDA","POLO","MAILLOT DE BAIN","CHAUSSURE CASUAL"],     // Très chaud
+  5: ["BLOUSON","VESTE CASUAL","JEANS","PANTALON VILLE","CHAUSSURE VILLE"],// Pluie
+};
+
+async function renderPrevisionnel() {
+  if (prevRendered) return;
+  prevRendered = true;
+
+  const status = document.getElementById('prev-status');
+  const body   = document.getElementById('prev-body');
+  body.innerHTML = '<div class="prev-loading">Chargement des prévisions météo...</div>';
+
+  // Dates J+0 à J+6
+  const jours = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(); d.setDate(d.getDate() + i);
+    const label = i === 0 ? "Auj." : i === 1 ? "Dem." : "J+" + i;
+    const dateStr = String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0');
+    const dayName = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'][d.getDay()];
+    jours.push({label, dateStr, dayName, date: d});
+  }
+
+  // Récupérer prévisions pour toutes les boutiques (cache)
+  const allB = REGIONS.flatMap(r => r.boutiques.map(b => ({...b, regNom:r.nom, regId:r.id})));
+  let loaded = 0;
+  const prevData = {};
+
+  const BATCH = 15;
+  // Dédupliquer par coordonnées
+  const coordMap = {};
+  allB.forEach(b => {
+    const k = b.lat.toFixed(3)+','+b.lon.toFixed(3);
+    if (!coordMap[k]) coordMap[k] = {lat:b.lat,lon:b.lon,boutiques:[]};
+    coordMap[k].boutiques.push(b);
+  });
+  const uniqueC = Object.values(coordMap);
+
+  for (let i = 0; i < uniqueC.length; i += BATCH) {
+    await Promise.all(uniqueC.slice(i, i+BATCH).map(async entry => {
+      let data = realtimeCache[entry.lat.toFixed(3)+','+entry.lon.toFixed(3)];
+      if (!data) data = await fetchRealtime(entry.lat, entry.lon);
+      if (data) {
+        entry.boutiques.forEach(b => { prevData[b.regId+'_'+b.nom] = data; });
+      }
+      loaded++;
+      status.textContent = Math.round(loaded/uniqueC.length*100) + '%';
+    }));
+  }
+
+  status.textContent = '✓ ' + allB.length + ' boutiques';
+
+  // Calculer la météo par région et par jour (moyenne des prévisions boutiques)
+  // pour l'en-tête des colonnes
+  const regMeteo = {};
+  REGIONS.forEach(reg => {
+    regMeteo[reg.id] = jours.map((j, ji) => {
+      const temps = reg.boutiques.map(b => {
+        const d = prevData[reg.id+'_'+b.nom];
+        if (!d) return null;
+        const p = ji === 0 ? d.today : d.prevs[ji-1];
+        return p ? p.temp : null;
+      }).filter(t => t !== null);
+      const pluies = reg.boutiques.map(b => {
+        const d = prevData[reg.id+'_'+b.nom];
+        if (!d) return 0;
+        const p = ji === 0 ? d.today : d.prevs[ji-1];
+        return p ? p.pluie : 0;
+      });
+      const avg = temps.length ? Math.round(temps.reduce((a,b)=>a+b,0)/temps.length*10)/10 : null;
+      const avgP = pluies.reduce((a,b)=>a+b,0)/pluies.length;
+      return {temp:avg, pluie:avgP};
+    });
+  });
+
+  // Rendu HTML
+  let html = '';
+  for (const reg of REGIONS) {
+    // En-têtes jours pour cette région
+    const joursHeaderHtml = jours.map((j, ji) => {
+      const rm = regMeteo[reg.id][ji];
+      const tl = rm && rm.temp !== null ? tLabel(rm.temp, rm.pluie) : {icon:'—', label:'—', cond:2};
+      const temp = rm && rm.temp !== null ? rm.temp+'°C' : '—';
+      return `<th>
+        <div class="day-header">
+          <div class="day-header-label">${j.dayName} ${j.dateStr}</div>
+          <div class="day-header-meteo">${tl.icon}</div>
+          <div class="day-header-temp" style="color:${rm&&rm.temp?tColorText(rm.temp,rm.pluie):'#9CA3AF'}">${temp}</div>
+        </div>
+      </th>`;
+    }).join('');
+
+    // Lignes boutiques
+    const boutsHtml = reg.boutiques.map(b => {
+      const bData = prevData[reg.id+'_'+b.nom];
+
+      const cellsHtml = jours.map((j, ji) => {
+        if (!bData) return '<td><div class="prev-cell"><span style="color:#9CA3AF;font-size:10px">—</span></div></td>';
+        const p = ji === 0 ? bData.today : bData.prevs[ji-1];
+        if (!p) return '<td><div class="prev-cell"><span style="color:#9CA3AF;font-size:10px">—</span></div></td>';
+        const tl = tLabel(p.temp, p.pluie);
+        const cond = tl.cond;
+        // Top famille recommandée
+        const topFam = TOP_FAMILLES_COND[cond][0];
+        const topCode = IMPL[topFam] ? IMPL[topFam][cond] : 'NEU';
+        const cons = CONSEIL[topCode];
+        return `<td>
+          <div class="prev-cell">
+            <span class="prev-cell-icon">${tl.icon}</span>
+            <span class="prev-cell-temp" style="color:${tColorText(p.temp,p.pluie)}">${p.temp}°</span>
+            <span class="prev-cell-conseil ${cons.cls}">${topFam}</span>
+          </div>
+        </td>`;
+      }).join('');
+
+      return `<tr>
+        <td class="bout-cell">${b.nom}</td>
+        ${cellsHtml}
+      </tr>`;
+    }).join('');
+
+    html += `
+      <div class="prev-region-block">
+        <div class="prev-region-title">
+          <span>${reg.nom}</span>
+          <span style="font-size:11px;opacity:0.7">${reg.boutiques.length} boutiques · AR : ${reg.ar}</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="prev-table">
+            <thead>
+              <tr>
+                <th class="th-bout">Boutique</th>
+                ${joursHeaderHtml}
+              </tr>
+            </thead>
+            <tbody>${boutsHtml}</tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+
+  body.innerHTML = html;
+}
+
 
 // ── INIT ─────────────────────────────────────────────────────────────
 function init(){
