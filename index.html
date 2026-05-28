@@ -94,6 +94,35 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
 .cmp-delta-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px}
 
 
+
+/* VUE BOUTIQUE INDIVIDUELLE (mode QR code) */
+.boutique-solo{max-width:480px;margin:0 auto;padding:16px}
+.bsolo-header{background:#0D2750;border-radius:12px;padding:18px 20px;margin-bottom:14px;text-align:center}
+.bsolo-nom{font-size:22px;font-weight:700;color:#fff;margin-bottom:4px}
+.bsolo-region{font-size:12px;color:#7AA3D4;font-family:'DM Mono',monospace}
+.bsolo-meteo-now{background:#fff;border-radius:12px;padding:20px;margin-bottom:14px;text-align:center;border:1px solid #E5E9F2}
+.bsolo-icon{font-size:52px;line-height:1;margin-bottom:8px}
+.bsolo-temp{font-size:42px;font-weight:300;font-family:'DM Mono',monospace;line-height:1;letter-spacing:-2px}
+.bsolo-label{font-size:14px;font-weight:500;margin-top:4px}
+.bsolo-pluie{font-size:12px;color:#6B7280;margin-top:4px}
+.bsolo-conseils{background:#fff;border-radius:12px;padding:16px;margin-bottom:14px;border:1px solid #E5E9F2}
+.bsolo-cons-title{font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px}
+.bsolo-fam-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.bsolo-fam{padding:8px 10px;border-radius:8px;font-size:11px;font-weight:600;text-align:center;border:1px solid}
+.bsolo-fam-up2{background:#EAF3DE;color:#27500A;border-color:#C0DD97}
+.bsolo-fam-up1{background:#E6F1FB;color:#0C447C;border-color:#B5D4F4}
+.bsolo-fam-dn2{background:#FEF3C7;color:#92400E;border-color:#FDE68A}
+.bsolo-prev{background:#fff;border-radius:12px;padding:16px;margin-bottom:14px;border:1px solid #E5E9F2}
+.bsolo-prev-title{font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px}
+.bsolo-prev-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.bsolo-prev-day{background:#F8F9FC;border-radius:8px;padding:8px 4px;text-align:center;border:1px solid #EEF0F8}
+.bsolo-prev-j{font-size:9px;font-weight:600;color:#0D2750;font-family:'DM Mono',monospace}
+.bsolo-prev-date{font-size:8px;color:#9CA3AF;margin:1px 0}
+.bsolo-prev-icon{font-size:16px;margin:3px 0}
+.bsolo-prev-temp{font-size:11px;font-weight:600;font-family:'DM Mono',monospace}
+.bsolo-prev-fam{font-size:8px;font-weight:600;padding:2px 4px;border-radius:3px;margin-top:3px}
+.bsolo-back{display:block;text-align:center;padding:10px;background:#F5F7FA;border-radius:8px;font-size:12px;color:#6B7280;text-decoration:none;border:1px solid #E5E9F2;cursor:pointer}
+
 /* PRÉVISIONNEL */
 .prev-layout{display:flex;flex-direction:column;gap:14px}
 .prev-header-bar{background:#fff;border:1px solid #E5E9F2;border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
@@ -248,6 +277,36 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
         <div id="carte-liste-body"></div>
       </div>
     </div>
+  </div>
+</div>
+
+
+<!-- VUE BOUTIQUE SOLO (mode QR code) -->
+<div id="view-boutique-solo" style="display:none">
+  <div class="boutique-solo" id="bsolo-content">
+    <div class="bsolo-header">
+      <div class="bsolo-nom" id="bsolo-nom">—</div>
+      <div class="bsolo-region" id="bsolo-region">—</div>
+    </div>
+    <div class="bsolo-meteo-now">
+      <div class="bsolo-icon" id="bsolo-icon">⏳</div>
+      <div class="bsolo-temp" id="bsolo-temp">—</div>
+      <div class="bsolo-label" id="bsolo-meteo-label">Chargement météo...</div>
+      <div class="bsolo-pluie" id="bsolo-pluie"></div>
+    </div>
+    <div class="bsolo-conseils">
+      <div class="bsolo-cons-title">⬆⬆ Mettre en avant aujourd'hui</div>
+      <div class="bsolo-fam-grid" id="bsolo-up2"></div>
+      <div class="bsolo-cons-title" style="margin-top:10px">⬆ Avancer en rayon</div>
+      <div class="bsolo-fam-grid" id="bsolo-up1"></div>
+      <div class="bsolo-cons-title" style="margin-top:10px">⬇⬇ Période défavorable</div>
+      <div class="bsolo-fam-grid" id="bsolo-dn2"></div>
+    </div>
+    <div class="bsolo-prev">
+      <div class="bsolo-prev-title">📅 Prévisions 10 jours</div>
+      <div class="bsolo-prev-grid" id="bsolo-prev-grid"></div>
+    </div>
+    <div class="bsolo-back" onclick="quitterBoutiqueSolo()">← Retour au dashboard complet</div>
   </div>
 </div>
 
@@ -702,6 +761,96 @@ async function renderCarte() {
 }
 
 
+
+// ── VUE BOUTIQUE SOLO (QR code) ──────────────────────────────────────
+function detectBoutiqueSolo() {
+  const params = new URLSearchParams(window.location.search);
+  const boutique = params.get('boutique');
+  if (!boutique) return;
+
+  // Trouver la boutique dans les données
+  let found = null, foundReg = null;
+  for (const reg of REGIONS) {
+    for (const b of reg.boutiques) {
+      if (b.nom.replace(/\s/g,'_').toUpperCase() === boutique.toUpperCase() ||
+          b.nom.toUpperCase() === boutique.replace(/_/g,' ').toUpperCase()) {
+        found = b; foundReg = reg; break;
+      }
+    }
+    if (found) break;
+  }
+  if (!found) return;
+
+  // Masquer le shell normal, afficher la vue solo
+  document.querySelector('.shell').style.display = 'none';
+  document.getElementById('view-boutique-solo').style.display = 'block';
+  document.getElementById('bsolo-nom').textContent = found.nom;
+  document.getElementById('bsolo-region').textContent = foundReg.nom + ' · ' + found.nom;
+  document.title = 'IZAC Météo · ' + found.nom;
+
+  loadBoutiqueSolo(found, foundReg);
+}
+
+async function loadBoutiqueSolo(b, reg) {
+  const data = await fetchRealtime(b.lat, b.lon);
+  if (!data) return;
+
+  const t = data.today.temp, p = data.today.pluie;
+  const tl = tLabel(t, p);
+
+  // Météo du jour
+  document.getElementById('bsolo-icon').textContent = tl.icon;
+  document.getElementById('bsolo-temp').textContent = t + '°C';
+  document.getElementById('bsolo-temp').style.color = tColorText(t, p);
+  document.getElementById('bsolo-meteo-label').textContent = tl.label;
+  document.getElementById('bsolo-meteo-label').style.color = tColorText(t, p);
+  document.getElementById('bsolo-pluie').textContent = p > 0 ? '💧 ' + p + 'mm de pluie' : '☀️ Pas de pluie';
+
+  // Conseils implantation
+  const cond = tl.cond;
+  const up2 = Object.entries(IMPL).filter(([,c])=>c[cond]==='UP2').map(([f])=>f);
+  const up1 = Object.entries(IMPL).filter(([,c])=>c[cond]==='UP1').map(([f])=>f);
+  const dn2 = Object.entries(IMPL).filter(([,c])=>c[cond]==='DN2').map(([f])=>f);
+
+  document.getElementById('bsolo-up2').innerHTML = up2.map(f=>
+    `<div class="bsolo-fam bsolo-fam-up2">⬆⬆ ${f}</div>`).join('');
+  document.getElementById('bsolo-up1').innerHTML = up1.map(f=>
+    `<div class="bsolo-fam bsolo-fam-up1">⬆ ${f}</div>`).join('');
+  document.getElementById('bsolo-dn2').innerHTML = dn2.map(f=>
+    `<div class="bsolo-fam bsolo-fam-dn2">⬇⬇ ${f}</div>`).join('');
+
+  // Prévisions 10 jours
+  const prevGrid = document.getElementById('bsolo-prev-grid');
+  const days = [{temp:t, pluie:p, label:'Auj.'}, ...data.prevs];
+  prevGrid.style.gridTemplateColumns = `repeat(${Math.min(days.length,5)},1fr)`;
+
+  // 2 rangées de 5
+  let prevHtml = '';
+  days.slice(0,10).forEach((d, i) => {
+    const ptl = tLabel(d.temp, d.pluie);
+    const pcond = ptl.cond;
+    const topFam = TOP_FAMILLES_COND[pcond][0];
+    const dt = new Date(); dt.setDate(dt.getDate()+i);
+    const dd = String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0');
+    const dayN = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'][dt.getDay()];
+    prevHtml += `<div class="bsolo-prev-day">
+      <div class="bsolo-prev-j">${i===0?'Auj.':dayN}</div>
+      <div class="bsolo-prev-date">${dd}</div>
+      <div class="bsolo-prev-icon">${ptl.icon}</div>
+      <div class="bsolo-prev-temp" style="color:${tColorText(d.temp,d.pluie)}">${d.temp}°</div>
+      <div class="bsolo-prev-fam" style="background:#EAF3DE;color:#27500A">${topFam.split(' ')[0]}</div>
+    </div>`;
+  });
+  prevGrid.innerHTML = prevHtml;
+  prevGrid.style.gridTemplateColumns = 'repeat(5,1fr)';
+}
+
+function quitterBoutiqueSolo() {
+  document.getElementById('view-boutique-solo').style.display = 'none';
+  document.querySelector('.shell').style.display = 'block';
+}
+
+
 // ── PRÉVISIONNEL 7 JOURS ─────────────────────────────────────────────
 let prevRendered = false;
 
@@ -875,6 +1024,7 @@ function init(){
   document.getElementById('date-p2').value=`${y}-${m}-01`;
   document.getElementById('date-p2-fin').value=`${y}-${m}-${new Date(y,now.getMonth()+1,0).getDate()}`;
   renderTempsReel();
+  detectBoutiqueSolo();
 }
 init();
 </script>
