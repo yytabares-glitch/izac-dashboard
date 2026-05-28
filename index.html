@@ -281,36 +281,10 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
 </div>
 
 
-<!-- VUE BOUTIQUE SOLO (mode QR code) -->
-<div id="view-boutique-solo" style="display:none">
-  <div class="boutique-solo" id="bsolo-content">
-    <div class="bsolo-header">
-      <div class="bsolo-nom" id="bsolo-nom">—</div>
-      <div class="bsolo-region" id="bsolo-region">—</div>
-    </div>
-    <div class="bsolo-meteo-now">
-      <div class="bsolo-icon" id="bsolo-icon">⏳</div>
-      <div class="bsolo-temp" id="bsolo-temp">—</div>
-      <div class="bsolo-label" id="bsolo-meteo-label">Chargement météo...</div>
-      <div class="bsolo-pluie" id="bsolo-pluie"></div>
-    </div>
-    <div class="bsolo-conseils">
-      <div class="bsolo-cons-title">⬆⬆ Mettre en avant aujourd'hui</div>
-      <div class="bsolo-fam-grid" id="bsolo-up2"></div>
-      <div class="bsolo-cons-title" style="margin-top:10px">⬆ Avancer en rayon</div>
-      <div class="bsolo-fam-grid" id="bsolo-up1"></div>
-      <div class="bsolo-cons-title" style="margin-top:10px">⬇⬇ Période défavorable</div>
-      <div class="bsolo-fam-grid" id="bsolo-dn2"></div>
-    </div>
-    <div class="bsolo-prev">
-      <div class="bsolo-prev-title">📅 Prévisions 10 jours</div>
-      <div class="bsolo-prev-grid" id="bsolo-prev-grid"></div>
-    </div>
-    <div class="bsolo-back" onclick="quitterBoutiqueSolo()">← Retour au dashboard complet</div>
-  </div>
-</div>
 
 </div>
+</div>
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
@@ -1028,5 +1002,34 @@ function init(){
 }
 init();
 </script>
+
+<!-- VUE BOUTIQUE SOLO (mode QR code) -->
+<div id="view-boutique-solo" style="display:none">
+  <div class="boutique-solo" id="bsolo-content">
+    <div class="bsolo-header">
+      <div class="bsolo-nom" id="bsolo-nom">—</div>
+      <div class="bsolo-region" id="bsolo-region">—</div>
+    </div>
+    <div class="bsolo-meteo-now">
+      <div class="bsolo-icon" id="bsolo-icon">⏳</div>
+      <div class="bsolo-temp" id="bsolo-temp">—</div>
+      <div class="bsolo-label" id="bsolo-meteo-label">Chargement météo...</div>
+      <div class="bsolo-pluie" id="bsolo-pluie"></div>
+    </div>
+    <div class="bsolo-conseils">
+      <div class="bsolo-cons-title">⬆⬆ Mettre en avant aujourd'hui</div>
+      <div class="bsolo-fam-grid" id="bsolo-up2"></div>
+      <div class="bsolo-cons-title" style="margin-top:10px">⬆ Avancer en rayon</div>
+      <div class="bsolo-fam-grid" id="bsolo-up1"></div>
+      <div class="bsolo-cons-title" style="margin-top:10px">⬇⬇ Période défavorable</div>
+      <div class="bsolo-fam-grid" id="bsolo-dn2"></div>
+    </div>
+    <div class="bsolo-prev">
+      <div class="bsolo-prev-title">📅 Prévisions 10 jours</div>
+      <div class="bsolo-prev-grid" id="bsolo-prev-grid"></div>
+    </div>
+    <div class="bsolo-back" onclick="quitterBoutiqueSolo()">← Retour au dashboard complet</div>
+  </div>
+
 </body>
 </html>
