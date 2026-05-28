@@ -361,11 +361,11 @@ async function fetchRealtime(lat,lon){
   const key=`${lat.toFixed(3)},${lon.toFixed(3)}`;
   if(realtimeCache[key]) return realtimeCache[key];
   try{
-    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation,weathercode&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&forecast_days=5&timezone=Europe%2FParis`);
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation,weathercode&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&forecast_days=11&timezone=Europe%2FParis`);
     const d=await r.json();
     const c=d.current||{};const dy=d.daily||{};
     const res={today:{temp:Math.round(c.temperature_2m*10)/10,pluie:c.precipitation||0},prevs:[]};
-    for(let i=1;i<5;i++){
+    for(let i=1;i<11;i++){
       const tmax=dy.temperature_2m_max[i],tmin=dy.temperature_2m_min[i];
       const pluie=dy.precipitation_sum[i]||0;
       const tmoy=Math.round((tmax+tmin)/2*10)/10;
@@ -733,7 +733,7 @@ async function renderPrevisionnel() {
 
   // Dates J+0 à J+6
   const jours = [];
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 10; i++) {
     const d = new Date(); d.setDate(d.getDate() + i);
     const label = i === 0 ? "Auj." : i === 1 ? "Dem." : "J+" + i;
     const dateStr = String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0');
