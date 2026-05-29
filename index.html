@@ -757,7 +757,7 @@ async function renderCarte() {
 // ── MESSAGES OPÉRATIONS ──────────────────────────────────────────────
 async function chargerMessageOperation(boutique, region) {
   try {
-    const r = await fetch('https://raw.githubusercontent.com/yytabares-glitch/izac-dashboard/main/messages.json?t=' + Date.now());
+    const r = await fetch('https://gist.githubusercontent.com/yytabares-glitch/e9bb925d30eb03b6bcfc50cca079c3bd/raw/messages.json?t=' + Date.now());
     if (!r.ok) return;
     const data = await r.json();
     const today = new Date().toISOString().split('T')[0];
