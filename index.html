@@ -3,1172 +3,472 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IZAC — Dashboard Météo Réseau</title>
+<title>IZAC — Admin Messages</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-height:100vh}
-.shell{max-width:1500px;margin:0 auto;padding:20px 20px 48px}
-.hdr{background:#0D2750;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-radius:10px;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.login-box{background:#fff;border:1px solid #E5E9F2;border-radius:16px;padding:40px;width:380px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
+.login-logo{width:56px;height:56px;background:#0D2750;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;margin:0 auto 16px}
+.login-title{font-size:18px;font-weight:600;color:#0D2750;margin-bottom:6px}
+.login-sub{font-size:12px;color:#6B7280;margin-bottom:24px}
+.form-input{width:100%;padding:10px 14px;border:1px solid #E5E9F2;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;margin-bottom:12px;background:#F8F9FC}
+.form-input:focus{outline:none;border-color:#0D2750;background:#fff}
+.btn-primary{width:100%;padding:11px;background:#0D2750;color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+.btn-primary:hover{background:#1E4D9B}
+.login-err{font-size:12px;color:#DC2626;margin-top:8px;display:none}
+.admin-wrap{display:none;max-width:1100px;margin:0 auto;padding:20px}
+.hdr{background:#0D2750;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-radius:10px;margin-bottom:20px}
 .hdr-left{display:flex;align-items:center;gap:12px}
-.hdr-logo{width:36px;height:36px;background:#1E4D9B;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0}
+.hdr-logo{width:34px;height:34px;background:#1E4D9B;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
 .hdr-title{color:#fff;font-size:15px;font-weight:600}
-.hdr-sub{color:#7AA3D4;font-size:11px;font-family:'DM Mono',monospace;margin-top:2px}
-.live{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.08);border-radius:20px;padding:5px 12px;font-size:11px;color:#7AA3D4;font-family:'DM Mono',monospace}
-.dot{width:7px;height:7px;border-radius:50%;background:#3DD68C;animation:blink 2s infinite;display:inline-block}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
-.tabs{display:flex;gap:4px;margin-bottom:14px;background:#fff;border-radius:10px;padding:4px;border:1px solid #E5E9F2;width:fit-content}
-.tab-btn{padding:8px 20px;border-radius:7px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;color:#6B7280;background:transparent}
-.tab-btn.active{background:#0D2750;color:#fff}
-.view{display:none}
-.view.active{display:block}
-
-/* BARRE COMPARATIF */
-.comparatif-bar{background:#fff;border:1px solid #E5E9F2;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.cb-label{font-size:12px;font-weight:600;color:#0D2750;white-space:nowrap}
-.cb-group{display:flex;align-items:center;gap:8px}
-.cb-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;white-space:nowrap}
-.cb-p1{background:#E6F1FB;color:#0C447C;border:1px solid #B5D4F4}
-.cb-p2{background:#EAF3DE;color:#27500A;border:1px solid #C0DD97}
-.cb-input{font-family:'DM Sans',sans-serif;font-size:13px;padding:6px 10px;border:1px solid #E5E9F2;border-radius:6px;background:#F8F9FC;color:#1A1F36;width:130px}
-.cb-btn{padding:8px 18px;background:#0D2750;color:#fff;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
-.cb-btn:disabled{background:#9CA3AF;cursor:not-allowed}
-.cb-info{font-size:11px;color:#6B7280;font-style:italic}
-.legend{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
-.legend span{font-size:11px;color:#6B7280;margin-right:4px}
-.lpill{font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid}
-.l-up2{background:#EAF3DE;color:#27500A;border-color:#C0DD97}
-.l-up1{background:#E6F1FB;color:#0C447C;border-color:#B5D4F4}
-.l-neu{background:#F1EFE8;color:#444441;border-color:#D3D1C7}
-.l-dn1{background:#FAEEDA;color:#633806;border-color:#FAC775}
-.l-dn2{background:#FCEBEB;color:#791F1F;border-color:#F7C1C1}
-.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
-.rcard{border:1px solid #E5E9F2;border-radius:12px;overflow:hidden;background:#fff;border-top:3px solid #0D2750}
-.rchead{padding:12px 16px 10px;border-bottom:1px solid #F0F2F7;display:flex;justify-content:space-between;align-items:flex-start}
-.rc-region{font-size:14px;font-weight:600;color:#0D2750}
-.rc-ar{font-size:11px;color:#6B7280;font-family:'DM Mono',monospace;margin-top:2px}
-.rc-nb{font-size:11px;color:#9CA3AF;margin-top:1px}
-.rc-meteo-region{text-align:right}
-.rc-temp-big{font-size:24px;font-weight:500;font-family:'DM Mono',monospace;line-height:1;letter-spacing:-1px}
-.rc-mlabel{font-size:11px;color:#6B7280;margin-top:2px}
-.rc-prevs{padding:10px 16px;display:flex;gap:5px;border-bottom:1px solid #F0F2F7}
-.prev{flex:1;background:#F8F9FC;border-radius:6px;padding:6px 4px;text-align:center;border:1px solid #EEF0F8}
-.prev-j{font-size:10px;font-weight:600;color:#0D2750;font-family:'DM Mono',monospace}
-.prev-d{font-size:9px;color:#9CA3AF;margin:1px 0}
-.prev-i{font-size:14px;margin:2px 0}
-.prev-t{font-size:11px;font-family:'DM Mono',monospace;font-weight:600}
-.rc-familles{padding:10px 16px;border-bottom:1px solid #F0F2F7}
-.rc-ftitle{font-size:10px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px}
-.fpills{display:flex;flex-wrap:wrap;gap:3px}
-.fpill{font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;border:1px solid}
-.fp-up2{background:#EAF3DE;color:#27500A;border-color:#C0DD97}
-.fp-up1{background:#E6F1FB;color:#0C447C;border-color:#B5D4F4}
-.fp-dn2{background:#FCEBEB;color:#791F1F;border-color:#F7C1C1}
-.rc-bouts{padding:10px 16px}
-.rc-btitle{font-size:10px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:7px}
-.bouts-list{display:flex;flex-direction:column;gap:3px}
-.bout-row{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:#F8F9FC;border-radius:5px;border:1px solid #EEF0F8}
-.bout-left{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
-.bout-name{font-size:10px;font-weight:500;color:#1A1F36;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bout-right{display:flex;align-items:center;gap:5px;flex-shrink:0}
-.bout-temp{font-size:10px;font-weight:600;font-family:'DM Mono',monospace}
-.bout-icon{font-size:12px}
-.bout-action{font-size:9px;font-weight:600;padding:2px 6px;border-radius:3px;border:1px solid;white-space:nowrap}
-.bout-row-cmp{display:flex;align-items:center;padding:6px 8px;background:#F8F9FC;border-radius:5px;border:1px solid #EEF0F8;gap:6px}
-.bout-name-cmp{font-size:10px;font-weight:600;color:#1A1F36;width:110px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bout-p1{display:flex;align-items:center;gap:4px;flex:1;background:#E6F1FB;border-radius:4px;padding:3px 6px;border:1px solid #B5D4F4}
-.bout-p2{display:flex;align-items:center;gap:4px;flex:1;background:#EAF3DE;border-radius:4px;padding:3px 6px;border:1px solid #C0DD97}
-.bout-cmp-temp{font-size:10px;font-weight:600;font-family:'DM Mono',monospace}
-.bout-delta{font-size:10px;font-weight:600;font-family:'DM Mono',monospace;width:38px;text-align:right;flex-shrink:0}
-.delta-pos{color:#27500A}.delta-neg{color:#791F1F}.delta-neu{color:#444441}
-.loading-row{text-align:center;padding:8px;color:#9CA3AF;font-size:11px}
-.cmp-summary{background:#fff;border:1px solid #E5E9F2;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:none}
-.cmp-summary.visible{display:block}
-.cmp-summary-title{font-size:12px;font-weight:600;color:#0D2750;margin-bottom:10px}
-.cmp-summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
-.cmp-reg-card{border-radius:7px;padding:10px 12px;border:1px solid #E5E9F2}
-.cmp-reg-name{font-size:11px;font-weight:600;color:#0D2750;margin-bottom:4px}
-.cmp-reg-temps{display:flex;gap:8px;align-items:center}
-.cmp-p-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px}
-.cmp-delta-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px}
-
-
-
-/* VUE BOUTIQUE INDIVIDUELLE (mode QR code) */
-.boutique-solo{max-width:480px;margin:0 auto;padding:16px}
-.bsolo-header{background:#0D2750;border-radius:12px;padding:18px 20px;margin-bottom:14px;text-align:center}
-.bsolo-nom{font-size:22px;font-weight:700;color:#fff;margin-bottom:4px}
-.bsolo-region{font-size:12px;color:#7AA3D4;font-family:'DM Mono',monospace}
-.bsolo-meteo-now{background:#fff;border-radius:12px;padding:20px;margin-bottom:14px;text-align:center;border:1px solid #E5E9F2}
-.bsolo-icon{font-size:52px;line-height:1;margin-bottom:8px}
-.bsolo-temp{font-size:42px;font-weight:300;font-family:'DM Mono',monospace;line-height:1;letter-spacing:-2px}
-.bsolo-label{font-size:14px;font-weight:500;margin-top:4px}
-.bsolo-pluie{font-size:12px;color:#6B7280;margin-top:4px}
-.bsolo-conseils{background:#fff;border-radius:12px;padding:16px;margin-bottom:14px;border:1px solid #E5E9F2}
-.bsolo-cons-title{font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px}
-.bsolo-fam-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.bsolo-fam{padding:8px 10px;border-radius:8px;font-size:11px;font-weight:600;text-align:center;border:1px solid}
-.bsolo-fam-up2{background:#EAF3DE;color:#27500A;border-color:#C0DD97}
-.bsolo-fam-up1{background:#E6F1FB;color:#0C447C;border-color:#B5D4F4}
-.bsolo-fam-dn2{background:#FEF3C7;color:#92400E;border-color:#FDE68A}
-.bsolo-prev{background:#fff;border-radius:12px;padding:16px;margin-bottom:14px;border:1px solid #E5E9F2}
-.bsolo-prev-title{font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px}
-.bsolo-prev-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
-.bsolo-prev-day{background:#F8F9FC;border-radius:8px;padding:8px 4px;text-align:center;border:1px solid #EEF0F8}
-.bsolo-prev-j{font-size:9px;font-weight:600;color:#0D2750;font-family:'DM Mono',monospace}
-.bsolo-prev-date{font-size:8px;color:#9CA3AF;margin:1px 0}
-.bsolo-prev-icon{font-size:16px;margin:3px 0}
-.bsolo-prev-temp{font-size:11px;font-weight:600;font-family:'DM Mono',monospace}
-.bsolo-prev-fam{font-size:8px;font-weight:600;padding:2px 4px;border-radius:3px;margin-top:3px}
-
-
-.bsolo-operation{background:linear-gradient(135deg,#FEF3C7,#FFF9E6);border:2px solid #FDE68A;border-radius:12px;padding:14px 16px;margin-bottom:14px;display:none}
-.bsolo-op-badge{font-size:10px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px}
-.bsolo-op-titre{font-size:15px;font-weight:600;color:#78350F;margin-bottom:4px}
-.bsolo-op-texte{font-size:13px;color:#92400E;line-height:1.5}
-
-.bsolo-conseil-ia{background:linear-gradient(135deg,#EFF6FF,#F0FDF4);border:1px solid #BFDBFE;border-radius:12px;padding:16px 18px;margin-bottom:14px;position:relative}
-.bsolo-conseil-ia::before{content:"✨ Conseil du jour";display:block;font-size:10px;font-weight:700;color:#1E4D9B;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px}
-.bsolo-conseil-text{font-size:13px;color:#1A1F36;line-height:1.6;font-style:italic}
-
-.bsolo-back{display:block;text-align:center;padding:10px;background:#F5F7FA;border-radius:8px;font-size:12px;color:#6B7280;text-decoration:none;border:1px solid #E5E9F2;cursor:pointer}
-
-/* PRÉVISIONNEL */
-.prev-layout{display:flex;flex-direction:column;gap:14px}
-.prev-header-bar{background:#fff;border:1px solid #E5E9F2;border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.prev-days-header{display:grid;gap:6px;margin-bottom:4px}
-.prev-region-block{background:#fff;border:1px solid #E5E9F2;border-radius:12px;overflow:hidden}
-.prev-region-title{background:#0D2750;color:#fff;padding:10px 16px;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:space-between}
-.prev-table{width:100%;border-collapse:collapse;font-size:11px}
-.prev-table th{background:#F5F7FA;padding:8px 10px;text-align:center;border-bottom:1px solid #E5E9F2;font-size:10px;font-weight:600;color:#6B7280;white-space:nowrap}
-.prev-table th.th-bout{text-align:left;width:140px}
-.prev-table td{padding:6px 10px;border-bottom:1px solid #F0F2F7;vertical-align:middle}
-.prev-table tr:last-child td{border-bottom:none}
-.prev-table tr:nth-child(even) td{background:#FAFBFC}
-.prev-cell{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:70px}
-.prev-cell-icon{font-size:14px;line-height:1}
-.prev-cell-temp{font-size:10px;font-weight:600;font-family:'DM Mono',monospace}
-.prev-cell-conseil{font-size:9px;font-weight:600;padding:1px 5px;border-radius:3px;text-align:center;white-space:nowrap}
-.pc-up2{background:#EAF3DE;color:#27500A}
-.pc-up1{background:#E6F1FB;color:#0C447C}
-.pc-neu{background:#F1EFE8;color:#444441}
-.pc-dn1{background:#FAEEDA;color:#633806}
-.pc-dn2{background:#FEF3C7;color:#92400E}
-.bout-cell{font-size:11px;font-weight:500;color:#1A1F36}
-.prev-loading{text-align:center;padding:30px;color:#9CA3AF;font-size:13px}
-.day-header{display:flex;flex-direction:column;align-items:center;gap:2px}
-.day-header-label{font-size:11px;font-weight:700;color:#0D2750}
-.day-header-date{font-size:10px;color:#9CA3AF;font-family:'DM Mono',monospace}
-.day-header-meteo{font-size:13px}
-.day-header-temp{font-size:10px;font-weight:600;font-family:'DM Mono',monospace}
-
-/* CARTE */
-.carte-layout{display:grid;grid-template-columns:1fr 320px;gap:14px;align-items:start}
-.carte-container{background:#fff;border:1px solid #E5E9F2;border-radius:12px;overflow:hidden;position:relative}
-.carte-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-.carte-stat{background:#fff;border:1px solid #E5E9F2;border-radius:8px;padding:10px 12px;text-align:center}
-.carte-stat-val{font-size:18px;font-weight:500;font-family:'DM Mono',monospace;line-height:1.2}
-.carte-stat-lbl{font-size:10px;color:#6B7280;margin-top:2px}
-.carte-legend{background:#fff;border:1px solid #E5E9F2;border-radius:8px;padding:12px;margin-bottom:12px}
-.carte-legend-title{font-size:11px;font-weight:600;color:#0D2750;margin-bottom:8px}
-.leg-item{display:flex;align-items:center;gap:7px;font-size:11px;color:#444;margin-bottom:5px}
-.leg-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.5)}
-.carte-liste{background:#fff;border:1px solid #E5E9F2;border-radius:8px;padding:12px;max-height:320px;overflow-y:auto}
-.carte-liste-title{font-size:11px;font-weight:600;color:#0D2750;margin-bottom:8px}
-.carte-liste-item{display:flex;align-items:center;justify-content:space-between;padding:5px 6px;border-radius:5px;cursor:pointer;transition:background 0.1s}
-.carte-liste-item:hover{background:#F8F9FC}
-.cli-left{display:flex;align-items:center;gap:6px}
-.cli-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.cli-nom{font-size:11px;font-weight:500;color:#1A1F36}
-.cli-reg{font-size:9px;color:#9CA3AF}
-.cli-right{display:flex;align-items:center;gap:4px}
-.cli-temp{font-size:11px;font-weight:600;font-family:'DM Mono',monospace}
-.cli-icon{font-size:11px}
-#carte-tooltip{position:fixed;background:#fff;border:1px solid #E5E9F2;border-radius:8px;padding:10px 14px;font-size:12px;pointer-events:none;display:none;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.12);min-width:150px}
+.hdr-sub{color:#7AA3D4;font-size:11px;margin-top:1px}
+.logout-btn{padding:6px 14px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.grid{display:grid;grid-template-columns:1fr 360px;gap:16px;align-items:start}
+.card{background:#fff;border:1px solid #E5E9F2;border-radius:12px;padding:20px;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:600;color:#0D2750;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #F0F2F7}
+.form-label{font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block}
+.form-row{margin-bottom:14px}
+.form-textarea{width:100%;padding:9px 12px;border:1px solid #E5E9F2;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;background:#F8F9FC;color:#1A1F36;resize:vertical;min-height:80px}
+.form-textarea:focus{outline:none;border-color:#0D2750;background:#fff}
+.emoji-grid{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.emoji-btn{width:36px;height:36px;border:1.5px solid #E5E9F2;border-radius:8px;background:#F8F9FC;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.emoji-btn.selected{border-color:#0D2750;background:#EFF6FF}
+.date-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.send-btn{width:100%;padding:13px;background:#0D2750;color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px}
+.send-btn:hover{background:#1E4D9B}
+.send-btn:disabled{background:#9CA3AF;cursor:not-allowed}
+.cible-tabs{display:flex;gap:3px;margin-bottom:12px;background:#F5F7FA;border-radius:8px;padding:3px}
+.cible-tab{flex:1;padding:7px;border:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;color:#6B7280;background:transparent}
+.cible-tab.active{background:#fff;color:#0D2750;font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+.cible-content{display:none}
+.cible-content.active{display:block}
+.region-btn{display:flex;align-items:center;justify-content:space-between;width:100%;padding:8px 12px;border:1.5px solid #E5E9F2;border-radius:7px;background:#F8F9FC;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;margin-bottom:6px;color:#1A1F36}
+.region-btn.selected{border-color:#0D2750;background:#EFF6FF;color:#0D2750}
+.mag-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.mag-btn{padding:6px 8px;border:1px solid #E5E9F2;border-radius:6px;background:#F8F9FC;font-size:10px;font-weight:500;cursor:pointer;text-align:left;color:#1A1F36}
+.mag-btn.selected{border-color:#0D2750;background:#EFF6FF;color:#0D2750;font-weight:600}
+.sel-count{font-size:11px;color:#0D2750;font-weight:600;margin-top:8px;padding:6px 10px;background:#EFF6FF;border-radius:6px;display:none}
+.preview-box{background:linear-gradient(135deg,#EFF6FF,#F0FDF4);border:1px solid #BFDBFE;border-radius:10px;padding:14px;margin-top:12px}
+.preview-title{font-size:10px;font-weight:600;color:#1E4D9B;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px}
+.preview-text{font-size:13px;color:#1A1F36;line-height:1.6}
+.msg-card{border:1px solid #E5E9F2;border-radius:8px;padding:12px 14px;margin-bottom:8px}
+.msg-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.msg-title-txt{font-size:13px;font-weight:600;color:#1A1F36}
+.badge{font-size:9px;font-weight:600;padding:2px 7px;border-radius:10px}
+.badge-actif{background:#EAF3DE;color:#27500A}
+.badge-off{background:#F1EFE8;color:#444441}
+.badge-prog{background:#E6F1FB;color:#0C447C}
+.msg-texte{font-size:11px;color:#6B7280;margin-bottom:4px;line-height:1.4}
+.msg-meta{font-size:10px;color:#9CA3AF;font-family:'DM Mono',monospace}
+.msg-actions{display:flex;gap:6px;margin-top:8px}
+.msg-btn{padding:4px 10px;border-radius:5px;font-size:11px;cursor:pointer;border:1px solid;font-family:'DM Sans',sans-serif;font-weight:500}
+.btn-del{background:#FCEBEB;color:#791F1F;border-color:#F7C1C1}
+.btn-tog{background:#EAF3DE;color:#27500A;border-color:#C0DD97}
+.no-msg{text-align:center;padding:24px;color:#9CA3AF;font-size:12px}
+.status{padding:10px 14px;border-radius:8px;font-size:12px;font-weight:500;margin-top:10px;display:none;text-align:center}
+.status-ok{background:#EAF3DE;color:#27500A;border:1px solid #C0DD97}
+.status-err{background:#FCEBEB;color:#791F1F;border:1px solid #F7C1C1}
+.status-loading{background:#E6F1FB;color:#0C447C;border:1px solid #B5D4F4}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top:2px solid #fff;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.exemple-item{padding:8px 10px;background:#F8F9FC;border:1px solid #E5E9F2;border-radius:7px;cursor:pointer;font-size:12px;color:#1A1F36;margin-bottom:5px;transition:background 0.1s}
+.exemple-item:hover{background:#EFF6FF;border-color:#B5D4F4}
+.select-all{font-size:11px;color:#1E4D9B;cursor:pointer;text-decoration:underline;margin-bottom:8px;display:inline-block}
 </style>
 </head>
 <body>
-<div class="shell">
 
-<div class="hdr">
-  <div class="hdr-left">
-    <div class="hdr-logo">IZ</div>
+<div class="login-wrap" id="login-wrap">
+  <div class="login-box">
+    <div class="login-logo">IZ</div>
+    <div class="login-title">IZAC Admin</div>
+    <div class="login-sub">Pilotage des messages boutiques en temps réel</div>
+    <input type="password" class="form-input" id="pwd" placeholder="Mot de passe" onkeypress="if(event.key==='Enter')login()">
+    <button class="btn-primary" onclick="login()">Accéder →</button>
+    <div class="login-err" id="login-err">Mot de passe incorrect</div>
+  </div>
+</div>
+
+<div class="admin-wrap" id="admin-wrap">
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="hdr-logo">IZ</div>
+      <div>
+        <div class="hdr-title">IZAC — Pilotage Messages Boutiques</div>
+        <div class="hdr-sub" id="hdr-status">Connecté · messages.json synchronisé avec GitHub</div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="logout()">Déconnexion</button>
+  </div>
+
+  <div class="grid">
     <div>
-      <div class="hdr-title">IZAC — Dashboard Météo Réseau</div>
-      <div class="hdr-sub" id="hdr-sub-txt">Météo individuelle par boutique · 7 régions · Textile masculin</div>
+      <!-- MESSAGE -->
+      <div class="card">
+        <div class="card-title">✍️ Nouveau message</div>
+        <div class="form-row">
+          <label class="form-label">Titre de l'opération</label>
+          <input type="text" class="form-input" id="msg-titre" placeholder="Ex: Fête des Pères, Soldes d'été..." oninput="updatePreview()">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Message pour les équipes</label>
+          <textarea class="form-textarea" id="msg-texte" placeholder="Votre message..." oninput="updatePreview()"></textarea>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Emoji</label>
+          <div class="emoji-grid">
+            <button class="emoji-btn selected" onclick="selectEmoji(this,'🎁')">🎁</button>
+            <button class="emoji-btn" onclick="selectEmoji(this,'🎯')">🎯</button>
+            <button class="emoji-btn" onclick="selectEmoji(this,'⚡')">⚡</button>
+            <button class="emoji-btn" onclick="selectEmoji(this,'🔥')">🔥</button>
+            <button class="emoji-btn" onclick="selectEmoji(this,'💪')">💪</button>
+            <button class="emoji-btn" onclick="selectEmoji(this,'🌟')">🌟</button>
+            <button class="emoji-btn" onclick="selectEmoji(this,'📢')">📢</button>
+            <button class="emoji-btn" onclick="selectEmoji(this,'🛍️')">🛍️</button>
+            <button class="emoji-btn" onclick="selectEmoji(this,'💥')">💥</button>
+            <button class="emoji-btn" onclick="selectEmoji(this,'👀')">👀</button>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Période d'affichage</label>
+          <div class="date-row">
+            <div><label class="form-label" style="font-size:10px">Du</label><input type="date" class="form-input" id="msg-debut"></div>
+            <div><label class="form-label" style="font-size:10px">Au</label><input type="date" class="form-input" id="msg-fin"></div>
+          </div>
+        </div>
+        <div class="preview-box">
+          <div class="preview-title">👁 Aperçu</div>
+          <div id="preview-text" class="preview-text" style="font-style:italic;color:#9CA3AF">Remplissez le formulaire...</div>
+        </div>
+      </div>
+
+      <!-- CIBLAGE -->
+      <div class="card">
+        <div class="card-title">🎯 Cibler les boutiques</div>
+        <div class="cible-tabs">
+          <button class="cible-tab active" onclick="setCible('toutes',this)">📡 Toutes</button>
+          <button class="cible-tab" onclick="setCible('regions',this)">🗺 Par région</button>
+          <button class="cible-tab" onclick="setCible('boutiques',this)">🏪 Précises</button>
+        </div>
+        <div class="cible-content active" id="cible-toutes">
+          <div style="text-align:center;padding:16px;color:#6B7280;font-size:13px;background:#F8F9FC;border-radius:8px">
+            📡 Message envoyé aux <strong>84 boutiques</strong> du réseau
+          </div>
+        </div>
+        <div class="cible-content" id="cible-regions" style="display:none">
+          <div id="reg-list"></div>
+        </div>
+        <div class="cible-content" id="cible-boutiques" style="display:none">
+          <span class="select-all" onclick="selectAll()">Tout sélectionner / Désélectionner</span>
+          <div class="mag-grid" id="mag-list"></div>
+          <div class="sel-count" id="sel-count"></div>
+        </div>
+      </div>
+
+      <button class="send-btn" id="send-btn" onclick="envoyerMessage()">
+        <span id="send-icon">📤</span> <span id="send-txt">Envoyer le message</span>
+      </button>
+      <div class="status" id="status"></div>
     </div>
-  </div>
-  <div class="live"><span class="dot"></span>Mis à jour · <span id="hdate">—</span></div>
-</div>
 
-<div class="tabs">
-  <button class="tab-btn active" onclick="setTab('temps-reel')">🌤 Temps réel</button>
-  <button class="tab-btn" onclick="setTab('comparatif')">📅 Comparatif</button>
-  <button class="tab-btn" onclick="setTab('carte')">🗺 Carte France</button>
-  <button class="tab-btn" onclick="setTab('previsionnel')">📈 Prévisionnel 10j</button>
-</div>
-
-<!-- VUE TEMPS RÉEL -->
-<div class="view active" id="view-temps-reel">
-  <div class="legend">
-    <span>Actions :</span>
-    <div class="lpill l-up2">⬆⬆ Priorité max</div>
-    <div class="lpill l-up1">⬆ En avant</div>
-    <div class="lpill l-neu">→ Maintenir</div>
-    <div class="lpill l-dn1">⬇ Réduire</div>
-    <div class="lpill l-dn2">⬇⬇ Période défavorable</div>
-  </div>
-  <div class="rgrid" id="rgrid-realtime"></div>
-</div>
-
-<!-- VUE COMPARATIF -->
-<div class="view" id="view-comparatif">
-  <div class="comparatif-bar">
-    <span class="cb-label">Comparer :</span>
-    <div class="cb-group">
-      <span class="cb-badge cb-p1">P1</span>
-      <input type="date" class="cb-input" id="date-p1" value="2024-06-01">
-      <span style="font-size:11px;color:#6B7280">→</span>
-      <input type="date" class="cb-input" id="date-p1-fin" value="2024-06-30">
-    </div>
-    <span style="font-size:16px;color:#9CA3AF">vs</span>
-    <div class="cb-group">
-      <span class="cb-badge cb-p2">P2</span>
-      <input type="date" class="cb-input" id="date-p2" value="2025-06-01">
-      <span style="font-size:11px;color:#6B7280">→</span>
-      <input type="date" class="cb-input" id="date-p2-fin" value="2025-06-30">
-    </div>
-    <button class="cb-btn" id="btn-comparer" onclick="lancerComparatif()">Comparer →</button>
-    <span class="cb-info" id="cb-status"></span>
-  </div>
-  <div class="cmp-summary" id="cmp-summary">
-    <div class="cmp-summary-title" id="cmp-summary-title"></div>
-    <div class="cmp-summary-grid" id="cmp-summary-grid"></div>
-  </div>
-  <div class="rgrid" id="rgrid-cmp"></div>
-</div>
-
-
-<!-- VUE PRÉVISIONNEL -->
-<div class="view" id="view-previsionnel">
-  <div class="prev-layout">
-    <div class="prev-header-bar">
-      <span style="font-size:13px;font-weight:600;color:#0D2750">📈 Prévisionnel météo × implantation — 10 prochains jours</span>
-      <span style="font-size:11px;color:#6B7280">Par boutique · Conseils adaptés à la météo prévue chaque jour</span>
-      <span class="cb-info" id="prev-status" style="margin-left:auto"></span>
-    </div>
-    <div id="prev-body"><div class="prev-loading">Cliquez sur l'onglet pour charger les prévisions...</div></div>
-  </div>
-</div>
-
-<!-- VUE CARTE -->
-<div class="view" id="view-carte">
-  <div class="carte-layout">
-    <div class="carte-container" id="carte-container">
-      <div id="leaflet-map" style="height:600px;width:100%;border-radius:10px;border:1px solid #E5E9F2"></div>
-    </div>
+    <!-- DROITE -->
     <div>
-      <div class="carte-stats">
-        <div class="carte-stat"><div class="carte-stat-val" id="cs-loaded" style="color:#0D2750">0</div><div class="carte-stat-lbl">boutiques</div></div>
-        <div class="carte-stat"><div class="carte-stat-val" id="cs-avg" style="color:#854F0B">—</div><div class="carte-stat-lbl">moy. réseau</div></div>
-        <div class="carte-stat"><div class="carte-stat-val" id="cs-max">—</div><div class="carte-stat-lbl">plus chaud</div></div>
-        <div class="carte-stat"><div class="carte-stat-val" id="cs-min">—</div><div class="carte-stat-lbl">plus frais</div></div>
+      <!-- MESSAGES ACTIFS -->
+      <div class="card">
+        <div class="card-title">📬 Messages actifs <span id="msg-count" style="font-size:11px;color:#9CA3AF"></span></div>
+        <div id="msg-list"><div class="no-msg">Chargement...</div></div>
       </div>
-      <div class="carte-legend">
-        <div class="carte-legend-title">Légende températures</div>
-        <div class="leg-item"><div class="leg-dot" style="background:#993C1D"></div>Très chaud &gt; 27°C</div>
-        <div class="leg-item"><div class="leg-dot" style="background:#CF6A1A"></div>Chaud 20–27°C</div>
-        <div class="leg-item"><div class="leg-dot" style="background:#0F6E56"></div>Frais 12–20°C</div>
-        <div class="leg-item"><div class="leg-dot" style="background:#185FA5"></div>Froid &lt; 12°C</div>
-        <div class="leg-item"><div class="leg-dot" style="background:#1E40AF"></div>Pluie &gt; 5mm</div>
-      </div>
-      <div class="carte-liste">
-        <div class="carte-liste-title">Toutes les boutiques</div>
-        <div id="carte-liste-body"></div>
+
+      <!-- EXEMPLES -->
+      <div class="card" style="background:#F8F9FC">
+        <div class="card-title">💡 Modèles rapides</div>
+        <div class="exemple-item" onclick="remplir('Fête des Pères','Valorisez la Maroquinerie, les Ceintures et Boutons de manchette ce week-end !','🎁')">🎁 Fête des Pères</div>
+        <div class="exemple-item" onclick="remplir('Soldes d\\'été','Les soldes commencent ! Maximisez la visibilité des collections été en façade. C\\'est le moment !','🔥')">🔥 Soldes d'été</div>
+        <div class="exemple-item" onclick="remplir('Opération Rentrée','La rentrée approche ! Costumes, Chemises Ville et Pantalons Ville en avant. Clientèle CSP+ en forte demande.','🎯')">🎯 Opération Rentrée</div>
+        <div class="exemple-item" onclick="remplir('Black Friday','Black Friday ce week-end — trafic maximal ! Accueil renforcé, toutes familles visibles. Faites la différence !','⚡')">⚡ Black Friday</div>
+        <div class="exemple-item" onclick="remplir('Inventaire','Inventaire prévu cette semaine. Vérifiez vos stocks et signalez les manquants à votre AR.','📢')">📢 Inventaire</div>
+        <div class="exemple-item" onclick="remplir('Objectif semaine','Super semaine en perspective ! Restez focus, accueillez chaque client avec le sourire. Vous êtes les meilleurs !','💪')">💪 Motivation équipe</div>
       </div>
     </div>
   </div>
 </div>
 
-
-
-</div>
-</div>
-
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
+const MOT_DE_PASSE = 'IZAC2026';
+const GH_TOKEN = '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';
+const GIST_ID  = 'e9bb925d30eb03b6bcfc50cca079c3bd';
+const GIST_FILE = 'messages.json';
+const GIST_API = 'https://api.github.com/gists/' + GIST_ID;
+
 const REGIONS = [
-  { id:"PARIS-OUEST", nom:"Paris Ouest", ar:"AR Paris Ouest", boutiques:[
-    {nom:"A13",lat:48.830,lon:2.360},{nom:"BELLE EPINE",lat:48.770,lon:2.347},
-    {nom:"CAEN",lat:49.183,lon:-0.371},{nom:"CRETEIL",lat:48.779,lon:2.456},
-    {nom:"DEAUVILLE",lat:49.362,lon:0.075},{nom:"GIVERNY",lat:49.025,lon:1.151},
-    {nom:"LA DEFENSE",lat:48.892,lon:2.238},{nom:"MONTPARNASSE",lat:48.838,lon:2.322},
-    {nom:"ORLEANS",lat:47.903,lon:1.904},{nom:"PARLY 2",lat:48.801,lon:2.130},
-    {nom:"ROUEN",lat:49.443,lon:1.099},{nom:"ST DENIS",lat:48.936,lon:2.355},
-    {nom:"ST QUENTIN",lat:48.964,lon:2.051},{nom:"VELIZY",lat:48.774,lon:2.198},
-    {nom:"VILLENEUVE",lat:48.732,lon:2.530},
-  ]},
-  { id:"PARIS-CENTRE", nom:"Paris Centre", ar:"AR Paris Centre", boutiques:[
-    {nom:"AEROVILLE",lat:49.020,lon:2.551},{nom:"AUBER",lat:48.875,lon:2.332},
-    {nom:"BEAUGRENELLE",lat:48.847,lon:2.285},{nom:"CARRE SENART",lat:48.634,lon:2.570},
-    {nom:"CLAYE SOUILLY",lat:48.938,lon:2.679},{nom:"CORBEIL",lat:48.609,lon:2.478},
-    {nom:"FORUM DES HALLES",lat:48.861,lon:2.347},{nom:"GONESSE",lat:49.000,lon:2.449},
-    {nom:"LEVALLOIS",lat:48.895,lon:2.288},{nom:"PARINOR",lat:48.941,lon:2.499},
-    {nom:"ROSNY 2",lat:48.868,lon:2.534},{nom:"RUE DE RENNES",lat:48.850,lon:2.332},
-    {nom:"VAL D'EUROPE",lat:48.877,lon:2.778},
-  ]},
-  { id:"BRETAGNE", nom:"Bretagne", ar:"AR Bretagne", boutiques:[
-    {nom:"ANGERS",lat:47.478,lon:-0.563},{nom:"LA ROCHELLE",lat:46.159,lon:-1.152},
-    {nom:"LE MANS",lat:47.997,lon:0.193},{nom:"LES SABLES",lat:46.497,lon:-1.783},
-    {nom:"NANTES ATLANTIS",lat:47.218,lon:-1.554},{nom:"NANTES CREBILLONS",lat:47.213,lon:-1.558},
-    {nom:"RENNES ALMA",lat:48.117,lon:-1.678},{nom:"RENNES CV",lat:48.112,lon:-1.680},
-    {nom:"TOURS",lat:47.394,lon:0.685},
-  ]},
-  { id:"SUD-OUEST", nom:"Sud Ouest", ar:"AR Sud Ouest", boutiques:[
-    {nom:"ANGLET",lat:43.492,lon:-1.520},{nom:"BEGLES",lat:44.804,lon:-0.557},
-    {nom:"BEZIERS",lat:43.344,lon:3.215},{nom:"BLAGNAC",lat:43.635,lon:1.380},
-    {nom:"BORDEAUX",lat:44.838,lon:-0.579},{nom:"BORDEAUX LAC",lat:44.881,lon:-0.552},
-    {nom:"FENOUILLET",lat:43.678,lon:1.376},{nom:"LORMONT",lat:44.873,lon:-0.522},
-    {nom:"MERIGNAC",lat:44.835,lon:-0.644},{nom:"PERPIGNAN AUCHAN",lat:42.699,lon:2.896},
-    {nom:"PERPIGNAN CLAIRA",lat:42.735,lon:2.968},{nom:"TOULOUSE",lat:43.605,lon:1.444},
-  ]},
-  { id:"RHONE-ALPES", nom:"Rhône-Alpes", ar:"AR Rhône-Alpes", boutiques:[
-    {nom:"CLERMONT",lat:45.780,lon:3.086},{nom:"CONFLUENCE",lat:45.744,lon:4.816},
-    {nom:"DIJON",lat:47.322,lon:5.042},{nom:"DIJON CV",lat:47.318,lon:5.038},
-    {nom:"ECULLY",lat:45.772,lon:4.778},{nom:"EPAGNY",lat:45.937,lon:6.104},
-    {nom:"GRENOBLE",lat:45.189,lon:5.725},{nom:"HERRIOT",lat:45.764,lon:4.836},
-    {nom:"NEYRPIC",lat:45.191,lon:5.729},{nom:"PART DIEU",lat:45.761,lon:4.859},
-    {nom:"ROMANS",lat:45.044,lon:5.052},{nom:"VILLEFONTAINE",lat:45.610,lon:5.150},
-  ]},
-  { id:"SUD-EST", nom:"Sud Est", ar:"AR Sud Est", boutiques:[
-    {nom:"AIX EN PROVENCE",lat:43.530,lon:5.447},{nom:"CABRIES",lat:43.429,lon:5.361},
-    {nom:"CANNES",lat:43.553,lon:7.017},{nom:"CAP 3000",lat:43.667,lon:7.193},
-    {nom:"GRAND VAR",lat:43.167,lon:5.966},{nom:"LA VALENTINE",lat:43.300,lon:5.370},
-    {nom:"MIRAMAS",lat:43.582,lon:5.004},{nom:"MONTPELLIER",lat:43.612,lon:3.877},
-    {nom:"NIMES",lat:43.837,lon:4.360},{nom:"POLYGONE",lat:43.608,lon:3.880},
-    {nom:"PRADO",lat:43.271,lon:5.396},{nom:"ST TROPEZ",lat:43.268,lon:6.640},
-    {nom:"TERRASSES DU PORT",lat:43.296,lon:5.370},
-  ]},
-  { id:"NORD", nom:"Nord", ar:"AR Nord", boutiques:[
-    {nom:"EURALILLE",lat:50.638,lon:3.071},{nom:"LILLE",lat:50.629,lon:3.057},
-    {nom:"LILLENIUM",lat:50.632,lon:3.060},{nom:"LUXEMBOURG",lat:49.612,lon:6.132},
-    {nom:"NANCY",lat:48.692,lon:6.184},{nom:"NOYELLES",lat:50.470,lon:2.995},
-    {nom:"ROUBAIX",lat:50.694,lon:3.175},{nom:"STRASBOURG",lat:48.573,lon:7.752},
-    {nom:"STRASBOURG CV",lat:48.575,lon:7.755},{nom:"PONT STE MARIE",lat:48.317,lon:4.081},
-  ]},
+  {nom:'Paris Ouest',  bouts:['A13','BELLE EPINE','CAEN','CRETEIL','DEAUVILLE','GIVERNY','LA DEFENSE','MONTPARNASSE','ORLEANS','PARLY 2','ROUEN','ST DENIS','ST QUENTIN','VELIZY','VILLENEUVE']},
+  {nom:'Paris Centre', bouts:['AEROVILLE','AUBER','BEAUGRENELLE','CARRE SENART','CLAYE SOUILLY','CORBEIL','FORUM DES HALLES','GONESSE','LEVALLOIS','PARINOR','ROSNY 2','RUE DE RENNES','VAL D EUROPE']},
+  {nom:'Bretagne',     bouts:['ANGERS','LA ROCHELLE','LE MANS','LES SABLES','NANTES ATLANTIS','NANTES CREBILLONS','RENNES ALMA','RENNES CV','TOURS']},
+  {nom:'Sud Ouest',    bouts:['ANGLET','BEGLES','BEZIERS','BLAGNAC','BORDEAUX','BORDEAUX LAC','FENOUILLET','LORMONT','MERIGNAC','PERPIGNAN AUCHAN','PERPIGNAN CLAIRA','TOULOUSE']},
+  {nom:'Rhône-Alpes',  bouts:['CLERMONT','CONFLUENCE','DIJON','DIJON CV','ECULLY','EPAGNY','GRENOBLE','HERRIOT','NEYRPIC','PART DIEU','ROMANS','VILLEFONTAINE']},
+  {nom:'Sud Est',      bouts:['AIX EN PROVENCE','AJACCIO','CABRIES','CANNES','CAP 3000','GRAND VAR','LA VALENTINE','MIRAMAS','MONTPELLIER','NIMES','POLYGONE','PRADO','ST TROPEZ','TERRASSES DU PORT']},
+  {nom:'Nord',         bouts:['EURALILLE','LILLE','LILLENIUM','LUXEMBOURG','NANCY','NOYELLES','ROUBAIX','STRASBOURG','STRASBOURG CV','PONT STE MARIE']},
 ];
 
-const IMPL={
-  "BERMUDA":["DN2","DN2","DN1","UP2","UP2","DN1"],"BLOUSON":["UP2","UP2","UP1","DN1","DN2","UP2"],
-  "BOXERS":["UP2","UP1","NEU","UP1","UP2","NEU"],"CHAPEAU":["UP2","UP1","NEU","DN1","DN2","UP1"],
-  "CHAUSSETTES":["UP2","UP1","NEU","UP1","UP2","NEU"],"CHAUSSURE CASUAL":["NEU","NEU","UP1","UP2","UP2","NEU"],
-  "CHAUSSURE VILLE":["UP1","UP1","UP2","UP1","NEU","NEU"],"CHEMISE CASUAL":["NEU","UP1","UP2","UP2","UP1","NEU"],
-  "CHEMISE VILLE":["UP1","UP1","UP2","UP1","NEU","NEU"],"COSTUME":["NEU","NEU","UP1","UP1","NEU","NEU"],
-  "ECHARPE":["UP2","UP2","UP1","DN2","DN2","UP2"],"GILET":["UP2","UP2","UP1","DN1","DN2","UP1"],
-  "JEANS":["UP2","UP2","UP1","UP1","NEU","UP1"],"MAILLOT DE BAIN":["DN2","DN2","DN1","UP2","UP2","DN2"],
-  "PANTALON CASUAL":["UP1","UP1","UP2","UP2","UP1","NEU"],"PANTALON VILLE":["UP1","UP1","UP2","UP1","NEU","NEU"],
-  "POLO":["DN1","NEU","UP1","UP2","UP2","NEU"],"PULL":["UP2","UP2","NEU","DN1","DN2","UP1"],
-  "TSHIRT":["DN2","DN1","UP1","UP2","UP2","DN1"],"VESTE CASUAL":["UP1","UP2","UP1","DN1","DN2","UP2"],
-  "VESTE VILLE":["UP1","UP2","UP1","DN1","DN2","UP1"],
-};
+let emoji = '🎁';
+let cibleMode = 'toutes';
+let selRegions = [];
+let selMags = [];
+let messages = [];
+let ghSha = null;
 
-let currentTab='temps-reel';
-let cmpData=null;
-const realtimeCache={};
-const archiveCache={};
-function tLabel(t,p){
-  if(p>5)  return{icon:"🌧",label:"Pluie",cond:5};
-  if(t<5)  return{icon:"❄️",label:"Grand froid",cond:0};
-  if(t<12) return{icon:"🧥",label:"Froid",cond:1};
-  if(t<20) return{icon:"🌤",label:"Frais",cond:2};
-  if(t<27) return{icon:"☀️",label:"Chaud",cond:3};
-  return       {icon:"🌡",label:"Très chaud",cond:4};
-}
-function tColor(t,p){
-  if(p>5)  return"#1E40AF";
-  if(t<5)  return"#185FA5";
-  if(t<12) return"#185FA5";
-  if(t<20) return"#0F6E56";
-  if(t<27) return"#CF6A1A";
-  return"#993C1D";
-}
-function tColorText(t,p){
-  if(p>5||t<12) return"#185FA5";
-  if(t<20) return"#0F6E56";
-  if(t<27) return"#CF6A1A";
-  return"#993C1D";
-}
-
-async function fetchRealtime(lat,lon){
-  const key=`${lat.toFixed(3)},${lon.toFixed(3)}`;
-  if(realtimeCache[key]) return realtimeCache[key];
-  try{
-    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation,weathercode&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&forecast_days=11&timezone=Europe%2FParis`);
-    const d=await r.json();
-    const c=d.current||{};const dy=d.daily||{};
-    const res={today:{temp:Math.round(c.temperature_2m*10)/10,pluie:c.precipitation||0},prevs:[]};
-    for(let i=1;i<11;i++){
-      const tmax=dy.temperature_2m_max[i],tmin=dy.temperature_2m_min[i];
-      const pluie=dy.precipitation_sum[i]||0;
-      const tmoy=Math.round((tmax+tmin)/2*10)/10;
-      const dt=new Date();dt.setDate(dt.getDate()+i);
-      res.prevs.push({temp:tmoy,pluie,date:dt});
-    }
-    realtimeCache[key]=res;return res;
-  }catch(e){return null;}
-}
-
-async function fetchArchive(lat,lon,d1,d2){
-  const key=`${lat.toFixed(3)},${lon.toFixed(3)}_${d1}_${d2}`;
-  if(archiveCache[key]) return archiveCache[key];
-  try{
-    const r=await fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${d1}&end_date=${d2}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Europe%2FParis`);
-    const d=await r.json();const dy=d.daily||{};
-    const tmaxs=dy.temperature_2m_max||[];const tmins=dy.temperature_2m_min||[];
-    const pluies=dy.precipitation_sum||[];
-    const tmoys=tmaxs.map((mx,i)=>(mx+tmins[i])/2).filter(v=>!isNaN(v));
-    const temp=tmoys.length?Math.round(tmoys.reduce((a,b)=>a+b,0)/tmoys.length*10)/10:null;
-    const pluie=Math.round(pluies.filter(p=>p).reduce((a,b)=>a+b,0)*10)/10;
-    archiveCache[key]={temp,pluie,nb:tmaxs.length};return archiveCache[key];
-  }catch(e){return null;}
-}
-
-function setTab(tab){
-  currentTab=tab;
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  event.target.classList.add('active');
-  document.getElementById('view-'+tab).classList.add('active');
-  if(tab==='temps-reel') renderTempsReel();
-  else if(tab==='previsionnel') renderPrevisionnel();
-  else if(tab==='carte'){
-    renderCarte();
-    // Forcer Leaflet à recalculer la taille après affichage
-    setTimeout(function(){if(leafletMap) leafletMap.invalidateSize();}, 200);
-  }
-  else if(tab==='comparatif'&&!cmpData) renderCmpVide();
-}
-
-// ── TEMPS RÉEL ────────────────────────────────────────────────────────
-function renderTempsReel(){
-  const grid=document.getElementById('rgrid-realtime');
-  if(grid.children.length > 0) return;
-  for(const reg of REGIONS){
-    const card=makeCard(reg,'realtime');
-    grid.appendChild(card);
-    loadRealtimeRegion(reg);
+// ── AUTH ─────────────────────────────────────────────────────────────
+function login() {
+  if (document.getElementById('pwd').value === MOT_DE_PASSE) {
+    document.getElementById('login-wrap').style.display = 'none';
+    document.getElementById('admin-wrap').style.display = 'block';
+    initAdmin();
+  } else {
+    document.getElementById('login-err').style.display = 'block';
+    document.getElementById('pwd').value = '';
   }
 }
-
-function makeCard(reg,mode){
-  const card=document.createElement('div');card.className='rcard';card.id=`card-${mode}-${reg.id}`;
-  card.innerHTML=`
-    <div class="rchead">
-      <div><div class="rc-region">${reg.nom}</div><div class="rc-ar">${reg.ar}</div><div class="rc-nb">${reg.boutiques.length} boutiques</div></div>
-      <div class="rc-meteo-region" id="head-${mode}-${reg.id}"><div class="rc-temp-big" style="color:#9CA3AF">—</div><div class="rc-mlabel">Chargement...</div></div>
-    </div>
-    <div class="rc-prevs" id="prevs-${mode}-${reg.id}"><div class="loading-row" style="width:100%">...</div></div>
-    <div class="rc-familles" id="fam-${mode}-${reg.id}"><div class="loading-row">...</div></div>
-    <div class="rc-bouts"><div class="rc-btitle">Boutiques · météo individuelle</div>
-      <div class="bouts-list" id="bouts-${mode}-${reg.id}">
-        ${reg.boutiques.map(b=>`<div class="bout-row" id="bout-${mode}-${reg.id}-${b.nom.replace(/[\s'\/]/g,'_')}">
-          <div class="bout-left"><span class="bout-icon">⏳</span><span class="bout-name">${b.nom}</span></div>
-          <div class="bout-right"><span class="bout-temp" style="color:#9CA3AF">—</span></div>
-        </div>`).join('')}
-      </div>
-    </div>`;
-  return card;
+function logout() {
+  document.getElementById('login-wrap').style.display = 'flex';
+  document.getElementById('admin-wrap').style.display = 'none';
 }
 
-async function loadRealtimeRegion(reg){
-  const results=await Promise.all(reg.boutiques.map(b=>fetchRealtime(b.lat,b.lon).then(m=>({nom:b.nom,m}))));
-  let temps=[];
-  for(const {nom,m} of results){
-    const id=`bout-realtime-${reg.id}-${nom.replace(/[\s'\/]/g,'_')}`;
-    const el=document.getElementById(id);
-    if(!el||!m) continue;
-    const t=m.today.temp,p=m.today.pluie;
-    const tl=tLabel(t,p);temps.push(t);
-    const cond=tl.cond;
-    const up2=Object.entries(IMPL).filter(([,c])=>c[cond]==='UP2').map(([f])=>f).slice(0,1);
-    const aHtml=up2.length?`<span class="bout-action fp-up2">⬆⬆ ${up2[0]}</span>`:`<span class="bout-action" style="background:#F1EFE8;color:#444441;border-color:#D3D1C7">→</span>`;
-    el.querySelector('.bout-right').innerHTML=`<span class="bout-temp" style="color:${tColorText(t,p)}">${t}°</span><span class="bout-icon">${tl.icon}</span>${aHtml}`;
-    el.querySelector('.bout-icon').textContent=tl.icon;
-  }
-  if(!temps.length) return;
-  const avg=Math.round(temps.reduce((a,b)=>a+b,0)/temps.length*10)/10;
-  const avgP=results.map(r=>r.m?.today?.pluie||0).reduce((a,b)=>a+b,0)/results.length;
-  const tl=tLabel(avg,avgP);
-  document.getElementById(`head-realtime-${reg.id}`).innerHTML=`<div class="rc-temp-big" style="color:${tColorText(avg,avgP)}">${avg}°</div><div class="rc-mlabel">${tl.icon} ${tl.label} <span style="font-size:9px;color:#9CA3AF">(moy.)</span></div>`;
-  const firstM=results[0]?.m;
-  if(firstM?.prevs) document.getElementById(`prevs-realtime-${reg.id}`).innerHTML=firstM.prevs.map((p,i)=>{
-    const ptl=tLabel(p.temp,p.pluie);const d=p.date;
-    const dd=String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');
-    return`<div class="prev"><div class="prev-j">J+${i+1}</div><div class="prev-d">${dd}</div><div class="prev-i">${ptl.icon}</div><div class="prev-t" style="color:${tColorText(p.temp,p.pluie)}">${p.temp}°</div></div>`;
-  }).join('');
-  const cond=tl.cond;
-  const up2=Object.entries(IMPL).filter(([,c])=>c[cond]==='UP2').map(([f])=>f);
-  const up1=Object.entries(IMPL).filter(([,c])=>c[cond]==='UP1').map(([f])=>f).slice(0,4);
-  const dn2=Object.entries(IMPL).filter(([,c])=>c[cond]==='DN2').map(([f])=>f);
-  document.getElementById(`fam-realtime-${reg.id}`).innerHTML=`
-    ${up2.length?`<div class="rc-ftitle">⬆⬆ A mettre en avant</div><div class="fpills">${up2.map(f=>`<span class="fpill fp-up2">${f}</span>`).join('')}${up1.map(f=>`<span class="fpill fp-up1">${f}</span>`).join('')}</div>`:''}
-    ${dn2.length?`<div class="rc-ftitle" style="margin-top:6px">⬇⬇ Période défavorable</div><div class="fpills">${dn2.map(f=>`<span class="fpill fp-dn2">${f}</span>`).join('')}</div>`:''}`;
-}
-
-// ── COMPARATIF ────────────────────────────────────────────────────────
-function renderCmpVide(){
-  document.getElementById('rgrid-cmp').innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9CA3AF;font-size:14px">Sélectionnez vos périodes et cliquez sur <strong>Comparer →</strong></div>`;
-}
-
-async function lancerComparatif(){
-  const p1d=document.getElementById('date-p1').value,p1f=document.getElementById('date-p1-fin').value;
-  const p2d=document.getElementById('date-p2').value,p2f=document.getElementById('date-p2-fin').value;
-  if(!p1d||!p1f||!p2d||!p2f){alert('Veuillez remplir toutes les dates.');return;}
-  const btn=document.getElementById('btn-comparer'),status=document.getElementById('cb-status');
-  btn.disabled=true;btn.textContent='Chargement...';
-
-  const allB=REGIONS.flatMap(r=>r.boutiques.map(b=>({...b,regId:r.id,regNom:r.nom})));
-  const results={};
-
-  // ── OPTIMISATION 1 : dédupliquer par coordonnées ──────────────────
-  // Plusieurs boutiques dans la même ville → 1 seule requête
-  const coordMap={};
-  allB.forEach(b=>{
-    const key=b.lat.toFixed(3)+','+b.lon.toFixed(3);
-    if(!coordMap[key]) coordMap[key]={lat:b.lat,lon:b.lon,boutiques:[]};
-    coordMap[key].boutiques.push(b);
+// ── GITHUB API ───────────────────────────────────────────────────────
+async function ghGet() {
+  const r = await fetch(GIST_API, {
+    headers: {'Authorization': 'token ' + GH_TOKEN, 'Accept': 'application/vnd.github.v3+json'}
   });
-  const uniqueCoords=Object.values(coordMap);
-  const totalRequetes=uniqueCoords.length;
-  let done=0;
-
-  status.textContent='Préparation... ('+totalRequetes+' villes à interroger)';
-
-  // ── OPTIMISATION 2 : batch de 15 requêtes en parallèle ───────────
-  const BATCH=15;
-  const coordEntries=uniqueCoords;
-
-  for(let i=0;i<coordEntries.length;i+=BATCH){
-    const batch=coordEntries.slice(i,i+BATCH);
-    await Promise.all(batch.map(async entry=>{
-      const [m1,m2]=await Promise.all([
-        fetchArchive(entry.lat,entry.lon,p1d,p1f),
-        fetchArchive(entry.lat,entry.lon,p2d,p2f)
-      ]);
-      // Appliquer le résultat à toutes les boutiques de cette coordonnée
-      entry.boutiques.forEach(b=>{
-        if(!results[b.regId]) results[b.regId]={};
-        results[b.regId][b.nom]={m1,m2};
-      });
-      done++;
-      const pct=Math.round(done/totalRequetes*100);
-      status.textContent=pct+'% — '+done+'/'+totalRequetes+' villes';
-    }));
-  }
-
-  cmpData={results,p1d,p1f,p2d,p2f};
-  btn.disabled=false;btn.textContent='Comparer →';
-  status.textContent='✓ '+allB.length+' boutiques chargées';
-  renderComparatif(cmpData);
+  if (!r.ok) return {messages: []};
+  const data = await r.json();
+  const content = data.files[GIST_FILE].content;
+  return JSON.parse(content);
 }
 
-function fmt(d){return d?d.split('-').reverse().join('/'):'—';}
-
-function renderComparatif({results,p1d,p1f,p2d,p2f}){
-  const summaryGrid=document.getElementById('cmp-summary-grid');
-  summaryGrid.innerHTML='';
-  document.getElementById('cmp-summary-title').textContent=`Températures moyennes : ${fmt(p1d)}–${fmt(p1f)} vs ${fmt(p2d)}–${fmt(p2f)}`;
-  for(const reg of REGIONS){
-    const rd=results[reg.id]||{};
-    const t1s=Object.values(rd).map(d=>d.m1?.temp).filter(t=>t!=null);
-    const t2s=Object.values(rd).map(d=>d.m2?.temp).filter(t=>t!=null);
-    if(!t1s.length) continue;
-    const avg1=Math.round(t1s.reduce((a,b)=>a+b,0)/t1s.length*10)/10;
-    const avg2=t2s.length?Math.round(t2s.reduce((a,b)=>a+b,0)/t2s.length*10)/10:null;
-    const delta=avg2!=null?Math.round((avg2-avg1)*10)/10:null;
-    const dClass=delta==null?'delta-neu':delta>0?'delta-pos':'delta-neg';
-    const dSign=delta==null?'':delta>0?'+':'';
-    summaryGrid.innerHTML+=`<div class="cmp-reg-card"><div class="cmp-reg-name">${reg.nom}</div><div class="cmp-reg-temps"><span class="cmp-p-badge" style="background:#E6F1FB;color:#0C447C">${avg1}°C</span><span style="color:#9CA3AF">→</span>${avg2!=null?`<span class="cmp-p-badge" style="background:#EAF3DE;color:#27500A">${avg2}°C</span>`:'<span style="color:#9CA3AF">—</span>'}${delta!=null?`<span class="cmp-delta-badge ${dClass}" style="${delta>0?'background:#EAF3DE':'background:#FCEBEB'}">${dSign}${delta}°</span>`:''}</div></div>`;
-  }
-  document.getElementById('cmp-summary').classList.add('visible');
-  const grid=document.getElementById('rgrid-cmp');grid.innerHTML='';
-  for(const reg of REGIONS){
-    const rd=results[reg.id]||{};
-    const card=document.createElement('div');card.className='rcard';
-    const t1s=Object.values(rd).map(d=>d.m1?.temp).filter(t=>t!=null);
-    const t2s=Object.values(rd).map(d=>d.m2?.temp).filter(t=>t!=null);
-    const avg1=t1s.length?Math.round(t1s.reduce((a,b)=>a+b,0)/t1s.length*10)/10:null;
-    const avg2=t2s.length?Math.round(t2s.reduce((a,b)=>a+b,0)/t2s.length*10)/10:null;
-    const delta=avg1&&avg2?Math.round((avg2-avg1)*10)/10:null;
-    const dSign=delta>0?'+':'';const dColor=delta>0?'#27500A':delta<0?'#791F1F':'#444441';
-    const boutsHtml=reg.boutiques.map(b=>{
-      const bd=rd[b.nom]||{};const m1=bd.m1,m2=bd.m2;
-      const t1=m1?.temp,p1=m1?.pluie||0,t2=m2?.temp,p2=m2?.pluie||0;
-      const tl1=t1!=null?tLabel(t1,p1):{icon:'—',label:'—'};
-      const tl2=t2!=null?tLabel(t2,p2):{icon:'—',label:'—'};
-      const d=t1!=null&&t2!=null?Math.round((t2-t1)*10)/10:null;
-      const ds=d!=null?(d>0?'+':'')+d+'°':'—';
-      const dc=d==null?'delta-neu':d>0?'delta-pos':'delta-neg';
-      return`<div class="bout-row-cmp"><span class="bout-name-cmp" title="${b.nom}">${b.nom}</span>
-        <div class="bout-p1"><span style="font-size:12px">${tl1.icon}</span><span class="bout-cmp-temp" style="color:${t1?tColorText(t1,p1):'#9CA3AF'}">${t1?t1+'°':'—'}</span>${m1?.pluie?`<span style="font-size:9px;color:#0C447C">${m1.pluie}mm</span>`:''}</div>
-        <div class="bout-p2"><span style="font-size:12px">${tl2.icon}</span><span class="bout-cmp-temp" style="color:${t2?tColorText(t2,p2):'#9CA3AF'}">${t2?t2+'°':'—'}</span>${m2?.pluie?`<span style="font-size:9px;color:#27500A">${m2.pluie}mm</span>`:''}</div>
-        <span class="bout-delta ${dc}">${ds}</span></div>`;
-    }).join('');
-    card.innerHTML=`<div class="rchead"><div><div class="rc-region">${reg.nom}</div><div class="rc-ar">${reg.ar}</div><div class="rc-nb">${reg.boutiques.length} boutiques</div></div>
-      <div style="text-align:right"><div style="display:flex;gap:6px;align-items:center;justify-content:flex-end">${avg1!=null?`<span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;background:#E6F1FB;color:#0C447C">${avg1}°C</span>`:''}${avg2!=null?`<span style="font-size:11px;color:#6B7280">→</span><span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;background:#EAF3DE;color:#27500A">${avg2}°C</span>`:''}</div>${delta!=null?`<div style="font-size:12px;font-weight:700;color:${dColor};margin-top:3px">${dSign}${delta}°C écart</div>`:''}</div></div>
-      <div style="padding:8px 16px;background:#F8F9FC;border-bottom:1px solid #F0F2F7;display:flex;gap:16px;font-size:10px;color:#6B7280"><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#E6F1FB;border:1px solid #B5D4F4;margin-right:4px;vertical-align:-1px"></span>P1 : ${fmt(p1d)} → ${fmt(p1f)}</span><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#EAF3DE;border:1px solid #C0DD97;margin-right:4px;vertical-align:-1px"></span>P2 : ${fmt(p2d)} → ${fmt(p2f)}</span><span style="margin-left:auto;font-weight:600">Δ = P2−P1</span></div>
-      <div class="rc-bouts"><div class="rc-btitle">Température par boutique · P1 (bleu) vs P2 (vert)</div><div class="bouts-list">${boutsHtml}</div></div>`;
-    grid.appendChild(card);
-  }
-}
-
-// ── CARTE FRANCE LEAFLET ────────────────────────────────────────────
-let carteRendered = false;
-let leafletMap = null;
-const carteMarkers = {};
-const carteMeteo = {};
-
-function tColorCarte(t, p) {
-  if (p > 5)  return "#1E3A8A";
-  if (t < 5)  return "#2563EB";
-  if (t < 12) return "#2563EB";
-  if (t < 20) return "#059669";
-  if (t < 27) return "#EA580C";
-  return "#DC2626";
-}
-
-function makeMarkerIcon(color, temp) {
-  return L.divIcon({
-    className: '',
-    html: `<div style="background:${color};border:2px solid white;border-radius:20px;padding:2px 7px;font-size:10px;font-weight:700;color:white;font-family:'DM Mono',monospace;box-shadow:0 1px 5px rgba(0,0,0,0.3);white-space:nowrap">${temp}°</div>`,
-    iconSize: [40, 20],
-    iconAnchor: [20, 10]
-  });
-}
-
-function makeMarkerIconInit(regColor) {
-  return L.divIcon({
-    className: '',
-    html: `<div style="width:12px;height:12px;border-radius:50%;background:${regColor};border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3)"></div>`,
-    iconSize: [12, 12],
-    iconAnchor: [6, 6]
-  });
-}
-
-const REG_COLORS_CARTE = {
-  "Paris Ouest":"#1E4D9B","Paris Centre":"#2563EB","Bretagne":"#059669",
-  "Sud Ouest":"#D97706","Rhône-Alpes":"#16A34A","Sud Est":"#DC2626","Nord":"#7C3AED"
-};
-
-async function renderCarte() {
-  if (carteRendered) {
-    if (leafletMap) setTimeout(() => leafletMap.invalidateSize(), 100);
-    return;
-  }
-  carteRendered = true;
-
-  // Init carte Leaflet
-  leafletMap = L.map('leaflet-map', {zoomControl: true}).setView([46.5, 2.5], 6);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    maxZoom: 18
-  }).addTo(leafletMap);
-
-  // Récupérer toutes les boutiques
-  const allBoutiques = REGIONS.flatMap(r => r.boutiques.map(b => ({...b, regNom: r.nom})));
-
-  // Placer les marqueurs initiaux
-  allBoutiques.forEach((b, idx) => {
-    const marker = L.marker([b.lat, b.lon], {
-      icon: makeMarkerIconInit(REG_COLORS_CARTE[b.regNom] || '#888')
-    });
-    marker.bindPopup(`<b style="font-size:13px;color:#0D2750">${b.nom}</b><br><span style="color:#9CA3AF;font-size:10px">${b.regNom}</span><br><span id="pop-${idx}">⏳ Chargement...</span>`);
-    marker.addTo(leafletMap);
-    carteMarkers[idx] = marker;
-  });
-
-  // Charger météo par batch
-  const temps = []; let loaded = 0;
-  const BATCH = 8;
-
-  for (let i = 0; i < allBoutiques.length; i += BATCH) {
-    const batch = allBoutiques.slice(i, i + BATCH);
-    await Promise.all(batch.map(async (b, j) => {
-      const idx = i + j;
-      let data = realtimeCache[`${b.lat.toFixed(3)},${b.lon.toFixed(3)}`];
-      if (!data) data = await fetchRealtime(b.lat, b.lon);
-      if (data) {
-        const t = data.today.temp, p = data.today.pluie;
-
-  // Date et heure
-  const now = new Date();
-  const dateStr = String(now.getDate()).padStart(2,'0') + '/' + String(now.getMonth()+1).padStart(2,'0') + '/' + now.getFullYear();
-  const heureStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-  document.getElementById('bsolo-datetime').textContent = 'Mis à jour · ' + dateStr + ' ' + heureStr;
-        carteMeteo[idx] = {temp: t, pluie: p};
-        temps.push(t);
-        const color = tColorCarte(t, p);
-        const tl = tLabel(t, p);
-        carteMarkers[idx].setIcon(makeMarkerIcon(color, t));
-        carteMarkers[idx].setPopupContent(`
-          <div style="font-family:'DM Sans',sans-serif;min-width:160px">
-            <div style="font-size:14px;font-weight:600;color:#0D2750;margin-bottom:4px">${b.nom}</div>
-            <div style="font-size:22px;font-weight:600;color:${color};margin-bottom:3px">${tl.icon} ${t}°C</div>
-            <div style="font-size:11px;color:#6B7280">${tl.label} · ${p}mm pluie</div>
-            <div style="font-size:10px;color:#9CA3AF;margin-top:4px;padding-top:4px;border-top:1px solid #F0F2F7">${b.regNom}</div>
-          </div>`);
+async function ghPut(data) {
+  const r = await fetch(GIST_API, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': 'token ' + GH_TOKEN,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      files: {
+        [GIST_FILE]: {content: JSON.stringify(data, null, 2)}
       }
-      loaded++;
-      document.getElementById('cs-loaded').textContent = loaded;
-    }));
-
-    if (temps.length) {
-      const avg = Math.round(temps.reduce((a,b)=>a+b,0)/temps.length*10)/10;
-      const max = Math.max(...temps), min = Math.min(...temps);
-      const maxIdx = Object.keys(carteMeteo).find(k => carteMeteo[k].temp === max);
-      const minIdx = Object.keys(carteMeteo).find(k => carteMeteo[k].temp === min);
-      document.getElementById('cs-avg').textContent = avg + '°C';
-      document.getElementById('cs-max').innerHTML = `${max}°C<br><span style="font-size:9px;color:#6B7280;font-weight:400">${allBoutiques[maxIdx]?.nom||''}</span>`;
-      document.getElementById('cs-min').innerHTML = `${min}°C<br><span style="font-size:9px;color:#6B7280;font-weight:400">${allBoutiques[minIdx]?.nom||''}</span>`;
-    }
-  }
-
-  // Liste triée par température
-  const sorted = [...allBoutiques.keys()].filter(i=>carteMeteo[i]).sort((a,b)=>carteMeteo[b].temp-carteMeteo[a].temp);
-  document.getElementById('carte-liste-body').innerHTML = sorted.map(i => {
-    const b = allBoutiques[i], d = carteMeteo[i];
-    const tl = tLabel(d.temp, d.pluie);
-    const color = tColorCarte(d.temp, d.pluie);
-    return `<div class="carte-liste-item" onclick="leafletMap.setView([${b.lat},${b.lon}],13);carteMarkers[${i}].openPopup()">
-      <div class="cli-left">
-        <div class="cli-dot" style="background:${color}"></div>
-        <div><div class="cli-nom">${b.nom}</div><div class="cli-reg">${b.regNom}</div></div>
-      </div>
-      <div class="cli-right" style="color:${color}">${d.temp}° ${tl.icon}</div>
-    </div>`;
-  }).join('');
-}
-
-
-
-
-// ── MESSAGES OPÉRATIONS ──────────────────────────────────────────────
-async function chargerMessageOperation(boutique, region) {
-  try {
-    const r = await fetch('https://gist.githubusercontent.com/yytabares-glitch/e9bb925d30eb03b6bcfc50cca079c3bd/raw/messages.json?t=' + Date.now());
-    if (!r.ok) return;
-    const data = await r.json();
-    const today = new Date().toISOString().split('T')[0];
-    const msgs = (data.messages || []).filter(m => {
-      if (!m.actif) return false;
-      if (m.fin && m.fin < today) return false;
-      if (m.debut && m.debut > today) return false;
-      if (m.cible === 'toutes') return true;
-      if (Array.isArray(m.cible)) {
-        // Vérifier boutique ou région
-        return m.cible.includes(boutique.toUpperCase()) ||
-               m.cible.includes(boutique) ||
-               m.cible.includes(region);
-      }
-      return m.cible === region;
-    });
-    if (msgs.length > 0) {
-      const msg = msgs[0];
-      document.getElementById('bsolo-op-titre').textContent = msg.emoji + ' ' + msg.titre;
-      document.getElementById('bsolo-op-texte').textContent = msg.texte;
-      document.getElementById('bsolo-operation').style.display = 'block';
-    }
-  } catch(e) { /* Pas de message = pas d'affichage */ }
-}
-
-// ── VUE BOUTIQUE SOLO (QR code) ──────────────────────────────────────
-function detectBoutiqueSolo() {
-  const params = new URLSearchParams(window.location.search);
-  const boutique = params.get('boutique');
-  if (!boutique) return;
-
-  // Trouver la boutique dans les données
-  let found = null, foundReg = null;
-  for (const reg of REGIONS) {
-    for (const b of reg.boutiques) {
-      if (b.nom.replace(/\s/g,'_').toUpperCase() === boutique.toUpperCase() ||
-          b.nom.toUpperCase() === boutique.replace(/_/g,' ').toUpperCase()) {
-        found = b; foundReg = reg; break;
-      }
-    }
-    if (found) break;
-  }
-  if (!found) return;
-
-  // Masquer le shell normal, afficher la vue solo
-  document.querySelector('.shell').style.display = 'none';
-  document.getElementById('view-boutique-solo').style.display = 'block';
-  document.getElementById('bsolo-nom').textContent = found.nom;
-  document.getElementById('bsolo-region').textContent = foundReg.nom + ' · ' + found.nom;
-  document.title = 'IZAC Météo · ' + found.nom;
-
-  loadBoutiqueSolo(found, foundReg);
-}
-
-
-function genererConseilIA(boutique, region, temp, pluie, label, up2Fams, dn2Fams, prevs) {
-  var famUp = up2Fams.slice(0,3).join(', ');
-  var demain = prevs[0];
-  var tl1 = demain ? tLabel(demain.temp, demain.pluie) : null;
-  var evolution = '';
-  if (demain && Math.abs(demain.temp - temp) > 3) {
-    if (demain.temp > temp)
-      evolution = ' La chaleur monte encore demain (' + demain.temp + 'C ' + tl1.icon + ') - profitez-en !';
-    else
-      evolution = ' Changement prevu demain (' + demain.temp + 'C ' + tl1.icon + ') - anticipez des aujourd hui.';
-  }
-
-  var encs = [
-    "Vous etes au top, bonne journee a toute l equipe ! 💪",
-    "L equipe IZAC assure - belle journee a vous ! 🌟",
-    "Chaque client est une opportunite - bonne journee ! ✨",
-    "Vous avez tout pour reussir aujourd hui - en avant ! 🚀",
-    "Bonne energie a toute l equipe - belle journee ! 😊",
-  ];
-  var enc = encs[Math.floor(Math.random() * encs.length)];
-
-  var intro = "Bonjour l equipe IZAC " + boutique + " ! 👋\n";
-  var conseil = '';
-
-  if (pluie > 5)
-    conseil = intro + "🌧 Temps pluvieux aujourd hui. Les clients qui se deplacent ont une vraie intention d achat - c est le moment de les accueillir chaleureusement. Misez sur " + famUp + "." + evolution;
-  else if (temp >= 27)
-    conseil = intro + "🌡 Forte chaleur aujourd hui (" + temp + "°C). Vos clients cherchent de la legerete - " + famUp + " sont vos meilleurs allies du jour." + evolution;
-  else if (temp >= 20)
-    conseil = intro + "☀️ Belle journee a " + temp + "°C. Le trafic devrait etre au rendez-vous - valorisez " + famUp + " pour seduire vos clients." + evolution;
-  else if (temp >= 12)
-    conseil = intro + "🌤 Temps doux aujourd hui (" + temp + "°C). Les clients sont en mode mi-saison - " + famUp + " correspondent parfaitement a leurs envies." + evolution;
-  else if (temp >= 5)
-    conseil = intro + "🧥 Temps frais aujourd hui (" + temp + "°C). Les clients cherchent du confort - " + famUp + " sont vos atouts du jour." + evolution;
-  else
-    conseil = intro + "❄️ Grand froid aujourd hui (" + temp + "°C). Une vraie opportunite pour " + famUp + " - vos clients en ont besoin !" + evolution;
-
-  return conseil + "\n\nBelles ventes ! 🛍️ " + enc;
-}
-
-
-async function loadBoutiqueSolo(b, reg) {
-  const data = await fetchRealtime(b.lat, b.lon);
-  if (!data) return;
-
-  const t = data.today.temp, p = data.today.pluie;
-
-  // Date et heure
-  const now = new Date();
-  const dateStr = String(now.getDate()).padStart(2,'0') + '/' + String(now.getMonth()+1).padStart(2,'0') + '/' + now.getFullYear();
-  const heureStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-  document.getElementById('bsolo-datetime').textContent = 'Mis à jour · ' + dateStr + ' ' + heureStr;
-  const tl = tLabel(t, p);
-
-  // Météo du jour
-  document.getElementById('bsolo-icon').textContent = tl.icon;
-  document.getElementById('bsolo-temp').textContent = t + '°C';
-  document.getElementById('bsolo-temp').style.color = tColorText(t, p);
-  document.getElementById('bsolo-meteo-label').textContent = tl.label;
-  document.getElementById('bsolo-meteo-label').style.color = tColorText(t, p);
-  document.getElementById('bsolo-pluie').textContent = p > 0 ? '💧 ' + p + 'mm de pluie' : '☀️ Pas de pluie';
-
-  // Conseil IA généré
-  const up2Fams = Object.entries(IMPL).filter(([,c])=>c[tl.cond]==='UP2').map(([f])=>f);
-  const dn2Fams = Object.entries(IMPL).filter(([,c])=>c[tl.cond]==='DN2').map(([f])=>f);
-  const conseilText = genererConseilIA(b.nom, reg.nom, t, p, tl.label, up2Fams, dn2Fams, data.prevs);
-  document.getElementById('bsolo-ia-text').innerHTML = conseilText.replace(/\n/g, '<br>');
-  chargerMessageOperation(b.nom, reg.nom);
-
-  // Conseils implantation
-  const cond = tl.cond;
-  const up2 = Object.entries(IMPL).filter(([,c])=>c[cond]==='UP2').map(([f])=>f);
-  const up1 = Object.entries(IMPL).filter(([,c])=>c[cond]==='UP1').map(([f])=>f);
-  const dn2 = Object.entries(IMPL).filter(([,c])=>c[cond]==='DN2').map(([f])=>f);
-
-  document.getElementById('bsolo-up2').innerHTML = up2.map(f=>
-    `<div class="bsolo-fam bsolo-fam-up2">⬆⬆ ${f}</div>`).join('');
-  document.getElementById('bsolo-up1').innerHTML = up1.map(f=>
-    `<div class="bsolo-fam bsolo-fam-up1">⬆ ${f}</div>`).join('');
-  document.getElementById('bsolo-dn2').innerHTML = dn2.map(f=>
-    `<div class="bsolo-fam bsolo-fam-dn2">⬇⬇ ${f}</div>`).join('');
-
-  // Prévisions 10 jours
-  const prevGrid = document.getElementById('bsolo-prev-grid');
-  const days = [{temp:t, pluie:p, label:'Auj.'}, ...data.prevs];
-  prevGrid.style.gridTemplateColumns = `repeat(${Math.min(days.length,5)},1fr)`;
-
-  // 2 rangées de 5
-  let prevHtml = '';
-  days.slice(0,10).forEach((d, i) => {
-    const ptl = tLabel(d.temp, d.pluie);
-    const pcond = ptl.cond;
-    const topFam = TOP_FAMILLES_COND[pcond][0];
-    const dt = new Date(); dt.setDate(dt.getDate()+i);
-    const dd = String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0');
-    const dayN = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'][dt.getDay()];
-    prevHtml += `<div class="bsolo-prev-day">
-      <div class="bsolo-prev-j">${i===0?'Auj.':dayN}</div>
-      <div class="bsolo-prev-date">${dd}</div>
-      <div class="bsolo-prev-icon">${ptl.icon}</div>
-      <div class="bsolo-prev-temp" style="color:${tColorText(d.temp,d.pluie)}">${d.temp}°</div>
-      <div class="bsolo-prev-fam" style="background:#EAF3DE;color:#27500A">${topFam.split(' ')[0]}</div>
-    </div>`;
+    })
   });
-  prevGrid.innerHTML = prevHtml;
-  prevGrid.style.gridTemplateColumns = 'repeat(5,1fr)';
+  return r.ok;
 }
-
-function quitterBoutiqueSolo() {
-  document.getElementById('view-boutique-solo').style.display = 'none';
-  document.querySelector('.shell').style.display = 'block';
-}
-
-
-// ── PRÉVISIONNEL 7 JOURS ─────────────────────────────────────────────
-let prevRendered = false;
-
-const CONSEIL = {
-  UP2: {label:"Mettre en avant",  cls:"pc-up2"},
-  UP1: {label:"Avancer en rayon", cls:"pc-up1"},
-  NEU: {label:"Maintenir",        cls:"pc-neu"},
-  DN1: {label:"Réduire",          cls:"pc-dn1"},
-  DN2: {label:"Période défavorable", cls:"pc-dn2"},
-};
-
-// Top familles par condition météo
-const TOP_FAMILLES_COND = {
-  0: ["PULL","BLOUSON","VESTE VILLE","GILET","ECHARPE"],        // Grand froid
-  1: ["PULL","BLOUSON","VESTE CASUAL","GILET","JEANS"],         // Froid
-  2: ["CHEMISE VILLE","PANTALON CASUAL","CHAUSSURE VILLE","POLO","JEANS"], // Frais
-  3: ["POLO","TSHIRT","PANTALON CASUAL","CHAUSSURE CASUAL","BERMUDA"],     // Chaud
-  4: ["TSHIRT","BERMUDA","POLO","MAILLOT DE BAIN","CHAUSSURE CASUAL"],     // Très chaud
-  5: ["BLOUSON","VESTE CASUAL","JEANS","PANTALON VILLE","CHAUSSURE VILLE"],// Pluie
-};
-
-async function renderPrevisionnel() {
-  if (prevRendered) return;
-  prevRendered = true;
-
-  const status = document.getElementById('prev-status');
-  const body   = document.getElementById('prev-body');
-  body.innerHTML = '<div class="prev-loading">Chargement des prévisions météo...</div>';
-
-  // Dates J+0 à J+6
-  const jours = [];
-  for (let i = 0; i < 10; i++) {
-    const d = new Date(); d.setDate(d.getDate() + i);
-    const label = i === 0 ? "Auj." : i === 1 ? "Dem." : "J+" + i;
-    const dateStr = String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0');
-    const dayName = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'][d.getDay()];
-    jours.push({label, dateStr, dayName, date: d});
-  }
-
-  // Récupérer prévisions pour toutes les boutiques (cache)
-  const allB = REGIONS.flatMap(r => r.boutiques.map(b => ({...b, regNom:r.nom, regId:r.id})));
-  let loaded = 0;
-  const prevData = {};
-
-  const BATCH = 15;
-  // Dédupliquer par coordonnées
-  const coordMap = {};
-  allB.forEach(b => {
-    const k = b.lat.toFixed(3)+','+b.lon.toFixed(3);
-    if (!coordMap[k]) coordMap[k] = {lat:b.lat,lon:b.lon,boutiques:[]};
-    coordMap[k].boutiques.push(b);
-  });
-  const uniqueC = Object.values(coordMap);
-
-  for (let i = 0; i < uniqueC.length; i += BATCH) {
-    await Promise.all(uniqueC.slice(i, i+BATCH).map(async entry => {
-      let data = realtimeCache[entry.lat.toFixed(3)+','+entry.lon.toFixed(3)];
-      if (!data) data = await fetchRealtime(entry.lat, entry.lon);
-      if (data) {
-        entry.boutiques.forEach(b => { prevData[b.regId+'_'+b.nom] = data; });
-      }
-      loaded++;
-      status.textContent = Math.round(loaded/uniqueC.length*100) + '%';
-    }));
-  }
-
-  status.textContent = '✓ ' + allB.length + ' boutiques';
-
-  // Calculer la météo par région et par jour (moyenne des prévisions boutiques)
-  // pour l'en-tête des colonnes
-  const regMeteo = {};
-  REGIONS.forEach(reg => {
-    regMeteo[reg.id] = jours.map((j, ji) => {
-      const temps = reg.boutiques.map(b => {
-        const d = prevData[reg.id+'_'+b.nom];
-        if (!d) return null;
-        const p = ji === 0 ? d.today : d.prevs[ji-1];
-        return p ? p.temp : null;
-      }).filter(t => t !== null);
-      const pluies = reg.boutiques.map(b => {
-        const d = prevData[reg.id+'_'+b.nom];
-        if (!d) return 0;
-        const p = ji === 0 ? d.today : d.prevs[ji-1];
-        return p ? p.pluie : 0;
-      });
-      const avg = temps.length ? Math.round(temps.reduce((a,b)=>a+b,0)/temps.length*10)/10 : null;
-      const avgP = pluies.reduce((a,b)=>a+b,0)/pluies.length;
-      return {temp:avg, pluie:avgP};
-    });
-  });
-
-  // Rendu HTML
-  let html = '';
-  for (const reg of REGIONS) {
-    // En-têtes jours pour cette région
-    const joursHeaderHtml = jours.map((j, ji) => {
-      const rm = regMeteo[reg.id][ji];
-      const tl = rm && rm.temp !== null ? tLabel(rm.temp, rm.pluie) : {icon:'—', label:'—', cond:2};
-      const temp = rm && rm.temp !== null ? rm.temp+'°C' : '—';
-      return `<th>
-        <div class="day-header">
-          <div class="day-header-label">${j.dayName} ${j.dateStr}</div>
-          <div class="day-header-meteo">${tl.icon}</div>
-          <div class="day-header-temp" style="color:${rm&&rm.temp?tColorText(rm.temp,rm.pluie):'#9CA3AF'}">${temp}</div>
-        </div>
-      </th>`;
-    }).join('');
-
-    // Lignes boutiques
-    const boutsHtml = reg.boutiques.map(b => {
-      const bData = prevData[reg.id+'_'+b.nom];
-
-      const cellsHtml = jours.map((j, ji) => {
-        if (!bData) return '<td><div class="prev-cell"><span style="color:#9CA3AF;font-size:10px">—</span></div></td>';
-        const p = ji === 0 ? bData.today : bData.prevs[ji-1];
-        if (!p) return '<td><div class="prev-cell"><span style="color:#9CA3AF;font-size:10px">—</span></div></td>';
-        const tl = tLabel(p.temp, p.pluie);
-        const cond = tl.cond;
-        // Top famille recommandée
-        const topFam = TOP_FAMILLES_COND[cond][0];
-        const topCode = IMPL[topFam] ? IMPL[topFam][cond] : 'NEU';
-        const cons = CONSEIL[topCode];
-        return `<td>
-          <div class="prev-cell">
-            <span class="prev-cell-icon">${tl.icon}</span>
-            <span class="prev-cell-temp" style="color:${tColorText(p.temp,p.pluie)}">${p.temp}°</span>
-            <span class="prev-cell-conseil ${cons.cls}">${topFam}</span>
-          </div>
-        </td>`;
-      }).join('');
-
-      return `<tr>
-        <td class="bout-cell">${b.nom}</td>
-        ${cellsHtml}
-      </tr>`;
-    }).join('');
-
-    html += `
-      <div class="prev-region-block">
-        <div class="prev-region-title">
-          <span>${reg.nom}</span>
-          <span style="font-size:11px;opacity:0.7">${reg.boutiques.length} boutiques · AR : ${reg.ar}</span>
-        </div>
-        <div style="overflow-x:auto">
-          <table class="prev-table">
-            <thead>
-              <tr>
-                <th class="th-bout">Boutique</th>
-                ${joursHeaderHtml}
-              </tr>
-            </thead>
-            <tbody>${boutsHtml}</tbody>
-          </table>
-        </div>
-      </div>`;
-  }
-
-  body.innerHTML = html;
-}
-
 
 // ── INIT ─────────────────────────────────────────────────────────────
-function init(){
-  const now=new Date();
-  document.getElementById('hdate').textContent=
-    String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear()+' '+
-    String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-  const y=now.getFullYear(),m=String(now.getMonth()+1).padStart(2,'0');
-  document.getElementById('date-p1').value=`${y-1}-${m}-01`;
-  document.getElementById('date-p1-fin').value=`${y-1}-${m}-${new Date(y-1,now.getMonth()+1,0).getDate()}`;
-  document.getElementById('date-p2').value=`${y}-${m}-01`;
-  document.getElementById('date-p2-fin').value=`${y}-${m}-${new Date(y,now.getMonth()+1,0).getDate()}`;
-  renderTempsReel();
-}
-init();
+async function initAdmin() {
+  // Dates par défaut
+  const t = new Date(), f = new Date();
+  f.setDate(f.getDate() + 7);
+  document.getElementById('msg-debut').value = t.toISOString().split('T')[0];
+  document.getElementById('msg-fin').value   = f.toISOString().split('T')[0];
 
-// Détection QR code après chargement complet du DOM
-window.addEventListener('load', function() {
-  const params = new URLSearchParams(window.location.search);
-  const boutique = params.get('boutique');
-  if (boutique) {
-    // Chercher la boutique
-    let found = null, foundReg = null;
-    for (const reg of REGIONS) {
-      for (const b of reg.boutiques) {
-        const nomClean = b.nom.replace(/[\s']/g,'_').toUpperCase();
-        const paramClean = boutique.toUpperCase();
-        if (nomClean === paramClean || b.nom.toUpperCase() === boutique.replace(/_/g,' ').toUpperCase()) {
-          found = b; foundReg = reg; break;
-        }
-      }
-      if (found) break;
-    }
-    if (!found) {
-      document.body.innerHTML = '<div style="padding:20px;font-family:sans-serif;color:#0D2750"><h2>Boutique non trouvée</h2><p>Paramètre : ' + boutique + '</p></div>';
-      return;
-    }
-    // Masquer le shell, afficher la vue solo
-    document.querySelector('.shell').style.display = 'none';
-    const soloView = document.getElementById('view-boutique-solo');
-    soloView.style.display = 'block';
-    document.getElementById('bsolo-nom').textContent = found.nom;
-    document.getElementById('bsolo-region').textContent = foundReg.nom;
-    document.title = 'IZAC Météo · ' + found.nom;
-    loadBoutiqueSolo(found, foundReg);
+  // Régions
+  document.getElementById('reg-list').innerHTML = REGIONS.map(r =>
+    `<button class="region-btn" onclick="toggleReg(this,'${r.nom}')">${r.nom} <span style="font-size:10px;color:#9CA3AF">${r.bouts.length} boutiques</span></button>`
+  ).join('');
+
+  // Boutiques
+  const allB = REGIONS.flatMap(r => r.bouts);
+  document.getElementById('mag-list').innerHTML = allB.map(m =>
+    `<button class="mag-btn" onclick="toggleMag(this,'${m}')">${m}</button>`
+  ).join('');
+
+  // Charger depuis GitHub
+  showStatus('Synchronisation avec GitHub...', 'loading');
+  try {
+    const data = await ghGet();
+    messages = data.messages || [];
+    renderMessages();
+    showStatus('✓ Synchronisé avec GitHub — ' + messages.length + ' message(s)', 'ok');
+    setTimeout(() => document.getElementById('status').style.display = 'none', 3000);
+  } catch(e) {
+    showStatus('⚠ Impossible de charger depuis GitHub — vérifiez votre connexion', 'err');
   }
-});
-</script>
+}
 
-<!-- VUE BOUTIQUE SOLO (mode QR code) -->
-<div id="view-boutique-solo" style="display:none">
-  <div class="boutique-solo" id="bsolo-content">
-    <div class="bsolo-header">
-      <div class="bsolo-nom" id="bsolo-nom">—</div>
-      <div class="bsolo-region" id="bsolo-region">—</div>
-      <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;background:rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;width:fit-content;margin-left:auto;margin-right:auto">
-        <span style="width:7px;height:7px;border-radius:50%;background:#3DD68C;animation:blink 2s infinite;display:inline-block"></span>
-        <span style="font-size:10px;color:#7AA3D4;font-family:'DM Mono',monospace" id="bsolo-datetime">—</span>
+// ── FORM ─────────────────────────────────────────────────────────────
+function selectEmoji(btn, e) {
+  document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected'); emoji = e; updatePreview();
+}
+
+function setCible(mode, btn) {
+  cibleMode = mode;
+  document.querySelectorAll('.cible-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  ['toutes','regions','boutiques'].forEach(m => {
+    const el = document.getElementById('cible-' + m);
+    el.classList.toggle('active', m === mode);
+    el.style.display = m === mode ? 'block' : 'none';
+  });
+  updatePreview();
+}
+
+function toggleReg(btn, reg) {
+  btn.classList.toggle('selected');
+  selRegions = selRegions.includes(reg) ? selRegions.filter(r=>r!==reg) : [...selRegions, reg];
+  updatePreview();
+}
+
+function toggleMag(btn, mag) {
+  btn.classList.toggle('selected');
+  selMags = selMags.includes(mag) ? selMags.filter(m=>m!==mag) : [...selMags, mag];
+  const el = document.getElementById('sel-count');
+  el.style.display = selMags.length ? 'block' : 'none';
+  el.textContent = selMags.length + ' boutique(s) sélectionnée(s)';
+  updatePreview();
+}
+
+function selectAll() {
+  const btns = document.querySelectorAll('.mag-btn');
+  const all = selMags.length === btns.length;
+  btns.forEach(b => b.classList.toggle('selected', !all));
+  selMags = all ? [] : REGIONS.flatMap(r => r.bouts);
+  const el = document.getElementById('sel-count');
+  el.style.display = selMags.length ? 'block' : 'none';
+  if (selMags.length) el.textContent = selMags.length + ' boutique(s) sélectionnée(s)';
+  updatePreview();
+}
+
+function updatePreview() {
+  const titre = document.getElementById('msg-titre').value || 'Titre...';
+  const texte = document.getElementById('msg-texte').value || 'Message...';
+  const cTxt = cibleMode==='toutes' ? 'toutes les boutiques'
+    : cibleMode==='regions' ? (selRegions.length ? selRegions.join(', ') : '—')
+    : (selMags.length ? selMags.length + ' boutique(s)' : '—');
+  document.getElementById('preview-text').innerHTML =
+    '<strong>' + emoji + ' ' + titre + '</strong><br>' + texte + '<br><br><span style="font-size:11px;color:#9CA3AF">→ ' + cTxt + '</span>';
+}
+
+function remplir(titre, texte, em) {
+  document.getElementById('msg-titre').value = titre;
+  document.getElementById('msg-texte').value = texte;
+  document.querySelectorAll('.emoji-btn').forEach(b => {
+    if (b.textContent.trim() === em) { b.classList.add('selected'); emoji = em; }
+    else b.classList.remove('selected');
+  });
+  updatePreview();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ── ENVOYER ───────────────────────────────────────────────────────────
+async function envoyerMessage() {
+  const titre = document.getElementById('msg-titre').value.trim();
+  const texte = document.getElementById('msg-texte').value.trim();
+  const debut = document.getElementById('msg-debut').value;
+  const fin   = document.getElementById('msg-fin').value;
+  if (!titre || !texte) { showStatus('Remplissez le titre et le message.', 'err'); return; }
+
+  let cible;
+  if (cibleMode === 'toutes') cible = 'toutes';
+  else if (cibleMode === 'regions') {
+    if (!selRegions.length) { showStatus('Sélectionnez au moins une région.', 'err'); return; }
+    cible = selRegions;
+  } else {
+    if (!selMags.length) { showStatus('Sélectionnez au moins une boutique.', 'err'); return; }
+    cible = selMags;
+  }
+
+  // Désactiver le bouton
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true;
+  document.getElementById('send-icon').innerHTML = '<span class="spinner"></span>';
+  document.getElementById('send-txt').textContent = 'Envoi en cours...';
+
+  const msg = {id: Date.now(), actif: true, titre, texte, emoji, cible, debut, fin, cree: new Date().toLocaleDateString('fr-FR')};
+  messages.unshift(msg);
+
+  try {
+    const ok = await ghPut({messages});
+    if (ok) {
+      showStatus('✓ Message envoyé et publié sur GitHub ! Visible instantanément sur tous les QR codes ciblés.', 'ok');
+      renderMessages();
+      // Reset form
+      document.getElementById('msg-titre').value = '';
+      document.getElementById('msg-texte').value = '';
+      document.getElementById('preview-text').innerHTML = '<span style="color:#9CA3AF;font-style:italic">Remplissez le formulaire...</span>';
+    } else {
+      messages.shift();
+      showStatus('Erreur lors de l\'envoi. Vérifiez votre connexion.', 'err');
+    }
+  } catch(e) {
+    messages.shift();
+    showStatus('Erreur : ' + e.message, 'err');
+  }
+
+  btn.disabled = false;
+  document.getElementById('send-icon').textContent = '📤';
+  document.getElementById('send-txt').textContent = 'Envoyer le message';
+}
+
+// ── MESSAGES ─────────────────────────────────────────────────────────
+async function supprimerMessage(id) {
+  messages = messages.filter(m => m.id !== id);
+  showStatus('Suppression...', 'loading');
+  const ok = await ghPut({messages});
+  if (ok) { renderMessages(); showStatus('✓ Message supprimé', 'ok'); }
+  else showStatus('Erreur suppression', 'err');
+  setTimeout(() => document.getElementById('status').style.display='none', 2000);
+}
+
+async function toggleActif(id) {
+  const m = messages.find(m => m.id === id);
+  if (m) {
+    m.actif = !m.actif;
+    showStatus('Mise à jour...', 'loading');
+    const ok = await ghPut({messages});
+    if (ok) { renderMessages(); showStatus('✓ Mis à jour', 'ok'); }
+    setTimeout(() => document.getElementById('status').style.display='none', 2000);
+  }
+}
+
+function renderMessages() {
+  const list = document.getElementById('msg-list');
+  document.getElementById('msg-count').textContent = '(' + messages.length + ')';
+  if (!messages.length) { list.innerHTML = '<div class="no-msg">Aucun message — créez votre premier message !</div>'; return; }
+  const today = new Date().toISOString().split('T')[0];
+  list.innerHTML = messages.map(m => {
+    let badge='', badgeClass='';
+    if (!m.actif) { badge='Désactivé'; badgeClass='badge-off'; }
+    else if (m.fin && m.fin < today) { badge='Expiré'; badgeClass='badge-off'; }
+    else if (m.debut > today) { badge='Programmé'; badgeClass='badge-prog'; }
+    else { badge='Actif'; badgeClass='badge-actif'; }
+    const cTxt = m.cible==='toutes' ? '📡 Toutes les boutiques'
+      : Array.isArray(m.cible) && m.cible.length > 3
+        ? m.cible.slice(0,3).join(', ') + ' +' + (m.cible.length-3)
+        : Array.isArray(m.cible) ? m.cible.join(', ') : m.cible;
+    return `<div class="msg-card">
+      <div class="msg-header">
+        <div class="msg-title-txt">${m.emoji} ${m.titre}</div>
+        <span class="badge ${badgeClass}">${badge}</span>
       </div>
-    </div>
-    <div class="bsolo-meteo-now">
-      <div class="bsolo-icon" id="bsolo-icon">⏳</div>
-      <div class="bsolo-temp" id="bsolo-temp">—</div>
-      <div class="bsolo-label" id="bsolo-meteo-label">Chargement météo...</div>
-      <div class="bsolo-pluie" id="bsolo-pluie"></div>
-    </div>
-    <div class="bsolo-operation" id="bsolo-operation"><div class="bsolo-op-badge">📢 Message de la Direction</div><div class="bsolo-op-titre" id="bsolo-op-titre"></div><div class="bsolo-op-texte" id="bsolo-op-texte"></div></div>
-    <div class="bsolo-conseil-ia"><div class="bsolo-conseil-text" id="bsolo-ia-text">Génération du conseil en cours...</div></div>
-    <div class="bsolo-conseils">
-      <div class="bsolo-cons-title">⬆⬆ Mettre en avant aujourd'hui</div>
-      <div class="bsolo-fam-grid" id="bsolo-up2"></div>
-      <div class="bsolo-cons-title" style="margin-top:10px">⬆ Avancer en rayon</div>
-      <div class="bsolo-fam-grid" id="bsolo-up1"></div>
-      <div class="bsolo-cons-title" style="margin-top:10px">⬇⬇ Période défavorable</div>
-      <div class="bsolo-fam-grid" id="bsolo-dn2"></div>
-    </div>
-    <div class="bsolo-prev">
-      <div class="bsolo-prev-title">📅 Prévisions 10 jours</div>
-      <div class="bsolo-prev-grid" id="bsolo-prev-grid"></div>
-    </div>
-    <div class="bsolo-back" onclick="quitterBoutiqueSolo()">← Retour au dashboard complet</div>
-  </div>
+      <div class="msg-texte">${m.texte.substring(0,90)}${m.texte.length>90?'...':''}</div>
+      <div class="msg-meta">${cTxt}<br>${m.debut||'—'} → ${m.fin||'—'} · Créé le ${m.cree||'—'}</div>
+      <div class="msg-actions">
+        <button class="msg-btn btn-tog" onclick="toggleActif(${m.id})">${m.actif?'Désactiver':'Réactiver'}</button>
+        <button class="msg-btn btn-del" onclick="supprimerMessage(${m.id})">Supprimer</button>
+      </div>
+    </div>`;
+  }).join('');
+}
 
+function showStatus(msg, type) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status status-' + type;
+  el.style.display = 'block';
+}
+
+document.getElementById('pwd').addEventListener('keypress', e => { if(e.key==='Enter') login(); });
+</script>
 </body>
 </html>
