@@ -23,8 +23,6 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
 .tab-btn.active{background:#0D2750;color:#fff}
 .view{display:none}
 .view.active{display:block}
-
-/* BARRE COMPARATIF */
 .comparatif-bar{background:#fff;border:1px solid #E5E9F2;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .cb-label{font-size:12px;font-weight:600;color:#0D2750;white-space:nowrap}
 .cb-group{display:flex;align-items:center;gap:8px}
@@ -92,10 +90,6 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
 .cmp-reg-temps{display:flex;gap:8px;align-items:center}
 .cmp-p-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px}
 .cmp-delta-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px}
-
-
-
-/* VUE BOUTIQUE INDIVIDUELLE (mode QR code) */
 .boutique-solo{max-width:480px;margin:0 auto;padding:16px}
 .bsolo-header{background:#0D2750;border-radius:12px;padding:18px 20px;margin-bottom:14px;text-align:center}
 .bsolo-nom{font-size:22px;font-weight:700;color:#fff;margin-bottom:4px}
@@ -121,20 +115,14 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
 .bsolo-prev-icon{font-size:16px;margin:3px 0}
 .bsolo-prev-temp{font-size:11px;font-weight:600;font-family:'DM Mono',monospace}
 .bsolo-prev-fam{font-size:8px;font-weight:600;padding:2px 4px;border-radius:3px;margin-top:3px}
-
-
 .bsolo-operation{background:linear-gradient(135deg,#FEF3C7,#FFF9E6);border:2px solid #FDE68A;border-radius:12px;padding:14px 16px;margin-bottom:14px;display:none}
 .bsolo-op-badge{font-size:10px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px}
 .bsolo-op-titre{font-size:15px;font-weight:600;color:#78350F;margin-bottom:4px}
 .bsolo-op-texte{font-size:13px;color:#92400E;line-height:1.5}
-
 .bsolo-conseil-ia{background:linear-gradient(135deg,#EFF6FF,#F0FDF4);border:1px solid #BFDBFE;border-radius:12px;padding:16px 18px;margin-bottom:14px;position:relative}
 .bsolo-conseil-ia::before{content:"✨ Conseil du jour";display:block;font-size:10px;font-weight:700;color:#1E4D9B;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px}
 .bsolo-conseil-text{font-size:13px;color:#1A1F36;line-height:1.6;font-style:italic}
-
 .bsolo-back{display:block;text-align:center;padding:10px;background:#F5F7FA;border-radius:8px;font-size:12px;color:#6B7280;text-decoration:none;border:1px solid #E5E9F2;cursor:pointer}
-
-/* PRÉVISIONNEL */
 .prev-layout{display:flex;flex-direction:column;gap:14px}
 .prev-header-bar{background:#fff;border:1px solid #E5E9F2;border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .prev-days-header{display:grid;gap:6px;margin-bottom:4px}
@@ -162,8 +150,6 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
 .day-header-date{font-size:10px;color:#9CA3AF;font-family:'DM Mono',monospace}
 .day-header-meteo{font-size:13px}
 .day-header-temp{font-size:10px;font-weight:600;font-family:'DM Mono',monospace}
-
-/* CARTE */
 .carte-layout{display:grid;grid-template-columns:1fr 320px;gap:14px;align-items:start}
 .carte-container{background:#fff;border:1px solid #E5E9F2;border-radius:12px;overflow:hidden;position:relative}
 .carte-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
@@ -185,12 +171,10 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
 .cli-right{display:flex;align-items:center;gap:4px}
 .cli-temp{font-size:11px;font-weight:600;font-family:'DM Mono',monospace}
 .cli-icon{font-size:11px}
-#carte-tooltip{position:fixed;background:#fff;border:1px solid #E5E9F2;border-radius:8px;padding:10px 14px;font-size:12px;pointer-events:none;display:none;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.12);min-width:150px}
 </style>
 </head>
 <body>
 <div class="shell">
-
 <div class="hdr">
   <div class="hdr-left">
     <div class="hdr-logo">IZ</div>
@@ -201,15 +185,12 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
   </div>
   <div class="live"><span class="dot"></span>Mis à jour · <span id="hdate">—</span></div>
 </div>
-
 <div class="tabs">
   <button class="tab-btn active" onclick="setTab('temps-reel')">🌤 Temps réel</button>
   <button class="tab-btn" onclick="setTab('comparatif')">📅 Comparatif</button>
   <button class="tab-btn" onclick="setTab('carte')">🗺 Carte France</button>
   <button class="tab-btn" onclick="setTab('previsionnel')">📈 Prévisionnel 10j</button>
 </div>
-
-<!-- VUE TEMPS RÉEL -->
 <div class="view active" id="view-temps-reel">
   <div class="legend">
     <span>Actions :</span>
@@ -221,8 +202,6 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
   </div>
   <div class="rgrid" id="rgrid-realtime"></div>
 </div>
-
-<!-- VUE COMPARATIF -->
 <div class="view" id="view-comparatif">
   <div class="comparatif-bar">
     <span class="cb-label">Comparer :</span>
@@ -248,9 +227,6 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
   </div>
   <div class="rgrid" id="rgrid-cmp"></div>
 </div>
-
-
-<!-- VUE PRÉVISIONNEL -->
 <div class="view" id="view-previsionnel">
   <div class="prev-layout">
     <div class="prev-header-bar">
@@ -261,8 +237,6 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
     <div id="prev-body"><div class="prev-loading">Cliquez sur l'onglet pour charger les prévisions...</div></div>
   </div>
 </div>
-
-<!-- VUE CARTE -->
 <div class="view" id="view-carte">
   <div class="carte-layout">
     <div class="carte-container" id="carte-container">
@@ -290,13 +264,39 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
     </div>
   </div>
 </div>
-
-
-
 </div>
+<div id="view-boutique-solo" style="display:none">
+  <div class="boutique-solo" id="bsolo-content">
+    <div class="bsolo-header">
+      <div class="bsolo-nom" id="bsolo-nom">—</div>
+      <div class="bsolo-region" id="bsolo-region">—</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;background:rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;width:fit-content;margin-left:auto;margin-right:auto">
+        <span style="width:7px;height:7px;border-radius:50%;background:#3DD68C;animation:blink 2s infinite;display:inline-block"></span>
+        <span style="font-size:10px;color:#7AA3D4;font-family:'DM Mono',monospace" id="bsolo-datetime">—</span>
+      </div>
+    </div>
+    <div class="bsolo-meteo-now">
+      <div class="bsolo-icon" id="bsolo-icon">⏳</div>
+      <div class="bsolo-temp" id="bsolo-temp">—</div>
+      <div class="bsolo-label" id="bsolo-meteo-label">Chargement météo...</div>
+      <div class="bsolo-pluie" id="bsolo-pluie"></div>
+    </div>
+    <div class="bsolo-operation" id="bsolo-operation"><div class="bsolo-op-badge">📢 Message de la Direction</div><div class="bsolo-op-titre" id="bsolo-op-titre"></div><div class="bsolo-op-texte" id="bsolo-op-texte"></div></div>
+    <div class="bsolo-conseil-ia"><div class="bsolo-conseil-text" id="bsolo-ia-text">Génération du conseil en cours...</div></div>
+    <div class="bsolo-conseils">
+      <div class="bsolo-cons-title">⬆⬆ Mettre en avant aujourd'hui</div>
+      <div class="bsolo-fam-grid" id="bsolo-up2"></div>
+      <div class="bsolo-cons-title" style="margin-top:10px">⬆ Avancer en rayon</div>
+      <div class="bsolo-fam-grid" id="bsolo-up1"></div>
+      <div class="bsolo-cons-title" style="margin-top:10px">⬇⬇ Période défavorable</div>
+      <div class="bsolo-fam-grid" id="bsolo-dn2"></div>
+    </div>
+    <div class="bsolo-prev">
+      <div class="bsolo-prev-title">📅 Prévisions 10 jours</div>
+      <div class="bsolo-prev-grid" id="bsolo-prev-grid"></div>
+    </div>
+  </div>
 </div>
-
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 const REGIONS = [
@@ -359,7 +359,6 @@ const REGIONS = [
     {nom:"STRASBOURG CV",lat:48.575,lon:7.755},{nom:"PONT STE MARIE",lat:48.317,lon:4.081},
   ]},
 ];
-
 const IMPL={
   "BERMUDA":["DN2","DN2","DN1","UP2","UP2","DN1"],"BLOUSON":["UP2","UP2","UP1","DN1","DN2","UP2"],
   "BOXERS":["UP2","UP1","NEU","UP1","UP2","NEU"],"CHAPEAU":["UP2","UP1","NEU","DN1","DN2","UP1"],
@@ -373,11 +372,16 @@ const IMPL={
   "TSHIRT":["DN2","DN1","UP1","UP2","UP2","DN1"],"VESTE CASUAL":["UP1","UP2","UP1","DN1","DN2","UP2"],
   "VESTE VILLE":["UP1","UP2","UP1","DN1","DN2","UP1"],
 };
-
 let currentTab='temps-reel';
 let cmpData=null;
 const realtimeCache={};
 const archiveCache={};
+function normNom(s){
+  return (s||'').toString().toUpperCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/['’\-_]/g,' ')
+    .replace(/\s+/g,' ').trim();
+}
 function tLabel(t,p){
   if(p>5)  return{icon:"🌧",label:"Pluie",cond:5};
   if(t<5)  return{icon:"❄️",label:"Grand froid",cond:0};
@@ -400,7 +404,6 @@ function tColorText(t,p){
   if(t<27) return"#CF6A1A";
   return"#993C1D";
 }
-
 async function fetchRealtime(lat,lon){
   const key=`${lat.toFixed(3)},${lon.toFixed(3)}`;
   if(realtimeCache[key]) return realtimeCache[key];
@@ -419,7 +422,6 @@ async function fetchRealtime(lat,lon){
     realtimeCache[key]=res;return res;
   }catch(e){return null;}
 }
-
 async function fetchArchive(lat,lon,d1,d2){
   const key=`${lat.toFixed(3)},${lon.toFixed(3)}_${d1}_${d2}`;
   if(archiveCache[key]) return archiveCache[key];
@@ -434,7 +436,6 @@ async function fetchArchive(lat,lon,d1,d2){
     archiveCache[key]={temp,pluie,nb:tmaxs.length};return archiveCache[key];
   }catch(e){return null;}
 }
-
 function setTab(tab){
   currentTab=tab;
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -445,13 +446,10 @@ function setTab(tab){
   else if(tab==='previsionnel') renderPrevisionnel();
   else if(tab==='carte'){
     renderCarte();
-    // Forcer Leaflet à recalculer la taille après affichage
     setTimeout(function(){if(leafletMap) leafletMap.invalidateSize();}, 200);
   }
   else if(tab==='comparatif'&&!cmpData) renderCmpVide();
 }
-
-// ── TEMPS RÉEL ────────────────────────────────────────────────────────
 function renderTempsReel(){
   const grid=document.getElementById('rgrid-realtime');
   if(grid.children.length > 0) return;
@@ -461,7 +459,6 @@ function renderTempsReel(){
     loadRealtimeRegion(reg);
   }
 }
-
 function makeCard(reg,mode){
   const card=document.createElement('div');card.className='rcard';card.id=`card-${mode}-${reg.id}`;
   card.innerHTML=`
@@ -481,7 +478,6 @@ function makeCard(reg,mode){
     </div>`;
   return card;
 }
-
 async function loadRealtimeRegion(reg){
   const results=await Promise.all(reg.boutiques.map(b=>fetchRealtime(b.lat,b.lon).then(m=>({nom:b.nom,m}))));
   let temps=[];
@@ -516,24 +512,17 @@ async function loadRealtimeRegion(reg){
     ${up2.length?`<div class="rc-ftitle">⬆⬆ A mettre en avant</div><div class="fpills">${up2.map(f=>`<span class="fpill fp-up2">${f}</span>`).join('')}${up1.map(f=>`<span class="fpill fp-up1">${f}</span>`).join('')}</div>`:''}
     ${dn2.length?`<div class="rc-ftitle" style="margin-top:6px">⬇⬇ Période défavorable</div><div class="fpills">${dn2.map(f=>`<span class="fpill fp-dn2">${f}</span>`).join('')}</div>`:''}`;
 }
-
-// ── COMPARATIF ────────────────────────────────────────────────────────
 function renderCmpVide(){
   document.getElementById('rgrid-cmp').innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9CA3AF;font-size:14px">Sélectionnez vos périodes et cliquez sur <strong>Comparer →</strong></div>`;
 }
-
 async function lancerComparatif(){
   const p1d=document.getElementById('date-p1').value,p1f=document.getElementById('date-p1-fin').value;
   const p2d=document.getElementById('date-p2').value,p2f=document.getElementById('date-p2-fin').value;
   if(!p1d||!p1f||!p2d||!p2f){alert('Veuillez remplir toutes les dates.');return;}
   const btn=document.getElementById('btn-comparer'),status=document.getElementById('cb-status');
   btn.disabled=true;btn.textContent='Chargement...';
-
   const allB=REGIONS.flatMap(r=>r.boutiques.map(b=>({...b,regId:r.id,regNom:r.nom})));
   const results={};
-
-  // ── OPTIMISATION 1 : dédupliquer par coordonnées ──────────────────
-  // Plusieurs boutiques dans la même ville → 1 seule requête
   const coordMap={};
   allB.forEach(b=>{
     const key=b.lat.toFixed(3)+','+b.lon.toFixed(3);
@@ -543,13 +532,9 @@ async function lancerComparatif(){
   const uniqueCoords=Object.values(coordMap);
   const totalRequetes=uniqueCoords.length;
   let done=0;
-
   status.textContent='Préparation... ('+totalRequetes+' villes à interroger)';
-
-  // ── OPTIMISATION 2 : batch de 15 requêtes en parallèle ───────────
   const BATCH=15;
   const coordEntries=uniqueCoords;
-
   for(let i=0;i<coordEntries.length;i+=BATCH){
     const batch=coordEntries.slice(i,i+BATCH);
     await Promise.all(batch.map(async entry=>{
@@ -557,7 +542,6 @@ async function lancerComparatif(){
         fetchArchive(entry.lat,entry.lon,p1d,p1f),
         fetchArchive(entry.lat,entry.lon,p2d,p2f)
       ]);
-      // Appliquer le résultat à toutes les boutiques de cette coordonnée
       entry.boutiques.forEach(b=>{
         if(!results[b.regId]) results[b.regId]={};
         results[b.regId][b.nom]={m1,m2};
@@ -567,15 +551,12 @@ async function lancerComparatif(){
       status.textContent=pct+'% — '+done+'/'+totalRequetes+' villes';
     }));
   }
-
   cmpData={results,p1d,p1f,p2d,p2f};
   btn.disabled=false;btn.textContent='Comparer →';
   status.textContent='✓ '+allB.length+' boutiques chargées';
   renderComparatif(cmpData);
 }
-
 function fmt(d){return d?d.split('-').reverse().join('/'):'—';}
-
 function renderComparatif({results,p1d,p1f,p2d,p2f}){
   const summaryGrid=document.getElementById('cmp-summary-grid');
   summaryGrid.innerHTML='';
@@ -623,13 +604,10 @@ function renderComparatif({results,p1d,p1f,p2d,p2f}){
     grid.appendChild(card);
   }
 }
-
-// ── CARTE FRANCE LEAFLET ────────────────────────────────────────────
 let carteRendered = false;
 let leafletMap = null;
 const carteMarkers = {};
 const carteMeteo = {};
-
 function tColorCarte(t, p) {
   if (p > 5)  return "#1E3A8A";
   if (t < 5)  return "#2563EB";
@@ -638,7 +616,6 @@ function tColorCarte(t, p) {
   if (t < 27) return "#EA580C";
   return "#DC2626";
 }
-
 function makeMarkerIcon(color, temp) {
   return L.divIcon({
     className: '',
@@ -647,7 +624,6 @@ function makeMarkerIcon(color, temp) {
     iconAnchor: [20, 10]
   });
 }
-
 function makeMarkerIconInit(regColor) {
   return L.divIcon({
     className: '',
@@ -656,30 +632,22 @@ function makeMarkerIconInit(regColor) {
     iconAnchor: [6, 6]
   });
 }
-
 const REG_COLORS_CARTE = {
   "Paris Ouest":"#1E4D9B","Paris Centre":"#2563EB","Bretagne":"#059669",
   "Sud Ouest":"#D97706","Rhône-Alpes":"#16A34A","Sud Est":"#DC2626","Nord":"#7C3AED"
 };
-
 async function renderCarte() {
   if (carteRendered) {
     if (leafletMap) setTimeout(() => leafletMap.invalidateSize(), 100);
     return;
   }
   carteRendered = true;
-
-  // Init carte Leaflet
   leafletMap = L.map('leaflet-map', {zoomControl: true}).setView([46.5, 2.5], 6);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     maxZoom: 18
   }).addTo(leafletMap);
-
-  // Récupérer toutes les boutiques
   const allBoutiques = REGIONS.flatMap(r => r.boutiques.map(b => ({...b, regNom: r.nom})));
-
-  // Placer les marqueurs initiaux
   allBoutiques.forEach((b, idx) => {
     const marker = L.marker([b.lat, b.lon], {
       icon: makeMarkerIconInit(REG_COLORS_CARTE[b.regNom] || '#888')
@@ -688,11 +656,8 @@ async function renderCarte() {
     marker.addTo(leafletMap);
     carteMarkers[idx] = marker;
   });
-
-  // Charger météo par batch
   const temps = []; let loaded = 0;
   const BATCH = 8;
-
   for (let i = 0; i < allBoutiques.length; i += BATCH) {
     const batch = allBoutiques.slice(i, i + BATCH);
     await Promise.all(batch.map(async (b, j) => {
@@ -701,12 +666,6 @@ async function renderCarte() {
       if (!data) data = await fetchRealtime(b.lat, b.lon);
       if (data) {
         const t = data.today.temp, p = data.today.pluie;
-
-  // Date et heure
-  const now = new Date();
-  const dateStr = String(now.getDate()).padStart(2,'0') + '/' + String(now.getMonth()+1).padStart(2,'0') + '/' + now.getFullYear();
-  const heureStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-  document.getElementById('bsolo-datetime').textContent = 'Mis à jour · ' + dateStr + ' ' + heureStr;
         carteMeteo[idx] = {temp: t, pluie: p};
         temps.push(t);
         const color = tColorCarte(t, p);
@@ -723,7 +682,6 @@ async function renderCarte() {
       loaded++;
       document.getElementById('cs-loaded').textContent = loaded;
     }));
-
     if (temps.length) {
       const avg = Math.round(temps.reduce((a,b)=>a+b,0)/temps.length*10)/10;
       const max = Math.max(...temps), min = Math.min(...temps);
@@ -734,8 +692,6 @@ async function renderCarte() {
       document.getElementById('cs-min').innerHTML = `${min}°C<br><span style="font-size:9px;color:#6B7280;font-weight:400">${allBoutiques[minIdx]?.nom||''}</span>`;
     }
   }
-
-  // Liste triée par température
   const sorted = [...allBoutiques.keys()].filter(i=>carteMeteo[i]).sort((a,b)=>carteMeteo[b].temp-carteMeteo[a].temp);
   document.getElementById('carte-liste-body').innerHTML = sorted.map(i => {
     const b = allBoutiques[i], d = carteMeteo[i];
@@ -750,74 +706,37 @@ async function renderCarte() {
     </div>`;
   }).join('');
 }
-
-
-
-
-// ── MESSAGES OPÉRATIONS ──────────────────────────────────────────────
 async function chargerMessageOperation(boutique, region) {
   try {
     const r = await fetch('https://api.jsonbin.io/v3/b/6a19a4daddf5aa59f774bd15/latest?t=' + Date.now(), {
-    headers: {
-      'X-Master-Key': '$2a$10$iefQE0ZnRVN8ODMIGRiU7.Is/gxB9q2paSQWMhWeeQ1ztQec0dK1q',
-      'X-Access-Key': '$2a$10$iefQE0ZnRVN8ODMIGRiU7.Is/gxB9q2paSQWMhWeeQ1ztQec0dK1q'
-    }
-  });
+      headers: {
+        'X-Master-Key': '$2a$10$iefQE0ZnRVN8ODMIGRiU7.Is/gxB9q2paSQWMhWeeQ1ztQec0dK1q'
+      }
+    });
     if (!r.ok) return;
     const data = await r.json();
+    const contenu = data.record || data;
     const today = new Date().toISOString().split('T')[0];
-    const msgs = (data.messages || []).filter(m => {
+    const bNorm = normNom(boutique);
+    const rNorm = normNom(region);
+    const msgs = (contenu.messages || []).filter(m => {
       if (!m.actif) return false;
       if (m.fin && m.fin < today) return false;
       if (m.debut && m.debut > today) return false;
       if (m.cible === 'toutes') return true;
       if (Array.isArray(m.cible)) {
-        // Vérifier boutique ou région
-        return m.cible.includes(boutique.toUpperCase()) ||
-               m.cible.includes(boutique) ||
-               m.cible.includes(region);
+        return m.cible.some(c => { const n = normNom(c); return n === bNorm || n === rNorm; });
       }
-      return m.cible === region;
+      return normNom(m.cible) === rNorm;
     });
     if (msgs.length > 0) {
       const msg = msgs[0];
-      document.getElementById('bsolo-op-titre').textContent = msg.emoji + ' ' + msg.titre;
-      document.getElementById('bsolo-op-texte').textContent = msg.texte;
+      document.getElementById('bsolo-op-titre').textContent = (msg.emoji ? msg.emoji + ' ' : '') + (msg.titre || '');
+      document.getElementById('bsolo-op-texte').textContent = msg.texte || '';
       document.getElementById('bsolo-operation').style.display = 'block';
     }
-  } catch(e) { /* Pas de message = pas d'affichage */ }
+  } catch(e) {}
 }
-
-// ── VUE BOUTIQUE SOLO (QR code) ──────────────────────────────────────
-function detectBoutiqueSolo() {
-  const params = new URLSearchParams(window.location.search);
-  const boutique = params.get('boutique');
-  if (!boutique) return;
-
-  // Trouver la boutique dans les données
-  let found = null, foundReg = null;
-  for (const reg of REGIONS) {
-    for (const b of reg.boutiques) {
-      if (b.nom.replace(/\s/g,'_').toUpperCase() === boutique.toUpperCase() ||
-          b.nom.toUpperCase() === boutique.replace(/_/g,' ').toUpperCase()) {
-        found = b; foundReg = reg; break;
-      }
-    }
-    if (found) break;
-  }
-  if (!found) return;
-
-  // Masquer le shell normal, afficher la vue solo
-  document.querySelector('.shell').style.display = 'none';
-  document.getElementById('view-boutique-solo').style.display = 'block';
-  document.getElementById('bsolo-nom').textContent = found.nom;
-  document.getElementById('bsolo-region').textContent = foundReg.nom + ' · ' + found.nom;
-  document.title = 'IZAC Météo · ' + found.nom;
-
-  loadBoutiqueSolo(found, foundReg);
-}
-
-
 function genererConseilIA(boutique, region, temp, pluie, label, up2Fams, dn2Fams, prevs) {
   var famUp = up2Fams.slice(0,3).join(', ');
   var demain = prevs[0];
@@ -829,7 +748,6 @@ function genererConseilIA(boutique, region, temp, pluie, label, up2Fams, dn2Fams
     else
       evolution = ' Changement prevu demain (' + demain.temp + 'C ' + tl1.icon + ') - anticipez des aujourd hui.';
   }
-
   var encs = [
     "Vous etes au top, bonne journee a toute l equipe ! 💪",
     "L equipe IZAC assure - belle journee a vous ! 🌟",
@@ -838,10 +756,8 @@ function genererConseilIA(boutique, region, temp, pluie, label, up2Fams, dn2Fams
     "Bonne energie a toute l equipe - belle journee ! 😊",
   ];
   var enc = encs[Math.floor(Math.random() * encs.length)];
-
   var intro = "Bonjour l equipe IZAC " + boutique + " ! 👋\n";
   var conseil = '';
-
   if (pluie > 5)
     conseil = intro + "🌧 Temps pluvieux aujourd hui. Les clients qui se deplacent ont une vraie intention d achat - c est le moment de les accueillir chaleureusement. Misez sur " + famUp + "." + evolution;
   else if (temp >= 27)
@@ -854,58 +770,41 @@ function genererConseilIA(boutique, region, temp, pluie, label, up2Fams, dn2Fams
     conseil = intro + "🧥 Temps frais aujourd hui (" + temp + "°C). Les clients cherchent du confort - " + famUp + " sont vos atouts du jour." + evolution;
   else
     conseil = intro + "❄️ Grand froid aujourd hui (" + temp + "°C). Une vraie opportunite pour " + famUp + " - vos clients en ont besoin !" + evolution;
-
   return conseil + "\n\nBelles ventes ! 🛍️ " + enc;
 }
-
-
 async function loadBoutiqueSolo(b, reg) {
   const data = await fetchRealtime(b.lat, b.lon);
   if (!data) return;
-
   const t = data.today.temp, p = data.today.pluie;
-
-  // Date et heure
   const now = new Date();
   const dateStr = String(now.getDate()).padStart(2,'0') + '/' + String(now.getMonth()+1).padStart(2,'0') + '/' + now.getFullYear();
   const heureStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
   document.getElementById('bsolo-datetime').textContent = 'Mis à jour · ' + dateStr + ' ' + heureStr;
   const tl = tLabel(t, p);
-
-  // Météo du jour
   document.getElementById('bsolo-icon').textContent = tl.icon;
   document.getElementById('bsolo-temp').textContent = t + '°C';
   document.getElementById('bsolo-temp').style.color = tColorText(t, p);
   document.getElementById('bsolo-meteo-label').textContent = tl.label;
   document.getElementById('bsolo-meteo-label').style.color = tColorText(t, p);
   document.getElementById('bsolo-pluie').textContent = p > 0 ? '💧 ' + p + 'mm de pluie' : '☀️ Pas de pluie';
-
-  // Conseil IA généré
   const up2Fams = Object.entries(IMPL).filter(([,c])=>c[tl.cond]==='UP2').map(([f])=>f);
   const dn2Fams = Object.entries(IMPL).filter(([,c])=>c[tl.cond]==='DN2').map(([f])=>f);
   const conseilText = genererConseilIA(b.nom, reg.nom, t, p, tl.label, up2Fams, dn2Fams, data.prevs);
   document.getElementById('bsolo-ia-text').innerHTML = conseilText.replace(/\n/g, '<br>');
   chargerMessageOperation(b.nom, reg.nom);
-
-  // Conseils implantation
   const cond = tl.cond;
   const up2 = Object.entries(IMPL).filter(([,c])=>c[cond]==='UP2').map(([f])=>f);
   const up1 = Object.entries(IMPL).filter(([,c])=>c[cond]==='UP1').map(([f])=>f);
   const dn2 = Object.entries(IMPL).filter(([,c])=>c[cond]==='DN2').map(([f])=>f);
-
   document.getElementById('bsolo-up2').innerHTML = up2.map(f=>
     `<div class="bsolo-fam bsolo-fam-up2">⬆⬆ ${f}</div>`).join('');
   document.getElementById('bsolo-up1').innerHTML = up1.map(f=>
     `<div class="bsolo-fam bsolo-fam-up1">⬆ ${f}</div>`).join('');
   document.getElementById('bsolo-dn2').innerHTML = dn2.map(f=>
     `<div class="bsolo-fam bsolo-fam-dn2">⬇⬇ ${f}</div>`).join('');
-
-  // Prévisions 10 jours
   const prevGrid = document.getElementById('bsolo-prev-grid');
   const days = [{temp:t, pluie:p, label:'Auj.'}, ...data.prevs];
   prevGrid.style.gridTemplateColumns = `repeat(${Math.min(days.length,5)},1fr)`;
-
-  // 2 rangées de 5
   let prevHtml = '';
   days.slice(0,10).forEach((d, i) => {
     const ptl = tLabel(d.temp, d.pluie);
@@ -925,16 +824,11 @@ async function loadBoutiqueSolo(b, reg) {
   prevGrid.innerHTML = prevHtml;
   prevGrid.style.gridTemplateColumns = 'repeat(5,1fr)';
 }
-
 function quitterBoutiqueSolo() {
   document.getElementById('view-boutique-solo').style.display = 'none';
   document.querySelector('.shell').style.display = 'block';
 }
-
-
-// ── PRÉVISIONNEL 7 JOURS ─────────────────────────────────────────────
 let prevRendered = false;
-
 const CONSEIL = {
   UP2: {label:"Mettre en avant",  cls:"pc-up2"},
   UP1: {label:"Avancer en rayon", cls:"pc-up1"},
@@ -942,26 +836,20 @@ const CONSEIL = {
   DN1: {label:"Réduire",          cls:"pc-dn1"},
   DN2: {label:"Période défavorable", cls:"pc-dn2"},
 };
-
-// Top familles par condition météo
 const TOP_FAMILLES_COND = {
-  0: ["PULL","BLOUSON","VESTE VILLE","GILET","ECHARPE"],        // Grand froid
-  1: ["PULL","BLOUSON","VESTE CASUAL","GILET","JEANS"],         // Froid
-  2: ["CHEMISE VILLE","PANTALON CASUAL","CHAUSSURE VILLE","POLO","JEANS"], // Frais
-  3: ["POLO","TSHIRT","PANTALON CASUAL","CHAUSSURE CASUAL","BERMUDA"],     // Chaud
-  4: ["TSHIRT","BERMUDA","POLO","MAILLOT DE BAIN","CHAUSSURE CASUAL"],     // Très chaud
-  5: ["BLOUSON","VESTE CASUAL","JEANS","PANTALON VILLE","CHAUSSURE VILLE"],// Pluie
+  0: ["PULL","BLOUSON","VESTE VILLE","GILET","ECHARPE"],
+  1: ["PULL","BLOUSON","VESTE CASUAL","GILET","JEANS"],
+  2: ["CHEMISE VILLE","PANTALON CASUAL","CHAUSSURE VILLE","POLO","JEANS"],
+  3: ["POLO","TSHIRT","PANTALON CASUAL","CHAUSSURE CASUAL","BERMUDA"],
+  4: ["TSHIRT","BERMUDA","POLO","MAILLOT DE BAIN","CHAUSSURE CASUAL"],
+  5: ["BLOUSON","VESTE CASUAL","JEANS","PANTALON VILLE","CHAUSSURE VILLE"],
 };
-
 async function renderPrevisionnel() {
   if (prevRendered) return;
   prevRendered = true;
-
   const status = document.getElementById('prev-status');
   const body   = document.getElementById('prev-body');
   body.innerHTML = '<div class="prev-loading">Chargement des prévisions météo...</div>';
-
-  // Dates J+0 à J+6
   const jours = [];
   for (let i = 0; i < 10; i++) {
     const d = new Date(); d.setDate(d.getDate() + i);
@@ -970,14 +858,10 @@ async function renderPrevisionnel() {
     const dayName = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'][d.getDay()];
     jours.push({label, dateStr, dayName, date: d});
   }
-
-  // Récupérer prévisions pour toutes les boutiques (cache)
   const allB = REGIONS.flatMap(r => r.boutiques.map(b => ({...b, regNom:r.nom, regId:r.id})));
   let loaded = 0;
   const prevData = {};
-
   const BATCH = 15;
-  // Dédupliquer par coordonnées
   const coordMap = {};
   allB.forEach(b => {
     const k = b.lat.toFixed(3)+','+b.lon.toFixed(3);
@@ -985,7 +869,6 @@ async function renderPrevisionnel() {
     coordMap[k].boutiques.push(b);
   });
   const uniqueC = Object.values(coordMap);
-
   for (let i = 0; i < uniqueC.length; i += BATCH) {
     await Promise.all(uniqueC.slice(i, i+BATCH).map(async entry => {
       let data = realtimeCache[entry.lat.toFixed(3)+','+entry.lon.toFixed(3)];
@@ -997,11 +880,7 @@ async function renderPrevisionnel() {
       status.textContent = Math.round(loaded/uniqueC.length*100) + '%';
     }));
   }
-
   status.textContent = '✓ ' + allB.length + ' boutiques';
-
-  // Calculer la météo par région et par jour (moyenne des prévisions boutiques)
-  // pour l'en-tête des colonnes
   const regMeteo = {};
   REGIONS.forEach(reg => {
     regMeteo[reg.id] = jours.map((j, ji) => {
@@ -1022,11 +901,8 @@ async function renderPrevisionnel() {
       return {temp:avg, pluie:avgP};
     });
   });
-
-  // Rendu HTML
   let html = '';
   for (const reg of REGIONS) {
-    // En-têtes jours pour cette région
     const joursHeaderHtml = jours.map((j, ji) => {
       const rm = regMeteo[reg.id][ji];
       const tl = rm && rm.temp !== null ? tLabel(rm.temp, rm.pluie) : {icon:'—', label:'—', cond:2};
@@ -1039,18 +915,14 @@ async function renderPrevisionnel() {
         </div>
       </th>`;
     }).join('');
-
-    // Lignes boutiques
     const boutsHtml = reg.boutiques.map(b => {
       const bData = prevData[reg.id+'_'+b.nom];
-
       const cellsHtml = jours.map((j, ji) => {
         if (!bData) return '<td><div class="prev-cell"><span style="color:#9CA3AF;font-size:10px">—</span></div></td>';
         const p = ji === 0 ? bData.today : bData.prevs[ji-1];
         if (!p) return '<td><div class="prev-cell"><span style="color:#9CA3AF;font-size:10px">—</span></div></td>';
         const tl = tLabel(p.temp, p.pluie);
         const cond = tl.cond;
-        // Top famille recommandée
         const topFam = TOP_FAMILLES_COND[cond][0];
         const topCode = IMPL[topFam] ? IMPL[topFam][cond] : 'NEU';
         const cons = CONSEIL[topCode];
@@ -1062,13 +934,11 @@ async function renderPrevisionnel() {
           </div>
         </td>`;
       }).join('');
-
       return `<tr>
         <td class="bout-cell">${b.nom}</td>
         ${cellsHtml}
       </tr>`;
     }).join('');
-
     html += `
       <div class="prev-region-block">
         <div class="prev-region-title">
@@ -1088,12 +958,8 @@ async function renderPrevisionnel() {
         </div>
       </div>`;
   }
-
   body.innerHTML = html;
 }
-
-
-// ── INIT ─────────────────────────────────────────────────────────────
 function init(){
   const now=new Date();
   document.getElementById('hdate').textContent=
@@ -1107,21 +973,14 @@ function init(){
   renderTempsReel();
 }
 init();
-
-// Détection QR code après chargement complet du DOM
 window.addEventListener('load', function() {
   const params = new URLSearchParams(window.location.search);
   const boutique = params.get('boutique');
   if (boutique) {
-    // Chercher la boutique
     let found = null, foundReg = null;
     for (const reg of REGIONS) {
       for (const b of reg.boutiques) {
-        const nomClean = b.nom.replace(/[\s']/g,'_').toUpperCase();
-        const paramClean = boutique.toUpperCase();
-        if (nomClean === paramClean || b.nom.toUpperCase() === boutique.replace(/_/g,' ').toUpperCase()) {
-          found = b; foundReg = reg; break;
-        }
+        if (normNom(b.nom) === normNom(boutique)) { found = b; foundReg = reg; break; }
       }
       if (found) break;
     }
@@ -1129,7 +988,6 @@ window.addEventListener('load', function() {
       document.body.innerHTML = '<div style="padding:20px;font-family:sans-serif;color:#0D2750"><h2>Boutique non trouvée</h2><p>Paramètre : ' + boutique + '</p></div>';
       return;
     }
-    // Masquer le shell, afficher la vue solo
     document.querySelector('.shell').style.display = 'none';
     const soloView = document.getElementById('view-boutique-solo');
     soloView.style.display = 'block';
@@ -1140,40 +998,5 @@ window.addEventListener('load', function() {
   }
 });
 </script>
-
-<!-- VUE BOUTIQUE SOLO (mode QR code) -->
-<div id="view-boutique-solo" style="display:none">
-  <div class="boutique-solo" id="bsolo-content">
-    <div class="bsolo-header">
-      <div class="bsolo-nom" id="bsolo-nom">—</div>
-      <div class="bsolo-region" id="bsolo-region">—</div>
-      <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;background:rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;width:fit-content;margin-left:auto;margin-right:auto">
-        <span style="width:7px;height:7px;border-radius:50%;background:#3DD68C;animation:blink 2s infinite;display:inline-block"></span>
-        <span style="font-size:10px;color:#7AA3D4;font-family:'DM Mono',monospace" id="bsolo-datetime">—</span>
-      </div>
-    </div>
-    <div class="bsolo-meteo-now">
-      <div class="bsolo-icon" id="bsolo-icon">⏳</div>
-      <div class="bsolo-temp" id="bsolo-temp">—</div>
-      <div class="bsolo-label" id="bsolo-meteo-label">Chargement météo...</div>
-      <div class="bsolo-pluie" id="bsolo-pluie"></div>
-    </div>
-    <div class="bsolo-operation" id="bsolo-operation"><div class="bsolo-op-badge">📢 Message de la Direction</div><div class="bsolo-op-titre" id="bsolo-op-titre"></div><div class="bsolo-op-texte" id="bsolo-op-texte"></div></div>
-    <div class="bsolo-conseil-ia"><div class="bsolo-conseil-text" id="bsolo-ia-text">Génération du conseil en cours...</div></div>
-    <div class="bsolo-conseils">
-      <div class="bsolo-cons-title">⬆⬆ Mettre en avant aujourd'hui</div>
-      <div class="bsolo-fam-grid" id="bsolo-up2"></div>
-      <div class="bsolo-cons-title" style="margin-top:10px">⬆ Avancer en rayon</div>
-      <div class="bsolo-fam-grid" id="bsolo-up1"></div>
-      <div class="bsolo-cons-title" style="margin-top:10px">⬇⬇ Période défavorable</div>
-      <div class="bsolo-fam-grid" id="bsolo-dn2"></div>
-    </div>
-    <div class="bsolo-prev">
-      <div class="bsolo-prev-title">📅 Prévisions 10 jours</div>
-      <div class="bsolo-prev-grid" id="bsolo-prev-grid"></div>
-    </div>
-    
-  </div>
-
 </body>
 </html>
