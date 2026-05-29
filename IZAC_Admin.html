@@ -8,20 +8,16 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-height:100vh}
-
-/* LOGIN */
 .login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh}
-.login-box{background:#fff;border:1px solid #E5E9F2;border-radius:16px;padding:40px;width:360px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
+.login-box{background:#fff;border:1px solid #E5E9F2;border-radius:16px;padding:40px;width:380px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
 .login-logo{width:56px;height:56px;background:#0D2750;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;margin:0 auto 16px}
 .login-title{font-size:18px;font-weight:600;color:#0D2750;margin-bottom:6px}
 .login-sub{font-size:12px;color:#6B7280;margin-bottom:24px}
-.login-input{width:100%;padding:10px 14px;border:1px solid #E5E9F2;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;margin-bottom:12px;background:#F8F9FC}
-.login-input:focus{outline:none;border-color:#0D2750}
-.login-btn{width:100%;padding:11px;background:#0D2750;color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
-.login-btn:hover{background:#1E4D9B}
+.form-input{width:100%;padding:10px 14px;border:1px solid #E5E9F2;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;margin-bottom:12px;background:#F8F9FC}
+.form-input:focus{outline:none;border-color:#0D2750;background:#fff}
+.btn-primary{width:100%;padding:11px;background:#0D2750;color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+.btn-primary:hover{background:#1E4D9B}
 .login-err{font-size:12px;color:#DC2626;margin-top:8px;display:none}
-
-/* ADMIN */
 .admin-wrap{display:none;max-width:1100px;margin:0 auto;padding:20px}
 .hdr{background:#0D2750;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-radius:10px;margin-bottom:20px}
 .hdr-left{display:flex;align-items:center;gap:12px}
@@ -29,115 +25,101 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
 .hdr-title{color:#fff;font-size:15px;font-weight:600}
 .hdr-sub{color:#7AA3D4;font-size:11px;margin-top:1px}
 .logout-btn{padding:6px 14px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif}
-
-.grid{display:grid;grid-template-columns:1fr 380px;gap:16px;align-items:start}
-
-/* FORMULAIRE */
+.grid{display:grid;grid-template-columns:1fr 360px;gap:16px;align-items:start}
 .card{background:#fff;border:1px solid #E5E9F2;border-radius:12px;padding:20px;margin-bottom:16px}
-.card-title{font-size:13px;font-weight:600;color:#0D2750;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #F0F2F7;display:flex;align-items:center;gap:8px}
-.form-row{margin-bottom:14px}
+.card-title{font-size:13px;font-weight:600;color:#0D2750;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #F0F2F7}
 .form-label{font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block}
-.form-input{width:100%;padding:9px 12px;border:1px solid #E5E9F2;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;background:#F8F9FC;color:#1A1F36}
-.form-input:focus{outline:none;border-color:#0D2750;background:#fff}
+.form-row{margin-bottom:14px}
 .form-textarea{width:100%;padding:9px 12px;border:1px solid #E5E9F2;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;background:#F8F9FC;color:#1A1F36;resize:vertical;min-height:80px}
 .form-textarea:focus{outline:none;border-color:#0D2750;background:#fff}
-.emoji-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
-.emoji-btn{width:36px;height:36px;border:1.5px solid #E5E9F2;border-radius:8px;background:#F8F9FC;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.1s}
-.emoji-btn:hover,.emoji-btn.selected{border-color:#0D2750;background:#EFF6FF}
+.emoji-grid{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.emoji-btn{width:36px;height:36px;border:1.5px solid #E5E9F2;border-radius:8px;background:#F8F9FC;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.emoji-btn.selected{border-color:#0D2750;background:#EFF6FF}
 .date-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.send-btn{width:100%;padding:12px;background:#0D2750;color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:background 0.15s;margin-top:4px}
+.send-btn{width:100%;padding:13px;background:#0D2750;color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px}
 .send-btn:hover{background:#1E4D9B}
 .send-btn:disabled{background:#9CA3AF;cursor:not-allowed}
-
-/* CIBLAGE */
-.cible-tabs{display:flex;gap:4px;margin-bottom:12px;background:#F5F7FA;border-radius:8px;padding:3px}
-.cible-tab{flex:1;padding:7px;border:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;color:#6B7280;background:transparent;transition:all 0.15s}
+.cible-tabs{display:flex;gap:3px;margin-bottom:12px;background:#F5F7FA;border-radius:8px;padding:3px}
+.cible-tab{flex:1;padding:7px;border:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;color:#6B7280;background:transparent}
 .cible-tab.active{background:#fff;color:#0D2750;font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
 .cible-content{display:none}
 .cible-content.active{display:block}
-.region-btn{display:flex;align-items:center;justify-content:space-between;width:100%;padding:8px 12px;border:1.5px solid #E5E9F2;border-radius:7px;background:#F8F9FC;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;margin-bottom:6px;color:#1A1F36;transition:all 0.1s}
+.region-btn{display:flex;align-items:center;justify-content:space-between;width:100%;padding:8px 12px;border:1.5px solid #E5E9F2;border-radius:7px;background:#F8F9FC;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;margin-bottom:6px;color:#1A1F36}
 .region-btn.selected{border-color:#0D2750;background:#EFF6FF;color:#0D2750}
-.region-btn .reg-count{font-size:10px;color:#9CA3AF;font-family:'DM Mono',monospace}
-.mag-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:8px}
-.mag-btn{padding:6px 8px;border:1px solid #E5E9F2;border-radius:6px;background:#F8F9FC;font-size:10px;font-weight:500;cursor:pointer;text-align:left;color:#1A1F36;transition:all 0.1s}
+.mag-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.mag-btn{padding:6px 8px;border:1px solid #E5E9F2;border-radius:6px;background:#F8F9FC;font-size:10px;font-weight:500;cursor:pointer;text-align:left;color:#1A1F36}
 .mag-btn.selected{border-color:#0D2750;background:#EFF6FF;color:#0D2750;font-weight:600}
-.selection-count{font-size:11px;color:#0D2750;font-weight:600;margin-top:8px;padding:6px 10px;background:#EFF6FF;border-radius:6px;display:none}
-.select-all-btn{font-size:11px;color:#1E4D9B;cursor:pointer;text-decoration:underline;margin-bottom:8px;display:inline-block}
-
-/* MESSAGES ACTIFS */
-.msg-card{border:1px solid #E5E9F2;border-radius:8px;padding:12px 14px;margin-bottom:8px;background:#fff}
-.msg-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-.msg-title{font-size:13px;font-weight:600;color:#1A1F36;display:flex;align-items:center;gap:6px}
-.msg-badge{font-size:9px;font-weight:600;padding:2px 7px;border-radius:10px}
-.badge-actif{background:#EAF3DE;color:#27500A}
-.badge-expire{background:#F1EFE8;color:#444441}
-.badge-programme{background:#E6F1FB;color:#0C447C}
-.msg-texte{font-size:12px;color:#6B7280;margin-bottom:6px;line-height:1.4}
-.msg-meta{font-size:10px;color:#9CA3AF;font-family:'DM Mono',monospace}
-.msg-actions{display:flex;gap:6px;margin-top:8px}
-.msg-btn{padding:4px 10px;border-radius:5px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid;font-family:'DM Sans',sans-serif}
-.btn-delete{background:#FCEBEB;color:#791F1F;border-color:#F7C1C1}
-.btn-toggle{background:#EAF3DE;color:#27500A;border-color:#C0DD97}
-.no-msg{text-align:center;padding:24px;color:#9CA3AF;font-size:13px}
-
-/* PREVIEW */
+.sel-count{font-size:11px;color:#0D2750;font-weight:600;margin-top:8px;padding:6px 10px;background:#EFF6FF;border-radius:6px;display:none}
 .preview-box{background:linear-gradient(135deg,#EFF6FF,#F0FDF4);border:1px solid #BFDBFE;border-radius:10px;padding:14px;margin-top:12px}
 .preview-title{font-size:10px;font-weight:600;color:#1E4D9B;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px}
-.preview-text{font-size:13px;color:#1A1F36;line-height:1.6;font-style:italic}
-
-/* STATUS */
-.status-bar{padding:10px 14px;border-radius:8px;font-size:12px;font-weight:500;margin-top:12px;display:none}
+.preview-text{font-size:13px;color:#1A1F36;line-height:1.6}
+.msg-card{border:1px solid #E5E9F2;border-radius:8px;padding:12px 14px;margin-bottom:8px}
+.msg-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.msg-title-txt{font-size:13px;font-weight:600;color:#1A1F36}
+.badge{font-size:9px;font-weight:600;padding:2px 7px;border-radius:10px}
+.badge-actif{background:#EAF3DE;color:#27500A}
+.badge-off{background:#F1EFE8;color:#444441}
+.badge-prog{background:#E6F1FB;color:#0C447C}
+.msg-texte{font-size:11px;color:#6B7280;margin-bottom:4px;line-height:1.4}
+.msg-meta{font-size:10px;color:#9CA3AF;font-family:'DM Mono',monospace}
+.msg-actions{display:flex;gap:6px;margin-top:8px}
+.msg-btn{padding:4px 10px;border-radius:5px;font-size:11px;cursor:pointer;border:1px solid;font-family:'DM Sans',sans-serif;font-weight:500}
+.btn-del{background:#FCEBEB;color:#791F1F;border-color:#F7C1C1}
+.btn-tog{background:#EAF3DE;color:#27500A;border-color:#C0DD97}
+.no-msg{text-align:center;padding:24px;color:#9CA3AF;font-size:12px}
+.status{padding:10px 14px;border-radius:8px;font-size:12px;font-weight:500;margin-top:10px;display:none;text-align:center}
 .status-ok{background:#EAF3DE;color:#27500A;border:1px solid #C0DD97}
 .status-err{background:#FCEBEB;color:#791F1F;border:1px solid #F7C1C1}
+.status-loading{background:#E6F1FB;color:#0C447C;border:1px solid #B5D4F4}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top:2px solid #fff;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.exemple-item{padding:8px 10px;background:#F8F9FC;border:1px solid #E5E9F2;border-radius:7px;cursor:pointer;font-size:12px;color:#1A1F36;margin-bottom:5px;transition:background 0.1s}
+.exemple-item:hover{background:#EFF6FF;border-color:#B5D4F4}
+.select-all{font-size:11px;color:#1E4D9B;cursor:pointer;text-decoration:underline;margin-bottom:8px;display:inline-block}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div class="login-wrap" id="login-wrap">
   <div class="login-box">
     <div class="login-logo">IZ</div>
     <div class="login-title">IZAC Admin</div>
-    <div class="login-sub">Tableau de pilotage des messages boutiques</div>
-    <input type="password" class="login-input" id="pwd-input" placeholder="Mot de passe" onkeypress="if(event.key==='Enter')login()">
-    <button class="login-btn" onclick="login()">Accéder →</button>
-    <div class="login-err" id="login-err">Mot de passe incorrect</div>
+    <div class="login-sub">Pilotage des messages boutiques en temps réel</div>
+    <input type="password" class="form-input" id="pwd" placeholder="Mot de passe admin" onkeypress="if(event.key==='Enter')login()">
+    <input type="password" class="form-input" id="gh-token" placeholder="Clé API JSONBin ($2a$...)" onkeypress="if(event.key==='Enter')login()">
+    <button class="btn-primary" onclick="login()">Accéder →</button>
+    <div class="login-err" id="login-err">Mot de passe ou clé API incorrecte</div>
   </div>
 </div>
 
-<!-- ADMIN -->
 <div class="admin-wrap" id="admin-wrap">
   <div class="hdr">
     <div class="hdr-left">
       <div class="hdr-logo">IZ</div>
       <div>
         <div class="hdr-title">IZAC — Pilotage Messages Boutiques</div>
-        <div class="hdr-sub">Envoyez des messages ciblés sur les QR codes de vos boutiques</div>
+        <div class="hdr-sub" id="hdr-status">Connecté · messages.json synchronisé avec GitHub</div>
       </div>
     </div>
     <button class="logout-btn" onclick="logout()">Déconnexion</button>
   </div>
 
   <div class="grid">
-    <!-- COLONNE GAUCHE : Formulaire -->
     <div>
-      <!-- Rédaction -->
+      <!-- MESSAGE -->
       <div class="card">
-        <div class="card-title">✍️ Rédiger un message</div>
-
+        <div class="card-title">✍️ Nouveau message</div>
         <div class="form-row">
           <label class="form-label">Titre de l'opération</label>
-          <input type="text" class="form-input" id="msg-titre" placeholder="Ex: Fête des Pères, Soldes d'été, Opération Rentrée...">
+          <input type="text" class="form-input" id="msg-titre" placeholder="Ex: Fête des Pères, Soldes d'été..." oninput="updatePreview()">
         </div>
-
         <div class="form-row">
           <label class="form-label">Message pour les équipes</label>
-          <textarea class="form-textarea" id="msg-texte" placeholder="Ex: Ce week-end, valorisez la Maroquinerie et les Accessoires. Objectif : profiter de l'affluence du samedi !"></textarea>
+          <textarea class="form-textarea" id="msg-texte" placeholder="Votre message..." oninput="updatePreview()"></textarea>
         </div>
-
         <div class="form-row">
           <label class="form-label">Emoji</label>
-          <div class="emoji-grid" id="emoji-grid">
+          <div class="emoji-grid">
             <button class="emoji-btn selected" onclick="selectEmoji(this,'🎁')">🎁</button>
             <button class="emoji-btn" onclick="selectEmoji(this,'🎯')">🎯</button>
             <button class="emoji-btn" onclick="selectEmoji(this,'⚡')">⚡</button>
@@ -145,79 +127,70 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
             <button class="emoji-btn" onclick="selectEmoji(this,'💪')">💪</button>
             <button class="emoji-btn" onclick="selectEmoji(this,'🌟')">🌟</button>
             <button class="emoji-btn" onclick="selectEmoji(this,'📢')">📢</button>
-            <button class="emoji-btn" onclick="selectEmoji(this,'👀')">👀</button>
-            <button class="emoji-btn" onclick="selectEmoji(this,'💥')">💥</button>
             <button class="emoji-btn" onclick="selectEmoji(this,'🛍️')">🛍️</button>
+            <button class="emoji-btn" onclick="selectEmoji(this,'💥')">💥</button>
+            <button class="emoji-btn" onclick="selectEmoji(this,'👀')">👀</button>
           </div>
         </div>
-
         <div class="form-row">
           <label class="form-label">Période d'affichage</label>
           <div class="date-row">
-            <div>
-              <label class="form-label" style="font-size:10px">Du</label>
-              <input type="date" class="form-input" id="msg-debut">
-            </div>
-            <div>
-              <label class="form-label" style="font-size:10px">Au</label>
-              <input type="date" class="form-input" id="msg-fin">
-            </div>
+            <div><label class="form-label" style="font-size:10px">Du</label><input type="date" class="form-input" id="msg-debut"></div>
+            <div><label class="form-label" style="font-size:10px">Au</label><input type="date" class="form-input" id="msg-fin"></div>
           </div>
         </div>
-
-        <!-- Aperçu -->
         <div class="preview-box">
-          <div class="preview-title">👁 Aperçu du message</div>
-          <div class="preview-text" id="preview-text">Remplissez le formulaire pour voir l'aperçu...</div>
+          <div class="preview-title">👁 Aperçu</div>
+          <div id="preview-text" class="preview-text" style="font-style:italic;color:#9CA3AF">Remplissez le formulaire...</div>
         </div>
       </div>
 
-      <!-- Ciblage -->
+      <!-- CIBLAGE -->
       <div class="card">
         <div class="card-title">🎯 Cibler les boutiques</div>
         <div class="cible-tabs">
-          <button class="cible-tab active" onclick="setCibleTab('toutes',this)">Toutes les boutiques</button>
-          <button class="cible-tab" onclick="setCibleTab('regions',this)">Par région</button>
-          <button class="cible-tab" onclick="setCibleTab('boutiques',this)">Boutiques précises</button>
+          <button class="cible-tab active" onclick="setCible('toutes',this)">📡 Toutes</button>
+          <button class="cible-tab" onclick="setCible('regions',this)">🗺 Par région</button>
+          <button class="cible-tab" onclick="setCible('boutiques',this)">🏪 Précises</button>
         </div>
-
         <div class="cible-content active" id="cible-toutes">
-          <div style="text-align:center;padding:16px;color:#6B7280;font-size:13px">
-            📡 Le message sera envoyé à <strong>toutes les 84 boutiques</strong> du réseau IZAC
+          <div style="text-align:center;padding:16px;color:#6B7280;font-size:13px;background:#F8F9FC;border-radius:8px">
+            📡 Message envoyé aux <strong>84 boutiques</strong> du réseau
           </div>
         </div>
-
-        <div class="cible-content" id="cible-regions">
-          <div id="regions-list"></div>
+        <div class="cible-content" id="cible-regions" style="display:none">
+          <div id="reg-list"></div>
         </div>
-
-        <div class="cible-content" id="cible-boutiques">
-          <span class="select-all-btn" onclick="selectAllMags()">Tout sélectionner / Tout désélectionner</span>
-          <div class="mag-grid" id="mags-list"></div>
-          <div class="selection-count" id="selection-count"></div>
+        <div class="cible-content" id="cible-boutiques" style="display:none">
+          <span class="select-all" onclick="selectAll()">Tout sélectionner / Désélectionner</span>
+          <div class="mag-grid" id="mag-list"></div>
+          <div class="sel-count" id="sel-count"></div>
         </div>
       </div>
 
-      <button class="send-btn" onclick="envoyerMessage()" id="send-btn">📤 Envoyer le message</button>
-      <div class="status-bar" id="status-bar"></div>
+      <button class="send-btn" id="send-btn" onclick="envoyerMessage()">
+        <span id="send-icon">📤</span> <span id="send-txt">Envoyer le message</span>
+      </button>
+      <div class="status" id="status"></div>
     </div>
 
-    <!-- COLONNE DROITE : Messages actifs -->
+    <!-- DROITE -->
     <div>
+      <!-- MESSAGES ACTIFS -->
       <div class="card">
-        <div class="card-title">📬 Messages actifs <span id="msg-count" style="font-size:11px;color:#9CA3AF;font-weight:400"></span></div>
-        <div id="messages-list"><div class="no-msg">Aucun message actif</div></div>
+        <div class="card-title">📬 Messages actifs <span id="msg-count" style="font-size:11px;color:#9CA3AF"></span></div>
+        <div id="msg-list"><div class="no-msg">Chargement...</div></div>
       </div>
 
+      <!-- EXEMPLES -->
       <div class="card" style="background:#F8F9FC">
-        <div class="card-title">💡 Exemples d'opérations</div>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          <div onclick="remplirExemple('Fête des Pères','Valorisez la Maroquinerie, les Ceintures et Boutons de manchette. Beau potentiel ce week-end !','🎁')" style="padding:8px 10px;background:#fff;border:1px solid #E5E9F2;border-radius:7px;cursor:pointer;font-size:12px;color:#1A1F36;transition:background 0.1s" onmouseover="this.style.background='#EFF6FF'" onmouseout="this.style.background='#fff'">🎁 Fête des Pères</div>
-          <div onclick="remplirExemple('Soldes d\\'été','Les soldes commencent ! Maximisez la visibilité des collections été en façade. C\\'est le moment !','🔥')" style="padding:8px 10px;background:#fff;border:1px solid #E5E9F2;border-radius:7px;cursor:pointer;font-size:12px;color:#1A1F36;transition:background 0.1s" onmouseover="this.style.background='#EFF6FF'" onmouseout="this.style.background='#fff'">🔥 Soldes d'été</div>
-          <div onclick="remplirExemple('Opération Rentrée','La rentrée approche ! Mettez en avant les Costumes, Chemises Ville et Pantalons Ville. Clientèle CSP+ en forte demande.','🎯')" style="padding:8px 10px;background:#fff;border:1px solid #E5E9F2;border-radius:7px;cursor:pointer;font-size:12px;color:#1A1F36;transition:background 0.1s" onmouseover="this.style.background='#EFF6FF'" onmouseout="this.style.background='#fff'">🎯 Opération Rentrée</div>
-          <div onclick="remplirExemple('Black Friday','Black Friday ce week-end — trafic maximal attendu ! Toutes les familles en rayon, accueil renforcé, conseillers disponibles.','⚡')" style="padding:8px 10px;background:#fff;border:1px solid #E5E9F2;border-radius:7px;cursor:pointer;font-size:12px;color:#1A1F36;transition:background 0.1s" onmouseover="this.style.background='#EFF6FF'" onmouseout="this.style.background='#fff'">⚡ Black Friday</div>
-          <div onclick="remplirExemple('Inventaire','Inventaire prévu cette semaine. Pensez à bien vérifier vos stocks et signaler les manquants.','📢')" style="padding:8px 10px;background:#fff;border:1px solid #E5E9F2;border-radius:7px;cursor:pointer;font-size:12px;color:#1A1F36;transition:background 0.1s" onmouseover="this.style.background='#EFF6FF'" onmouseout="this.style.background='#fff'">📢 Inventaire</div>
-        </div>
+        <div class="card-title">💡 Modèles rapides</div>
+        <div class="exemple-item" onclick="remplir('Fête des Pères','Valorisez la Maroquinerie, les Ceintures et Boutons de manchette ce week-end !','🎁')">🎁 Fête des Pères</div>
+        <div class="exemple-item" onclick="remplir('Soldes d\\'été','Les soldes commencent ! Maximisez la visibilité des collections été en façade. C\\'est le moment !','🔥')">🔥 Soldes d'été</div>
+        <div class="exemple-item" onclick="remplir('Opération Rentrée','La rentrée approche ! Costumes, Chemises Ville et Pantalons Ville en avant. Clientèle CSP+ en forte demande.','🎯')">🎯 Opération Rentrée</div>
+        <div class="exemple-item" onclick="remplir('Black Friday','Black Friday ce week-end — trafic maximal ! Accueil renforcé, toutes familles visibles. Faites la différence !','⚡')">⚡ Black Friday</div>
+        <div class="exemple-item" onclick="remplir('Inventaire','Inventaire prévu cette semaine. Vérifiez vos stocks et signalez les manquants à votre AR.','📢')">📢 Inventaire</div>
+        <div class="exemple-item" onclick="remplir('Objectif semaine','Super semaine en perspective ! Restez focus, accueillez chaque client avec le sourire. Vous êtes les meilleurs !','💪')">💪 Motivation équipe</div>
       </div>
     </div>
   </div>
@@ -225,291 +198,277 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
 
 <script>
 const MOT_DE_PASSE = 'IZAC2026';
+let JSONBIN_KEY = '';
+const JSONBIN_ID = '6a199fb5ddf5aa59f774a8d8';
+const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID;
+
+
+
 
 const REGIONS = [
-  {nom:'Paris Ouest',  boutiques:['A13','BELLE EPINE','CAEN','CRETEIL','DEAUVILLE','GIVERNY','LA DEFENSE','MONTPARNASSE','ORLEANS','PARLY 2','ROUEN','ST DENIS','ST QUENTIN','VELIZY','VILLENEUVE']},
-  {nom:'Paris Centre', boutiques:['AEROVILLE','AUBER','BEAUGRENELLE','CARRE SENART','CLAYE SOUILLY','CORBEIL','FORUM DES HALLES','GONESSE','LEVALLOIS','PARINOR','ROSNY 2','RUE DE RENNES','VAL D EUROPE']},
-  {nom:'Bretagne',     boutiques:['ANGERS','LA ROCHELLE','LE MANS','LES SABLES','NANTES ATLANTIS','NANTES CREBILLONS','RENNES ALMA','RENNES CV','TOURS']},
-  {nom:'Sud Ouest',    boutiques:['ANGLET','BEGLES','BEZIERS','BLAGNAC','BORDEAUX','BORDEAUX LAC','FENOUILLET','LORMONT','MERIGNAC','PERPIGNAN AUCHAN','PERPIGNAN CLAIRA','TOULOUSE']},
-  {nom:'Rhône-Alpes',  boutiques:['CLERMONT','CONFLUENCE','DIJON','DIJON CV','ECULLY','EPAGNY','GRENOBLE','HERRIOT','NEYRPIC','PART DIEU','ROMANS','VILLEFONTAINE']},
-  {nom:'Sud Est',      boutiques:['AIX EN PROVENCE','AJACCIO','CABRIES','CANNES','CAP 3000','GRAND VAR','LA VALENTINE','MIRAMAS','MONTPELLIER','NIMES','POLYGONE','PRADO','ST TROPEZ','TERRASSES DU PORT']},
-  {nom:'Nord',         boutiques:['EURALILLE','LILLE','LILLENIUM','LUXEMBOURG','NANCY','NOYELLES','ROUBAIX','STRASBOURG','STRASBOURG CV','PONT STE MARIE']},
+  {nom:'Paris Ouest',  bouts:['A13','BELLE EPINE','CAEN','CRETEIL','DEAUVILLE','GIVERNY','LA DEFENSE','MONTPARNASSE','ORLEANS','PARLY 2','ROUEN','ST DENIS','ST QUENTIN','VELIZY','VILLENEUVE']},
+  {nom:'Paris Centre', bouts:['AEROVILLE','AUBER','BEAUGRENELLE','CARRE SENART','CLAYE SOUILLY','CORBEIL','FORUM DES HALLES','GONESSE','LEVALLOIS','PARINOR','ROSNY 2','RUE DE RENNES','VAL D EUROPE']},
+  {nom:'Bretagne',     bouts:['ANGERS','LA ROCHELLE','LE MANS','LES SABLES','NANTES ATLANTIS','NANTES CREBILLONS','RENNES ALMA','RENNES CV','TOURS']},
+  {nom:'Sud Ouest',    bouts:['ANGLET','BEGLES','BEZIERS','BLAGNAC','BORDEAUX','BORDEAUX LAC','FENOUILLET','LORMONT','MERIGNAC','PERPIGNAN AUCHAN','PERPIGNAN CLAIRA','TOULOUSE']},
+  {nom:'Rhône-Alpes',  bouts:['CLERMONT','CONFLUENCE','DIJON','DIJON CV','ECULLY','EPAGNY','GRENOBLE','HERRIOT','NEYRPIC','PART DIEU','ROMANS','VILLEFONTAINE']},
+  {nom:'Sud Est',      bouts:['AIX EN PROVENCE','AJACCIO','CABRIES','CANNES','CAP 3000','GRAND VAR','LA VALENTINE','MIRAMAS','MONTPELLIER','NIMES','POLYGONE','PRADO','ST TROPEZ','TERRASSES DU PORT']},
+  {nom:'Nord',         bouts:['EURALILLE','LILLE','LILLENIUM','LUXEMBOURG','NANCY','NOYELLES','ROUBAIX','STRASBOURG','STRASBOURG CV','PONT STE MARIE']},
 ];
 
-let selectedEmoji = '🎁';
+let emoji = '🎁';
 let cibleMode = 'toutes';
-let selectedRegions = [];
-let selectedMags = [];
+let selRegions = [];
+let selMags = [];
 let messages = [];
+let ghSha = null;
 
-// ── LOGIN ─────────────────────────────────────────────────────────────
+// ── AUTH ─────────────────────────────────────────────────────────────
 function login() {
-  const pwd = document.getElementById('pwd-input').value;
-  if (pwd === MOT_DE_PASSE) {
+  const pwd = document.getElementById('pwd').value;
+  const key = document.getElementById('gh-token').value.trim();
+  if (pwd === MOT_DE_PASSE && key.length > 10) {
+    JSONBIN_KEY = key;
     document.getElementById('login-wrap').style.display = 'none';
     document.getElementById('admin-wrap').style.display = 'block';
     initAdmin();
   } else {
     document.getElementById('login-err').style.display = 'block';
-    document.getElementById('pwd-input').value = '';
+    document.getElementById('pwd').value = '';
   }
 }
 function logout() {
   document.getElementById('login-wrap').style.display = 'flex';
   document.getElementById('admin-wrap').style.display = 'none';
-  document.getElementById('pwd-input').value = '';
+}
+
+// ── GITHUB API ───────────────────────────────────────────────────────
+async function ghGet() {
+  const r = await fetch(JSONBIN_URL + '/latest', {
+    headers: {'X-Master-Key': JSONBIN_KEY}
+  });
+  if (!r.ok) return {messages: []};
+  const data = await r.json();
+  return data.record || {messages: []};
+}
+
+async function ghPut(data) {
+  const r = await fetch(JSONBIN_URL, {
+    method: 'PUT',
+    headers: {
+      'X-Master-Key': JSONBIN_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  });
+  return r.ok;
 }
 
 // ── INIT ─────────────────────────────────────────────────────────────
-function initAdmin() {
+async function initAdmin() {
   // Dates par défaut
-  const today = new Date();
-  const fin = new Date(); fin.setDate(fin.getDate() + 7);
-  document.getElementById('msg-debut').value = today.toISOString().split('T')[0];
-  document.getElementById('msg-fin').value = fin.toISOString().split('T')[0];
+  const t = new Date(), f = new Date();
+  f.setDate(f.getDate() + 7);
+  document.getElementById('msg-debut').value = t.toISOString().split('T')[0];
+  document.getElementById('msg-fin').value   = f.toISOString().split('T')[0];
 
   // Régions
-  const regList = document.getElementById('regions-list');
-  regList.innerHTML = REGIONS.map(r =>
-    `<button class="region-btn" onclick="toggleRegion(this,'${r.nom}')" data-reg="${r.nom}">
-      <span>${r.nom}</span>
-      <span class="reg-count">${r.boutiques.length} boutiques</span>
-    </button>`
+  document.getElementById('reg-list').innerHTML = REGIONS.map(r =>
+    `<button class="region-btn" onclick="toggleReg(this,'${r.nom}')">${r.nom} <span style="font-size:10px;color:#9CA3AF">${r.bouts.length} boutiques</span></button>`
   ).join('');
 
   // Boutiques
-  const magList = document.getElementById('mags-list');
-  const allMags = REGIONS.flatMap(r => r.boutiques);
-  magList.innerHTML = allMags.map(m =>
-    `<button class="mag-btn" onclick="toggleMag(this,'${m}')" data-mag="${m}">${m}</button>`
+  const allB = REGIONS.flatMap(r => r.bouts);
+  document.getElementById('mag-list').innerHTML = allB.map(m =>
+    `<button class="mag-btn" onclick="toggleMag(this,'${m}')">${m}</button>`
   ).join('');
 
-  // Preview live
-  ['msg-titre','msg-texte'].forEach(id => {
-    document.getElementById(id).addEventListener('input', updatePreview);
-  });
-
-  loadMessages();
-  renderMessages();
+  // Charger depuis GitHub
+  showStatus('Synchronisation avec GitHub...', 'loading');
+  try {
+    const data = await ghGet();
+    messages = data.messages || [];
+    renderMessages();
+    showStatus('✓ Synchronisé avec GitHub — ' + messages.length + ' message(s)', 'ok');
+    setTimeout(() => document.getElementById('status').style.display = 'none', 3000);
+  } catch(e) {
+    showStatus('⚠ Impossible de charger depuis GitHub — vérifiez votre connexion', 'err');
+  }
 }
 
-// ── EMOJI ─────────────────────────────────────────────────────────────
-function selectEmoji(btn, emoji) {
+// ── FORM ─────────────────────────────────────────────────────────────
+function selectEmoji(btn, e) {
   document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-  selectedEmoji = emoji;
+  btn.classList.add('selected'); emoji = e; updatePreview();
+}
+
+function setCible(mode, btn) {
+  cibleMode = mode;
+  document.querySelectorAll('.cible-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  ['toutes','regions','boutiques'].forEach(m => {
+    const el = document.getElementById('cible-' + m);
+    el.classList.toggle('active', m === mode);
+    el.style.display = m === mode ? 'block' : 'none';
+  });
   updatePreview();
 }
 
-// ── CIBLAGE ───────────────────────────────────────────────────────────
-function setCibleTab(mode, btn) {
-  cibleMode = mode;
-  document.querySelectorAll('.cible-tab').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.cible-content').forEach(c => c.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('cible-' + mode).classList.add('active');
-}
-
-function toggleRegion(btn, reg) {
+function toggleReg(btn, reg) {
   btn.classList.toggle('selected');
-  if (selectedRegions.includes(reg))
-    selectedRegions = selectedRegions.filter(r => r !== reg);
-  else
-    selectedRegions.push(reg);
+  selRegions = selRegions.includes(reg) ? selRegions.filter(r=>r!==reg) : [...selRegions, reg];
   updatePreview();
 }
 
 function toggleMag(btn, mag) {
   btn.classList.toggle('selected');
-  if (selectedMags.includes(mag))
-    selectedMags = selectedMags.filter(m => m !== mag);
-  else
-    selectedMags.push(mag);
-  const count = document.getElementById('selection-count');
-  if (selectedMags.length > 0) {
-    count.style.display = 'block';
-    count.textContent = selectedMags.length + ' boutique(s) sélectionnée(s)';
-  } else {
-    count.style.display = 'none';
-  }
+  selMags = selMags.includes(mag) ? selMags.filter(m=>m!==mag) : [...selMags, mag];
+  const el = document.getElementById('sel-count');
+  el.style.display = selMags.length ? 'block' : 'none';
+  el.textContent = selMags.length + ' boutique(s) sélectionnée(s)';
   updatePreview();
 }
 
-function selectAllMags() {
+function selectAll() {
   const btns = document.querySelectorAll('.mag-btn');
-  const allSelected = selectedMags.length === btns.length;
-  btns.forEach(btn => {
-    if (allSelected) { btn.classList.remove('selected'); }
-    else { btn.classList.add('selected'); }
-  });
-  selectedMags = allSelected ? [] : REGIONS.flatMap(r => r.boutiques);
-  const count = document.getElementById('selection-count');
-  if (selectedMags.length > 0) {
-    count.style.display = 'block';
-    count.textContent = selectedMags.length + ' boutique(s) sélectionnée(s)';
-  } else { count.style.display = 'none'; }
+  const all = selMags.length === btns.length;
+  btns.forEach(b => b.classList.toggle('selected', !all));
+  selMags = all ? [] : REGIONS.flatMap(r => r.bouts);
+  const el = document.getElementById('sel-count');
+  el.style.display = selMags.length ? 'block' : 'none';
+  if (selMags.length) el.textContent = selMags.length + ' boutique(s) sélectionnée(s)';
   updatePreview();
 }
 
-// ── PREVIEW ───────────────────────────────────────────────────────────
 function updatePreview() {
-  const titre = document.getElementById('msg-titre').value || 'Titre de l\'opération';
-  const texte = document.getElementById('msg-texte').value || 'Votre message ici...';
-  let cibleTxt = '';
-  if (cibleMode === 'toutes') cibleTxt = 'toutes les boutiques';
-  else if (cibleMode === 'regions') cibleTxt = selectedRegions.length ? selectedRegions.join(', ') : 'aucune région sélectionnée';
-  else cibleTxt = selectedMags.length ? selectedMags.length + ' boutique(s)' : 'aucune boutique sélectionnée';
-
+  const titre = document.getElementById('msg-titre').value || 'Titre...';
+  const texte = document.getElementById('msg-texte').value || 'Message...';
+  const cTxt = cibleMode==='toutes' ? 'toutes les boutiques'
+    : cibleMode==='regions' ? (selRegions.length ? selRegions.join(', ') : '—')
+    : (selMags.length ? selMags.length + ' boutique(s)' : '—');
   document.getElementById('preview-text').innerHTML =
-    `<strong>${selectedEmoji} ${titre}</strong><br>${texte}<br><br><em style="font-size:11px;color:#9CA3AF">→ Envoyé à : ${cibleTxt}</em>`;
+    '<strong>' + emoji + ' ' + titre + '</strong><br>' + texte + '<br><br><span style="font-size:11px;color:#9CA3AF">→ ' + cTxt + '</span>';
 }
 
-// ── EXEMPLES ─────────────────────────────────────────────────────────
-function remplirExemple(titre, texte, emoji) {
+function remplir(titre, texte, em) {
   document.getElementById('msg-titre').value = titre;
   document.getElementById('msg-texte').value = texte;
   document.querySelectorAll('.emoji-btn').forEach(b => {
-    if (b.textContent === emoji) { b.classList.add('selected'); selectedEmoji = emoji; }
+    if (b.textContent.trim() === em) { b.classList.add('selected'); emoji = em; }
     else b.classList.remove('selected');
   });
   updatePreview();
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
-// ── MESSAGES ─────────────────────────────────────────────────────────
-function loadMessages() {
-  const saved = localStorage.getItem('izac_messages');
-  if (saved) messages = JSON.parse(saved);
-}
-function saveMessages() {
-  localStorage.setItem('izac_messages', JSON.stringify(messages));
-  // Générer le JSON à copier sur GitHub
-  const json = {messages: messages.map(m => ({
-    id: m.id, actif: m.actif, titre: m.titre, texte: m.texte,
-    emoji: m.emoji, cible: m.cible, date_debut: m.debut, date_fin: m.fin
-  }))};
-  document.getElementById('json-output') && (document.getElementById('json-output').value = JSON.stringify(json, null, 2));
-}
-
-function envoyerMessage() {
+// ── ENVOYER ───────────────────────────────────────────────────────────
+async function envoyerMessage() {
   const titre = document.getElementById('msg-titre').value.trim();
   const texte = document.getElementById('msg-texte').value.trim();
   const debut = document.getElementById('msg-debut').value;
   const fin   = document.getElementById('msg-fin').value;
-
-  if (!titre || !texte) {
-    showStatus('Veuillez remplir le titre et le message.', false);
-    return;
-  }
+  if (!titre || !texte) { showStatus('Remplissez le titre et le message.', 'err'); return; }
 
   let cible;
   if (cibleMode === 'toutes') cible = 'toutes';
   else if (cibleMode === 'regions') {
-    if (!selectedRegions.length) { showStatus('Sélectionnez au moins une région.', false); return; }
-    cible = selectedRegions;
+    if (!selRegions.length) { showStatus('Sélectionnez au moins une région.', 'err'); return; }
+    cible = selRegions;
   } else {
-    if (!selectedMags.length) { showStatus('Sélectionnez au moins une boutique.', false); return; }
-    cible = selectedMags;
+    if (!selMags.length) { showStatus('Sélectionnez au moins une boutique.', 'err'); return; }
+    cible = selMags;
   }
 
-  const msg = {
-    id: Date.now(), actif: true, titre, texte,
-    emoji: selectedEmoji, cible, debut, fin,
-    creeLe: new Date().toLocaleDateString('fr-FR')
-  };
+  // Désactiver le bouton
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true;
+  document.getElementById('send-icon').innerHTML = '<span class="spinner"></span>';
+  document.getElementById('send-txt').textContent = 'Envoi en cours...';
+
+  const msg = {id: Date.now(), actif: true, titre, texte, emoji, cible, debut, fin, cree: new Date().toLocaleDateString('fr-FR')};
   messages.unshift(msg);
-  saveMessages();
-  renderMessages();
-  showStatus('✓ Message envoyé ! Copiez le JSON ci-dessous et mettez à jour messages.json sur GitHub.', true);
-  showJsonOutput();
+
+  try {
+    const ok = await ghPut({messages});
+    if (ok) {
+      showStatus('✓ Message envoyé et publié sur GitHub ! Visible instantanément sur tous les QR codes ciblés.', 'ok');
+      renderMessages();
+      // Reset form
+      document.getElementById('msg-titre').value = '';
+      document.getElementById('msg-texte').value = '';
+      document.getElementById('preview-text').innerHTML = '<span style="color:#9CA3AF;font-style:italic">Remplissez le formulaire...</span>';
+    } else {
+      messages.shift();
+      showStatus('Erreur lors de l\'envoi. Vérifiez votre connexion.', 'err');
+    }
+  } catch(e) {
+    messages.shift();
+    showStatus('Erreur : ' + e.message, 'err');
+  }
+
+  btn.disabled = false;
+  document.getElementById('send-icon').textContent = '📤';
+  document.getElementById('send-txt').textContent = 'Envoyer le message';
 }
 
-function supprimerMessage(id) {
+// ── MESSAGES ─────────────────────────────────────────────────────────
+async function supprimerMessage(id) {
   messages = messages.filter(m => m.id !== id);
-  saveMessages();
-  renderMessages();
+  showStatus('Suppression...', 'loading');
+  const ok = await ghPut({messages});
+  if (ok) { renderMessages(); showStatus('✓ Message supprimé', 'ok'); }
+  else showStatus('Erreur suppression', 'err');
+  setTimeout(() => document.getElementById('status').style.display='none', 2000);
 }
 
-function toggleActif(id) {
+async function toggleActif(id) {
   const m = messages.find(m => m.id === id);
-  if (m) { m.actif = !m.actif; saveMessages(); renderMessages(); }
+  if (m) {
+    m.actif = !m.actif;
+    showStatus('Mise à jour...', 'loading');
+    const ok = await ghPut({messages});
+    if (ok) { renderMessages(); showStatus('✓ Mis à jour', 'ok'); }
+    setTimeout(() => document.getElementById('status').style.display='none', 2000);
+  }
 }
 
 function renderMessages() {
-  const list = document.getElementById('messages-list');
+  const list = document.getElementById('msg-list');
   document.getElementById('msg-count').textContent = '(' + messages.length + ')';
   if (!messages.length) { list.innerHTML = '<div class="no-msg">Aucun message — créez votre premier message !</div>'; return; }
-
   const today = new Date().toISOString().split('T')[0];
   list.innerHTML = messages.map(m => {
-    let badge = '', badgeClass = '';
-    if (!m.actif) { badge = 'Désactivé'; badgeClass = 'badge-expire'; }
-    else if (m.fin && m.fin < today) { badge = 'Expiré'; badgeClass = 'badge-expire'; }
-    else if (m.debut > today) { badge = 'Programmé'; badgeClass = 'badge-programme'; }
-    else { badge = 'Actif'; badgeClass = 'badge-actif'; }
-
-    const cibleTxt = m.cible === 'toutes' ? '📡 Toutes les boutiques'
+    let badge='', badgeClass='';
+    if (!m.actif) { badge='Désactivé'; badgeClass='badge-off'; }
+    else if (m.fin && m.fin < today) { badge='Expiré'; badgeClass='badge-off'; }
+    else if (m.debut > today) { badge='Programmé'; badgeClass='badge-prog'; }
+    else { badge='Actif'; badgeClass='badge-actif'; }
+    const cTxt = m.cible==='toutes' ? '📡 Toutes les boutiques'
       : Array.isArray(m.cible) && m.cible.length > 3
-        ? m.cible.slice(0,3).join(', ') + '... +' + (m.cible.length-3)
+        ? m.cible.slice(0,3).join(', ') + ' +' + (m.cible.length-3)
         : Array.isArray(m.cible) ? m.cible.join(', ') : m.cible;
-
     return `<div class="msg-card">
       <div class="msg-header">
-        <div class="msg-title">${m.emoji} ${m.titre}</div>
-        <span class="msg-badge ${badgeClass}">${badge}</span>
+        <div class="msg-title-txt">${m.emoji} ${m.titre}</div>
+        <span class="badge ${badgeClass}">${badge}</span>
       </div>
-      <div class="msg-texte">${m.texte.substring(0,100)}${m.texte.length>100?'...':''}</div>
-      <div class="msg-meta">${cibleTxt} · Du ${m.debut||'—'} au ${m.fin||'—'} · Créé le ${m.creeLe}</div>
+      <div class="msg-texte">${m.texte.substring(0,90)}${m.texte.length>90?'...':''}</div>
+      <div class="msg-meta">${cTxt}<br>${m.debut||'—'} → ${m.fin||'—'} · Créé le ${m.cree||'—'}</div>
       <div class="msg-actions">
-        <button class="msg-btn btn-toggle" onclick="toggleActif(${m.id})">${m.actif?'Désactiver':'Réactiver'}</button>
-        <button class="msg-btn btn-delete" onclick="supprimerMessage(${m.id})">Supprimer</button>
+        <button class="msg-btn btn-tog" onclick="toggleActif(${m.id})">${m.actif?'Désactiver':'Réactiver'}</button>
+        <button class="msg-btn btn-del" onclick="supprimerMessage(${m.id})">Supprimer</button>
       </div>
     </div>`;
   }).join('');
 }
 
-function showStatus(msg, ok) {
-  const bar = document.getElementById('status-bar');
-  bar.textContent = msg;
-  bar.className = 'status-bar ' + (ok ? 'status-ok' : 'status-err');
-  bar.style.display = 'block';
-  setTimeout(() => bar.style.display = 'none', 5000);
+function showStatus(msg, type) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status status-' + type;
+  el.style.display = 'block';
 }
 
-function showJsonOutput() {
-  const json = {messages: messages.filter(m=>m.actif).map(m => ({
-    id: m.id, actif: true, titre: m.titre, texte: m.texte,
-    emoji: m.emoji, cible: m.cible, date_debut: m.debut, date_fin: m.fin
-  }))};
-  const jsonStr = JSON.stringify(json, null, 2);
-
-  // Créer ou mettre à jour la zone JSON
-  let jsonZone = document.getElementById('json-zone');
-  if (!jsonZone) {
-    jsonZone = document.createElement('div');
-    jsonZone.id = 'json-zone';
-    jsonZone.style.cssText = 'margin-top:14px;background:#1A1F36;border-radius:10px;padding:14px';
-    jsonZone.innerHTML = `
-      <div style="font-size:11px;font-weight:600;color:#7AA3D4;margin-bottom:8px;font-family:'DM Mono',monospace">
-        📋 Copiez ce JSON → créez/remplacez messages.json sur GitHub
-      </div>
-      <textarea id="json-output" style="width:100%;height:200px;background:#0D2750;color:#7AA3D4;border:none;border-radius:6px;padding:10px;font-family:'DM Mono',monospace;font-size:11px;resize:vertical" readonly></textarea>
-      <button onclick="copyJson()" style="margin-top:8px;width:100%;padding:8px;background:#1E4D9B;color:#fff;border:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer">📋 Copier le JSON</button>`;
-    document.getElementById('send-btn').after(jsonZone);
-  }
-  document.getElementById('json-output').value = jsonStr;
-}
-
-function copyJson() {
-  const txt = document.getElementById('json-output').value;
-  navigator.clipboard.writeText(txt);
-  const btn = event.target;
-  btn.textContent = '✓ Copié !';
-  setTimeout(() => btn.textContent = '📋 Copier le JSON', 2000);
-}
-
-// Init preview
-document.getElementById('pwd-input').addEventListener('keypress', e => { if(e.key==='Enter') login(); });
+document.getElementById('pwd').addEventListener('keypress', e => { if(e.key==='Enter') login(); });
 </script>
 </body>
 </html>
