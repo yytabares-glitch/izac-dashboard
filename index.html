@@ -122,6 +122,12 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
 .bsolo-prev-temp{font-size:11px;font-weight:600;font-family:'DM Mono',monospace}
 .bsolo-prev-fam{font-size:8px;font-weight:600;padding:2px 4px;border-radius:3px;margin-top:3px}
 
+
+.bsolo-operation{background:linear-gradient(135deg,#FEF3C7,#FFF9E6);border:2px solid #FDE68A;border-radius:12px;padding:14px 16px;margin-bottom:14px;display:none}
+.bsolo-op-badge{font-size:10px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px}
+.bsolo-op-titre{font-size:15px;font-weight:600;color:#78350F;margin-bottom:4px}
+.bsolo-op-texte{font-size:13px;color:#92400E;line-height:1.5}
+
 .bsolo-conseil-ia{background:linear-gradient(135deg,#EFF6FF,#F0FDF4);border:1px solid #BFDBFE;border-radius:12px;padding:16px 18px;margin-bottom:14px;position:relative}
 .bsolo-conseil-ia::before{content:"✨ Conseil du jour";display:block;font-size:10px;font-weight:700;color:#1E4D9B;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px}
 .bsolo-conseil-text{font-size:13px;color:#1A1F36;line-height:1.6;font-style:italic}
@@ -747,6 +753,36 @@ async function renderCarte() {
 
 
 
+
+// ── MESSAGES OPÉRATIONS ──────────────────────────────────────────────
+async function chargerMessageOperation(boutique, region) {
+  try {
+    const r = await fetch('https://raw.githubusercontent.com/yytabares-glitch/izac-dashboard/main/messages.json?t=' + Date.now());
+    if (!r.ok) return;
+    const data = await r.json();
+    const today = new Date().toISOString().split('T')[0];
+    const msgs = (data.messages || []).filter(m => {
+      if (!m.actif) return false;
+      if (m.fin && m.fin < today) return false;
+      if (m.debut && m.debut > today) return false;
+      if (m.cible === 'toutes') return true;
+      if (Array.isArray(m.cible)) {
+        // Vérifier boutique ou région
+        return m.cible.includes(boutique.toUpperCase()) ||
+               m.cible.includes(boutique) ||
+               m.cible.includes(region);
+      }
+      return m.cible === region;
+    });
+    if (msgs.length > 0) {
+      const msg = msgs[0];
+      document.getElementById('bsolo-op-titre').textContent = msg.emoji + ' ' + msg.titre;
+      document.getElementById('bsolo-op-texte').textContent = msg.texte;
+      document.getElementById('bsolo-operation').style.display = 'block';
+    }
+  } catch(e) { /* Pas de message = pas d'affichage */ }
+}
+
 // ── VUE BOUTIQUE SOLO (QR code) ──────────────────────────────────────
 function detectBoutiqueSolo() {
   const params = new URLSearchParams(window.location.search);
@@ -844,6 +880,7 @@ async function loadBoutiqueSolo(b, reg) {
   const dn2Fams = Object.entries(IMPL).filter(([,c])=>c[tl.cond]==='DN2').map(([f])=>f);
   const conseilText = genererConseilIA(b.nom, reg.nom, t, p, tl.label, up2Fams, dn2Fams, data.prevs);
   document.getElementById('bsolo-ia-text').innerHTML = conseilText.replace(/\n/g, '<br>');
+  chargerMessageOperation(b.nom, reg.nom);
 
   // Conseils implantation
   const cond = tl.cond;
@@ -1116,6 +1153,7 @@ window.addEventListener('load', function() {
       <div class="bsolo-label" id="bsolo-meteo-label">Chargement météo...</div>
       <div class="bsolo-pluie" id="bsolo-pluie"></div>
     </div>
+    <div class="bsolo-operation" id="bsolo-operation"><div class="bsolo-op-badge">📢 Message de la Direction</div><div class="bsolo-op-titre" id="bsolo-op-titre"></div><div class="bsolo-op-texte" id="bsolo-op-texte"></div></div>
     <div class="bsolo-conseil-ia"><div class="bsolo-conseil-text" id="bsolo-ia-text">Génération du conseil en cours...</div></div>
     <div class="bsolo-conseils">
       <div class="bsolo-cons-title">⬆⬆ Mettre en avant aujourd'hui</div>
