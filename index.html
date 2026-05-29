@@ -757,7 +757,12 @@ async function renderCarte() {
 // ── MESSAGES OPÉRATIONS ──────────────────────────────────────────────
 async function chargerMessageOperation(boutique, region) {
   try {
-    const r = await fetch('https://api.jsonbin.io/v3/b/6a199fb5ddf5aa59f774a8d8/latest?t=' + Date.now(), {headers: {'X-Master-Key': '$2a$10$iefQE0ZnRVN8ODMIGRiU7.Is/gxB9q2paSQWMhWeeQ1ztQec0dK1q'}});
+    const r = await fetch('https://api.jsonbin.io/v3/b/6a19a4daddf5aa59f774bd15/latest?t=' + Date.now(), {
+    headers: {
+      'X-Master-Key': '$2a$10$iefQE0ZnRVN8ODMIGRiU7.Is/gxB9q2paSQWMhWeeQ1ztQec0dK1q',
+      'X-Access-Key': '$2a$10$iefQE0ZnRVN8ODMIGRiU7.Is/gxB9q2paSQWMhWeeQ1ztQec0dK1q'
+    }
+  });
     if (!r.ok) return;
     const data = await r.json();
     const today = new Date().toISOString().split('T')[0];
