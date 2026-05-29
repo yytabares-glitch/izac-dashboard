@@ -121,6 +121,11 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
 .bsolo-prev-icon{font-size:16px;margin:3px 0}
 .bsolo-prev-temp{font-size:11px;font-weight:600;font-family:'DM Mono',monospace}
 .bsolo-prev-fam{font-size:8px;font-weight:600;padding:2px 4px;border-radius:3px;margin-top:3px}
+
+.bsolo-conseil-ia{background:linear-gradient(135deg,#EFF6FF,#F0FDF4);border:1px solid #BFDBFE;border-radius:12px;padding:16px 18px;margin-bottom:14px;position:relative}
+.bsolo-conseil-ia::before{content:"✨ Conseil du jour";display:block;font-size:10px;font-weight:700;color:#1E4D9B;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px}
+.bsolo-conseil-text{font-size:13px;color:#1A1F36;line-height:1.6;font-style:italic}
+
 .bsolo-back{display:block;text-align:center;padding:10px;background:#F5F7FA;border-radius:8px;font-size:12px;color:#6B7280;text-decoration:none;border:1px solid #E5E9F2;cursor:pointer}
 
 /* PRÉVISIONNEL */
@@ -765,6 +770,48 @@ function detectBoutiqueSolo() {
   loadBoutiqueSolo(found, foundReg);
 }
 
+
+function genererConseilIA(boutique, region, temp, pluie, label, up2Fams, dn2Fams, prevs) {
+  var famUp = up2Fams.slice(0,3).join(', ');
+  var demain = prevs[0];
+  var tl1 = demain ? tLabel(demain.temp, demain.pluie) : null;
+  var evolution = '';
+  if (demain && Math.abs(demain.temp - temp) > 3) {
+    if (demain.temp > temp)
+      evolution = ' La chaleur monte encore demain (' + demain.temp + 'C ' + tl1.icon + ') - profitez-en !';
+    else
+      evolution = ' Changement prevu demain (' + demain.temp + 'C ' + tl1.icon + ') - anticipez des aujourd hui.';
+  }
+
+  var encs = [
+    "Vous etes au top, bonne journee a toute l equipe ! 💪",
+    "L equipe IZAC assure - belle journee a vous ! 🌟",
+    "Chaque client est une opportunite - bonne journee ! ✨",
+    "Vous avez tout pour reussir aujourd hui - en avant ! 🚀",
+    "Bonne energie a toute l equipe - belle journee ! 😊",
+  ];
+  var enc = encs[Math.floor(Math.random() * encs.length)];
+
+  var intro = "Bonjour l equipe IZAC " + boutique + " ! 👋\n";
+  var conseil = '';
+
+  if (pluie > 5)
+    conseil = intro + "🌧 Temps pluvieux aujourd hui. Les clients qui se deplacent ont une vraie intention d achat - c est le moment de les accueillir chaleureusement. Misez sur " + famUp + "." + evolution;
+  else if (temp >= 27)
+    conseil = intro + "🌡 Forte chaleur aujourd hui (" + temp + "°C). Vos clients cherchent de la legerete - " + famUp + " sont vos meilleurs allies du jour." + evolution;
+  else if (temp >= 20)
+    conseil = intro + "☀️ Belle journee a " + temp + "°C. Le trafic devrait etre au rendez-vous - valorisez " + famUp + " pour seduire vos clients." + evolution;
+  else if (temp >= 12)
+    conseil = intro + "🌤 Temps doux aujourd hui (" + temp + "°C). Les clients sont en mode mi-saison - " + famUp + " correspondent parfaitement a leurs envies." + evolution;
+  else if (temp >= 5)
+    conseil = intro + "🧥 Temps frais aujourd hui (" + temp + "°C). Les clients cherchent du confort - " + famUp + " sont vos atouts du jour." + evolution;
+  else
+    conseil = intro + "❄️ Grand froid aujourd hui (" + temp + "°C). Une vraie opportunite pour " + famUp + " - vos clients en ont besoin !" + evolution;
+
+  return conseil + "\n\nBelles ventes ! 🛍️ " + enc;
+}
+
+
 async function loadBoutiqueSolo(b, reg) {
   const data = await fetchRealtime(b.lat, b.lon);
   if (!data) return;
@@ -779,6 +826,12 @@ async function loadBoutiqueSolo(b, reg) {
   document.getElementById('bsolo-meteo-label').textContent = tl.label;
   document.getElementById('bsolo-meteo-label').style.color = tColorText(t, p);
   document.getElementById('bsolo-pluie').textContent = p > 0 ? '💧 ' + p + 'mm de pluie' : '☀️ Pas de pluie';
+
+  // Conseil IA généré
+  const up2Fams = Object.entries(IMPL).filter(([,c])=>c[tl.cond]==='UP2').map(([f])=>f);
+  const dn2Fams = Object.entries(IMPL).filter(([,c])=>c[tl.cond]==='DN2').map(([f])=>f);
+  const conseilText = genererConseilIA(b.nom, reg.nom, t, p, tl.label, up2Fams, dn2Fams, data.prevs);
+  document.getElementById('bsolo-ia-text').innerHTML = conseilText.replace(/\n/g, '<br>');
 
   // Conseils implantation
   const cond = tl.cond;
@@ -1047,6 +1100,7 @@ window.addEventListener('load', function() {
       <div class="bsolo-label" id="bsolo-meteo-label">Chargement météo...</div>
       <div class="bsolo-pluie" id="bsolo-pluie"></div>
     </div>
+    <div class="bsolo-conseil-ia"><div class="bsolo-conseil-text" id="bsolo-ia-text">Génération du conseil en cours...</div></div>
     <div class="bsolo-conseils">
       <div class="bsolo-cons-title">⬆⬆ Mettre en avant aujourd'hui</div>
       <div class="bsolo-fam-grid" id="bsolo-up2"></div>
