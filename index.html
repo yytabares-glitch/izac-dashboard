@@ -695,6 +695,12 @@ async function renderCarte() {
       if (!data) data = await fetchRealtime(b.lat, b.lon);
       if (data) {
         const t = data.today.temp, p = data.today.pluie;
+
+  // Date et heure
+  const now = new Date();
+  const dateStr = String(now.getDate()).padStart(2,'0') + '/' + String(now.getMonth()+1).padStart(2,'0') + '/' + now.getFullYear();
+  const heureStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('bsolo-datetime').textContent = 'Mis à jour · ' + dateStr + ' ' + heureStr;
         carteMeteo[idx] = {temp: t, pluie: p};
         temps.push(t);
         const color = tColorCarte(t, p);
@@ -817,6 +823,12 @@ async function loadBoutiqueSolo(b, reg) {
   if (!data) return;
 
   const t = data.today.temp, p = data.today.pluie;
+
+  // Date et heure
+  const now = new Date();
+  const dateStr = String(now.getDate()).padStart(2,'0') + '/' + String(now.getMonth()+1).padStart(2,'0') + '/' + now.getFullYear();
+  const heureStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('bsolo-datetime').textContent = 'Mis à jour · ' + dateStr + ' ' + heureStr;
   const tl = tLabel(t, p);
 
   // Météo du jour
@@ -1093,6 +1105,10 @@ window.addEventListener('load', function() {
     <div class="bsolo-header">
       <div class="bsolo-nom" id="bsolo-nom">—</div>
       <div class="bsolo-region" id="bsolo-region">—</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;background:rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;width:fit-content;margin-left:auto;margin-right:auto">
+        <span style="width:7px;height:7px;border-radius:50%;background:#3DD68C;animation:blink 2s infinite;display:inline-block"></span>
+        <span style="font-size:10px;color:#7AA3D4;font-family:'DM Mono',monospace" id="bsolo-datetime">—</span>
+      </div>
     </div>
     <div class="bsolo-meteo-now">
       <div class="bsolo-icon" id="bsolo-icon">⏳</div>
