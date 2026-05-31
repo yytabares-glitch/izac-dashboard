@@ -298,7 +298,11 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
   </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+const SUPA_URL = 'https://imurxmsglmpgxdbavalk.supabase.co';
+const SUPA_KEY = 'sb_publishable_-FqQ5I6tx4rCUwUqmsf5DA_IFsfkUlQ';
+const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 const REGIONS = [
   { id:"PARIS-OUEST", nom:"Paris Ouest", ar:"AR Paris Ouest", boutiques:[
     {nom:"A13",lat:48.830,lon:2.360},{nom:"BELLE EPINE",lat:48.770,lon:2.347},
@@ -708,19 +712,16 @@ async function renderCarte() {
 }
 async function chargerMessageOperation(boutique, region) {
   try {
-    const r = await fetch('https://api.jsonbin.io/v3/b/6a19a4daddf5aa59f774bd15/latest?t=' + Date.now(), {
-      headers: {
-        'X-Master-Key': '$2a$10$iefQE0ZnRVN8ODMIGRiU7.Is/gxB9q2paSQWMhWeeQ1ztQec0dK1q'
-      }
-    });
-    if (!r.ok) return;
-    const data = await r.json();
-    const contenu = data.record || data;
     const today = new Date().toISOString().split('T')[0];
+    const { data, error } = await sb
+      .from('messages')
+      .select('*')
+      .eq('actif', true)
+      .order('id', { ascending: false });
+    if (error || !data) return;
     const bNorm = normNom(boutique);
     const rNorm = normNom(region);
-    const msgs = (contenu.messages || []).filter(m => {
-      if (!m.actif) return false;
+    const msgs = data.filter(m => {
       if (m.fin && m.fin < today) return false;
       if (m.debut && m.debut > today) return false;
       if (m.cible === 'toutes') return true;

@@ -85,10 +85,10 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
     <div class="login-logo">IZ</div>
     <div class="login-title">IZAC Admin</div>
     <div class="login-sub">Pilotage des messages boutiques en temps réel</div>
-    <input type="password" class="form-input" id="pwd" placeholder="Mot de passe admin" onkeypress="if(event.key==='Enter')login()">
-    <input type="password" class="form-input" id="gh-token" placeholder="Clé API JSONBin ($2a$...)" onkeypress="if(event.key==='Enter')login()">
+    <input type="email" class="form-input" id="email" placeholder="Email" onkeypress="if(event.key==='Enter')login()">
+    <input type="password" class="form-input" id="pwd" placeholder="Mot de passe" onkeypress="if(event.key==='Enter')login()">
     <button class="btn-primary" onclick="login()">Accéder →</button>
-    <div class="login-err" id="login-err">Mot de passe ou clé API incorrecte</div>
+    <div class="login-err" id="login-err">Email ou mot de passe incorrect</div>
   </div>
 </div>
 
@@ -196,11 +196,11 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const MOT_DE_PASSE = 'IZAC2026';
-let JSONBIN_KEY = '';
-const JSONBIN_ID = '6a19a4daddf5aa59f774bd15';
-const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID;
+const SUPA_URL = 'https://imurxmsglmpgxdbavalk.supabase.co';
+const SUPA_KEY = 'sb_publishable_-FqQ5I6tx4rCUwUqmsf5DA_IFsfkUlQ';
+const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 
 
 
@@ -223,44 +223,31 @@ let messages = [];
 let ghSha = null;
 
 // ── AUTH ─────────────────────────────────────────────────────────────
-function login() {
+async function login() {
+  const email = document.getElementById('email').value.trim();
   const pwd = document.getElementById('pwd').value;
-  const key = document.getElementById('gh-token').value.trim();
-  if (pwd === MOT_DE_PASSE && key.length > 10) {
-    JSONBIN_KEY = key;
-    document.getElementById('login-wrap').style.display = 'none';
-    document.getElementById('admin-wrap').style.display = 'block';
-    initAdmin();
-  } else {
+  const { error } = await sb.auth.signInWithPassword({ email, password: pwd });
+  if (error) {
     document.getElementById('login-err').style.display = 'block';
     document.getElementById('pwd').value = '';
+    return;
   }
+  document.getElementById('login-err').style.display = 'none';
+  document.getElementById('login-wrap').style.display = 'none';
+  document.getElementById('admin-wrap').style.display = 'block';
+  initAdmin();
 }
 function logout() {
+  sb.auth.signOut();
   document.getElementById('login-wrap').style.display = 'flex';
   document.getElementById('admin-wrap').style.display = 'none';
 }
 
-// ── GITHUB API ───────────────────────────────────────────────────────
-async function ghGet() {
-  const r = await fetch(JSONBIN_URL + '/latest', {
-    headers: {'X-Master-Key': JSONBIN_KEY}
-  });
-  if (!r.ok) return {messages: []};
-  const data = await r.json();
-  return data.record || {messages: []};
-}
-
-async function ghPut(data) {
-  const r = await fetch(JSONBIN_URL, {
-    method: 'PUT',
-    headers: {
-      'X-Master-Key': JSONBIN_KEY,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(data)
-  });
-  return r.ok;
+// ── SUPABASE DATA ────────────────────────────────────────────────────
+async function chargerMessages() {
+  const { data, error } = await sb.from('messages').select('*').order('id', { ascending: false });
+  if (error) return [];
+  return data || [];
 }
 
 // ── INIT ─────────────────────────────────────────────────────────────
@@ -282,16 +269,15 @@ async function initAdmin() {
     `<button class="mag-btn" onclick="toggleMag(this,'${m}')">${m}</button>`
   ).join('');
 
-  // Charger depuis GitHub
-  showStatus('Synchronisation avec GitHub...', 'loading');
+  // Charger depuis Supabase
+  showStatus('Synchronisation...', 'loading');
   try {
-    const data = await ghGet();
-    messages = data.messages || [];
+    messages = await chargerMessages();
     renderMessages();
-    showStatus('✓ Synchronisé avec GitHub — ' + messages.length + ' message(s)', 'ok');
+    showStatus('✓ Synchronisé — ' + messages.length + ' message(s)', 'ok');
     setTimeout(() => document.getElementById('status').style.display = 'none', 3000);
   } catch(e) {
-    showStatus('⚠ Impossible de charger depuis GitHub — vérifiez votre connexion', 'err');
+    showStatus('⚠ Impossible de charger les messages', 'err');
   }
 }
 
@@ -385,23 +371,21 @@ async function envoyerMessage() {
   document.getElementById('send-txt').textContent = 'Envoi en cours...';
 
   const msg = {id: Date.now(), actif: true, titre, texte, emoji, cible, debut, fin, cree: new Date().toLocaleDateString('fr-FR')};
-  messages.unshift(msg);
 
   try {
-    const ok = await ghPut({messages});
-    if (ok) {
-      showStatus('✓ Message envoyé et publié sur GitHub ! Visible instantanément sur tous les QR codes ciblés.', 'ok');
+    const { error } = await sb.from('messages').insert(msg);
+    if (!error) {
+      messages.unshift(msg);
+      showStatus('✓ Message envoyé ! Visible instantanément sur tous les QR codes ciblés.', 'ok');
       renderMessages();
       // Reset form
       document.getElementById('msg-titre').value = '';
       document.getElementById('msg-texte').value = '';
       document.getElementById('preview-text').innerHTML = '<span style="color:#9CA3AF;font-style:italic">Remplissez le formulaire...</span>';
     } else {
-      messages.shift();
-      showStatus('Erreur lors de l\'envoi. Vérifiez votre connexion.', 'err');
+      showStatus('Erreur lors de l\'envoi : ' + error.message, 'err');
     }
   } catch(e) {
-    messages.shift();
     showStatus('Erreur : ' + e.message, 'err');
   }
 
@@ -412,21 +396,21 @@ async function envoyerMessage() {
 
 // ── MESSAGES ─────────────────────────────────────────────────────────
 async function supprimerMessage(id) {
-  messages = messages.filter(m => m.id !== id);
   showStatus('Suppression...', 'loading');
-  const ok = await ghPut({messages});
-  if (ok) { renderMessages(); showStatus('✓ Message supprimé', 'ok'); }
-  else showStatus('Erreur suppression', 'err');
+  const { error } = await sb.from('messages').delete().eq('id', id);
+  if (!error) { messages = messages.filter(m => m.id !== id); renderMessages(); showStatus('✓ Message supprimé', 'ok'); }
+  else showStatus('Erreur suppression : ' + error.message, 'err');
   setTimeout(() => document.getElementById('status').style.display='none', 2000);
 }
 
 async function toggleActif(id) {
   const m = messages.find(m => m.id === id);
   if (m) {
-    m.actif = !m.actif;
+    const nouveau = !m.actif;
     showStatus('Mise à jour...', 'loading');
-    const ok = await ghPut({messages});
-    if (ok) { renderMessages(); showStatus('✓ Mis à jour', 'ok'); }
+    const { error } = await sb.from('messages').update({ actif: nouveau }).eq('id', id);
+    if (!error) { m.actif = nouveau; renderMessages(); showStatus('✓ Mis à jour', 'ok'); }
+    else showStatus('Erreur : ' + error.message, 'err');
     setTimeout(() => document.getElementById('status').style.display='none', 2000);
   }
 }
