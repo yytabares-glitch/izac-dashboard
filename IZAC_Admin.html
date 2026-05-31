@@ -172,6 +172,21 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
         <span id="send-icon">📤</span> <span id="send-txt">Envoyer le message</span>
       </button>
       <div class="status" id="status"></div>
+
+      <!-- EMAIL — MODE TEST -->
+      <div class="card" style="margin-top:16px;border:1.5px dashed #1E4D9B;background:#F8FBFF">
+        <div class="card-title">📧 Envoi par mail — MODE TEST</div>
+        <p style="font-size:12px;color:#6B7280;margin:0 0 12px;line-height:1.5">
+          Les mails partent vers <strong>tabares.yendi@icloud.com</strong> pour valider le système. On branchera les vraies adresses boutiques ensuite.
+        </p>
+        <button class="send-btn" style="background:#1E4D9B;margin-bottom:8px" onclick="testMailMessage()">
+          📨 Tester l'envoi de CE message
+        </button>
+        <button class="send-btn" style="background:#0D2750" onclick="testMailBrief()">
+          🌤 Tester un brief météo du jour
+        </button>
+        <div class="status" id="mail-status"></div>
+      </div>
     </div>
 
     <!-- DROITE -->
@@ -197,10 +212,25 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
 const SUPA_URL = 'https://imurxmsglmpgxdbavalk.supabase.co';
 const SUPA_KEY = 'sb_publishable_-FqQ5I6tx4rCUwUqmsf5DA_IFsfkUlQ';
 const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// ── EMAILJS (MODE TEST) ──────────────────────────────────────────────
+// 1. Compte gratuit sur emailjs.com
+// 2. Email Services > connecte Gmail  ->  copie le SERVICE ID
+// 3. Email Templates > crée le template (voir instructions)  ->  copie le TEMPLATE ID
+// 4. Account > General  ->  copie ta PUBLIC KEY
+// 5. Colle les 3 valeurs ci-dessous entre les apostrophes :
+const EMAILJS_PUBLIC_KEY  = 'VGbb67VPHO3Pv4awa';
+const EMAILJS_SERVICE_ID  = 'service_a47v05p';
+const EMAILJS_TEMPLATE_ID = 'template_4xqfzyt';
+const EMAIL_TEST          = 'tabares.yendi@icloud.com';
+if (window.emailjs && !EMAILJS_PUBLIC_KEY.startsWith('COLLE')) {
+  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+}
 
 
 
@@ -450,6 +480,70 @@ function showStatus(msg, type) {
   el.textContent = msg;
   el.className = 'status status-' + type;
   el.style.display = 'block';
+}
+
+// ── ENVOI MAIL (MODE TEST) ───────────────────────────────────────────
+function showMailStatus(msg, type) {
+  const el = document.getElementById('mail-status');
+  el.textContent = msg;
+  el.className = 'status status-' + type;
+  el.style.display = 'block';
+}
+function clesMailOk() {
+  if (!window.emailjs || EMAILJS_PUBLIC_KEY.startsWith('COLLE') || EMAILJS_SERVICE_ID.startsWith('COLLE') || EMAILJS_TEMPLATE_ID.startsWith('COLLE')) {
+    showMailStatus('⚠ Configure d\'abord tes 3 clés EmailJS en haut du script.', 'err');
+    return false;
+  }
+  return true;
+}
+async function testMailMessage() {
+  if (!clesMailOk()) return;
+  const titre = document.getElementById('msg-titre').value.trim() || 'Message test IZAC';
+  const texte = document.getElementById('msg-texte').value.trim() || 'Ceci est un message de test envoyé depuis l\'admin IZAC.';
+  showMailStatus('Envoi en cours...', 'loading');
+  try {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_email: EMAIL_TEST,
+      subject: '[IZAC] ' + emoji + ' ' + titre,
+      titre: emoji + ' ' + titre,
+      corps: texte
+    });
+    showMailStatus('✓ Mail envoyé à ' + EMAIL_TEST + ' ! Vérifie ta boîte (pense aux spams).', 'ok');
+  } catch(e) {
+    showMailStatus('Erreur envoi : ' + (e && (e.text || e.message) || e), 'err');
+  }
+}
+async function fetchMeteoParis() {
+  try {
+    const r = await fetch('https://api.open-meteo.com/v1/forecast?latitude=48.8607&longitude=2.3470&current=temperature_2m&timezone=Europe/Paris');
+    const d = await r.json();
+    return Math.round(d.current.temperature_2m);
+  } catch(e) { return null; }
+}
+function conseilMeteo(t) {
+  if (t <= 8)  return 'Temps froid : mettez en avant Manteaux, Pulls, Écharpes et Gants en façade et table d\'entrée.';
+  if (t <= 15) return 'Temps frais : valorisez Vestes, Pulls et Chemises. Proposez le total look mi-saison.';
+  if (t <= 22) return 'Temps doux : Chemises, Polos et Vestes légères en avant. Belle journée pour le trafic.';
+  return 'Temps chaud : Polos, T-shirts et pièces en lin en priorité. Allégez les vitrines.';
+}
+async function testMailBrief() {
+  if (!clesMailOk()) return;
+  showMailStatus('Récupération météo + envoi...', 'loading');
+  const boutique = 'FORUM DES HALLES';
+  const t = await fetchMeteoParis();
+  const temp = (t === null) ? 14 : t;
+  const corps = 'Météo du jour à Paris : ' + temp + '°C.\n\n' + conseilMeteo(temp) + '\n\nBonne journée à toute l\'équipe ! 💪';
+  try {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_email: EMAIL_TEST,
+      subject: '[IZAC] 🌤 Brief du jour — ' + boutique,
+      titre: '🌤 Brief météo du jour — ' + boutique,
+      corps: corps
+    });
+    showMailStatus('✓ Brief météo envoyé à ' + EMAIL_TEST + ' ! Vérifie ta boîte.', 'ok');
+  } catch(e) {
+    showMailStatus('Erreur envoi : ' + (e && (e.text || e.message) || e), 'err');
+  }
 }
 
 document.getElementById('pwd').addEventListener('keypress', e => { if(e.key==='Enter') login(); });
