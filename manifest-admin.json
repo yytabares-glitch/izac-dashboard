@@ -1,0 +1,16 @@
+{
+  "name": "YY Admin — Pilotage IZAC",
+  "short_name": "YY Admin",
+  "description": "Pilotage des messages et statistiques d'usage des boutiques IZAC",
+  "lang": "fr",
+  "start_url": "./IZAC_Admin.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#263145",
+  "theme_color": "#263145",
+  "icons": [
+    { "src": "icon-admin-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-admin-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

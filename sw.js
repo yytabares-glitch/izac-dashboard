@@ -1,10 +1,10 @@
 // IZAC Météo — service worker
-const CACHE = 'izac-meteo-v1';
-const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+const CACHE = 'izac-meteo-v2';
+const SHELL = ['./', './index.html', './IZAC_Admin.html', './manifest.json', './manifest-admin.json', './icon-192.png', './icon-512.png', './icon-admin-192.png', './icon-admin-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())
+    caches.open(CACHE).then(function(c){ return Promise.all(SHELL.map(function(u){ return c.add(u).catch(function(){}); })); }).then(() => self.skipWaiting())
   );
 });
 

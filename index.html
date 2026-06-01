@@ -202,6 +202,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
 .cli-icon{font-size:11px}
 .carte-liste::-webkit-scrollbar{width:8px}
 .carte-liste::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
+@media (max-width:760px){
+  .carte-layout{grid-template-columns:1fr}
+  #leaflet-map{height:55vh !important;min-height:320px}
+}
 </style>
 </head>
 <body>
@@ -677,6 +681,9 @@ function renderComparatif({results,p1d,p1f,p2d,p2f}){
 }
 let carteRendered = false;
 let leafletMap = null;
+let _mapRz;
+window.addEventListener('resize', function(){ clearTimeout(_mapRz); _mapRz=setTimeout(function(){ if(leafletMap) leafletMap.invalidateSize(); }, 250); });
+window.addEventListener('orientationchange', function(){ setTimeout(function(){ if(leafletMap) leafletMap.invalidateSize(); }, 350); });
 const carteMarkers = {};
 const carteMeteo = {};
 function tColorCarte(t, p) {
