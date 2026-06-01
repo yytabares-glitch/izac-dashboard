@@ -85,10 +85,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
 .bout-row:hover{background:var(--tint-2);border-color:var(--line)}
 .bout-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
 .bout-name{font-size:11.5px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.02em}
-.bout-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.bout-right{display:flex;align-items:center;gap:7px;flex-shrink:0}
 .bout-temp{font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
-.bout-icon{font-size:14px;line-height:1}
-.bout-range{font-size:12px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:.01em;white-space:nowrap}
+.bout-icon{font-size:14px;line-height:1;width:18px;text-align:center;flex-shrink:0}
+.bout-range{font-size:12px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:.01em;white-space:nowrap;min-width:64px;text-align:right}
 .bout-range .ar{color:var(--ink-55);margin:0 1px;font-weight:400}
 .bout-rain{font-size:9.5px;font-weight:600;color:var(--ink);background:var(--tint-2);border:1px solid var(--line);border-radius:20px;padding:2px 7px;white-space:nowrap;letter-spacing:.01em}
 .bout-action{font-size:9px;font-weight:600;padding:2px 7px;border-radius:6px;border:1px solid var(--line);background:var(--tint);color:var(--ink);white-space:nowrap}
@@ -158,7 +158,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
 .prev-table tr:nth-child(even) td{background:var(--tint)}
 .prev-cell{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:70px}
 .prev-cell-icon{font-size:15px;line-height:1}
-.prev-cell-temp{font-size:10.5px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.prev-cell-temp{font-size:10.5px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
 .prev-cell-conseil{font-size:8.5px;font-weight:600;padding:1px 6px;border-radius:5px;text-align:center;white-space:nowrap;background:var(--tint-2);color:var(--ink)}
 .pc-up2{background:var(--ink);color:#fff}
 .pc-up1{background:var(--tint-2);color:var(--ink)}
@@ -398,6 +398,25 @@ let currentTab='temps-reel';
 let cmpData=null;
 const realtimeCache={};
 const archiveCache={};
+// --- Limiteur d'appels réseau (max 6 simultanés) + 3 essais avec backoff ---
+let _net=6;const _netQ=[];
+function _netTake(){return new Promise(res=>{if(_net>0){_net--;res();}else _netQ.push(res);});}
+function _netGive(){_net++;if(_netQ.length&&_net>0){_net--;_netQ.shift()();}}
+async function _getJSON(url){
+  await _netTake();
+  try{
+    for(let att=0;att<3;att++){
+      try{
+        const r=await fetch(url);
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        return await r.json();
+      }catch(e){
+        if(att<2) await new Promise(rs=>setTimeout(rs,500*(att+1)+Math.floor(Math.random()*300)));
+      }
+    }
+    return null;
+  }finally{ _netGive(); }
+}
 function normNom(s){
   return (s||'').toString().toUpperCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
@@ -425,46 +444,48 @@ function tColorText(t,p){
 async function fetchRealtime(lat,lon){
   const key=`${lat.toFixed(3)},${lon.toFixed(3)}`;
   if(realtimeCache[key]) return realtimeCache[key];
-  try{
-    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation,weathercode&hourly=temperature_2m,precipitation&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&forecast_days=11&timezone=Europe%2FParis`);
-    const d=await r.json();
-    const c=d.current||{};const dy=d.daily||{};const hr=d.hourly||{};
-    const res={today:{temp:Math.round(c.temperature_2m*10)/10,pluie:c.precipitation||0},opening:null,prevs:[]};
-    if(hr.time&&hr.temperature_2m){
-      const td=hr.time[0].slice(0,10);let mn=null,mx=null,rn=0,ok=false;
-      for(let i=0;i<hr.time.length;i++){
-        if(hr.time[i].slice(0,10)!==td) break;
-        const h=parseInt(hr.time[i].slice(11,13),10);
-        if(h>=10&&h<=20){
-          const tv=hr.temperature_2m[i];const pv=hr.precipitation[i]||0;
-          if(mn===null||tv<mn)mn=tv; if(mx===null||tv>mx)mx=tv; rn+=pv; ok=true;
-        }
+  const d=await _getJSON(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation,weathercode&hourly=temperature_2m,precipitation&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&forecast_days=11&timezone=Europe%2FParis`);
+  if(!d||!d.current||d.current.temperature_2m==null) return null;
+  const c=d.current;const dy=d.daily||{};const hr=d.hourly||{};
+  const res={today:{temp:Math.round(c.temperature_2m*10)/10,pluie:c.precipitation||0},opening:null,prevs:[]};
+  if(hr.time&&hr.temperature_2m){
+    const td=hr.time[0].slice(0,10);let mn=null,mx=null,rn=0,ok=false;
+    for(let i=0;i<hr.time.length;i++){
+      if(hr.time[i].slice(0,10)!==td) break;
+      const h=parseInt(hr.time[i].slice(11,13),10);
+      if(h>=10&&h<=20){
+        const tv=hr.temperature_2m[i];const pv=hr.precipitation[i]||0;
+        if(tv!=null){ if(mn===null||tv<mn)mn=tv; if(mx===null||tv>mx)mx=tv; rn+=pv; ok=true; }
       }
-      if(ok) res.opening={min:Math.round(mn),max:Math.round(mx),rain:Math.round(rn*10)/10};
     }
+    if(ok) res.opening={min:Math.round(mn),max:Math.round(mx),rain:Math.round(rn*10)/10};
+  }
+  if(dy.temperature_2m_max){
     for(let i=1;i<11;i++){
       const tmax=dy.temperature_2m_max[i],tmin=dy.temperature_2m_min[i];
-      const pluie=dy.precipitation_sum[i]||0;
+      if(tmax==null||tmin==null) continue;
+      const pluie=(dy.precipitation_sum&&dy.precipitation_sum[i])||0;
       const tmoy=Math.round((tmax+tmin)/2*10)/10;
       const dt=new Date();dt.setDate(dt.getDate()+i);
       res.prevs.push({temp:tmoy,tmin:Math.round(tmin),tmax:Math.round(tmax),pluie,date:dt});
     }
-    realtimeCache[key]=res;return res;
-  }catch(e){return null;}
+  }
+  realtimeCache[key]=res;return res;
 }
 async function fetchArchive(lat,lon,d1,d2){
   const key=`${lat.toFixed(3)},${lon.toFixed(3)}_${d1}_${d2}`;
   if(archiveCache[key]) return archiveCache[key];
-  try{
-    const r=await fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${d1}&end_date=${d2}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Europe%2FParis`);
-    const d=await r.json();const dy=d.daily||{};
-    const tmaxs=dy.temperature_2m_max||[];const tmins=dy.temperature_2m_min||[];
-    const pluies=dy.precipitation_sum||[];
-    const tmoys=tmaxs.map((mx,i)=>(mx+tmins[i])/2).filter(v=>!isNaN(v));
-    const temp=tmoys.length?Math.round(tmoys.reduce((a,b)=>a+b,0)/tmoys.length*10)/10:null;
-    const pluie=Math.round(pluies.filter(p=>p).reduce((a,b)=>a+b,0)*10)/10;
-    archiveCache[key]={temp,pluie,nb:tmaxs.length};return archiveCache[key];
-  }catch(e){return null;}
+  const d=await _getJSON(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${d1}&end_date=${d2}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Europe%2FParis`);
+  if(!d) return null;
+  const dy=d.daily||{};
+  const tmaxs=dy.temperature_2m_max||[];const tmins=dy.temperature_2m_min||[];
+  const pluies=dy.precipitation_sum||[];
+  const tmoys=tmaxs.map((mx,i)=>(mx+tmins[i])/2).filter(v=>v!=null&&!isNaN(v));
+  const temp=tmoys.length?Math.round(tmoys.reduce((a,b)=>a+b,0)/tmoys.length*10)/10:null;
+  const pluie=Math.round(pluies.filter(p=>p).reduce((a,b)=>a+b,0)*10)/10;
+  const res={temp,pluie,nb:tmaxs.length};
+  if(temp!=null) archiveCache[key]=res;
+  return res;
 }
 function setTab(tab){
   currentTab=tab;
@@ -510,6 +531,12 @@ function makeCard(reg,mode){
 }
 async function loadRealtimeRegion(reg){
   const results=await Promise.all(reg.boutiques.map(b=>fetchRealtime(b.lat,b.lon).then(m=>({nom:b.nom,m}))));
+  for(let pass=0;pass<3;pass++){
+    const failed=results.filter(x=>!x.m);
+    if(!failed.length) break;
+    await new Promise(r=>setTimeout(r,700));
+    await Promise.all(failed.map(async x=>{const bb=reg.boutiques.find(z=>z.nom===x.nom); if(bb) x.m=await fetchRealtime(bb.lat,bb.lon);}));
+  }
   let temps=[];
   for(const {nom,m} of results){
     const id=`bout-realtime-${reg.id}-${nom.replace(/[\s'\/]/g,'_')}`;
@@ -522,8 +549,7 @@ async function loadRealtimeRegion(reg){
     if(op){
       const rains=op.rain>=1;
       const dayIcon=rains?'🌧':tLabel(op.max,0).icon;
-      const rainChip=rains?`<span class="bout-rain">☔ ${op.rain} mm</span>`:'';
-      rightHtml=`<span class="bout-icon">${dayIcon}</span><span class="bout-range">${op.min}°<span class="ar">→</span>${op.max}°</span>${rainChip}`;
+      rightHtml=`<span class="bout-icon">${dayIcon}</span><span class="bout-range">${op.min}°→${op.max}°</span>`;
     }else{
       rightHtml=`<span class="bout-temp" style="color:var(--ink-55)">${t}°</span>`;
     }
