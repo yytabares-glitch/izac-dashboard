@@ -93,6 +93,19 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
 .exemple-item{padding:9px 11px;background:var(--tint);border:1px solid var(--line-2);border-radius:9px;cursor:pointer;font-size:12px;color:var(--ink);margin-bottom:6px;transition:all .15s}
 .exemple-item:hover{background:var(--tint-2);border-color:var(--line)}
 .select-all{font-size:11px;color:var(--ink);cursor:pointer;text-decoration:underline;margin-bottom:8px;display:inline-block;font-weight:600}
+.tabnav{display:flex;gap:8px;margin-bottom:18px}
+.tabnav-btn{font-family:'Hanken Grotesk',system-ui,sans-serif;font-weight:600;font-size:13px;padding:9px 16px;border-radius:10px;border:1px solid rgba(38,49,69,.12);background:#fff;color:#5b647a;cursor:pointer;transition:all .15s}
+.tabnav-btn:hover{color:#263145;border-color:rgba(38,49,69,.25)}
+.tabnav-btn.active{background:#263145;color:#fff;border-color:#263145}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.kpi{background:#F8F9FC;border:1px solid rgba(38,49,69,.08);border-radius:12px;padding:14px 16px}
+.kpi-num{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:26px;color:#263145;line-height:1}
+.kpi-lab{font-size:11px;color:#828a9c;margin-top:5px;font-weight:500}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.bar-name{font-size:12px;color:#263145;width:128px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.bar-track{flex:1;background:rgba(38,49,69,.06);border-radius:6px;height:18px;position:relative;overflow:hidden;min-width:60px}
+.bar-fill{position:absolute;left:0;top:0;bottom:0;background:#263145;border-radius:6px;transition:width .3s}
+.bar-val{font-size:11px;color:#5b647a;width:34px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums;font-weight:600}
 </style>
 </head>
 <body>
@@ -120,7 +133,12 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
     <button class="logout-btn" onclick="logout()">Déconnexion</button>
   </div>
 
-  <div class="grid">
+  <div class="tabnav">
+    <button class="tabnav-btn active" id="tab-messages" onclick="switchTab('messages')">📬 Messages</button>
+    <button class="tabnav-btn" id="tab-stats" onclick="switchTab('stats')">📊 Statistiques d'usage</button>
+  </div>
+
+  <div class="grid" id="view-messages">
     <div>
       <!-- MESSAGE -->
       <div class="card">
@@ -222,6 +240,23 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
         <div class="exemple-item" onclick="remplir('Black Friday','Black Friday ce week-end — trafic maximal ! Accueil renforcé, toutes familles visibles. Faites la différence !','⚡')">⚡ Black Friday</div>
         <div class="exemple-item" onclick="remplir('Inventaire','Inventaire prévu cette semaine. Vérifiez vos stocks et signalez les manquants à votre AR.','📢')">📢 Inventaire</div>
         <div class="exemple-item" onclick="remplir('Objectif semaine','Super semaine en perspective ! Restez focus, accueillez chaque client avec le sourire. Vous êtes les meilleurs !','💪')">💪 Motivation équipe</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-stats" style="display:none">
+    <div class="card">
+      <div class="card-title">📊 Statistiques d'usage <span id="stats-sub" style="font-size:11px;color:#9CA3AF;font-weight:400"></span></div>
+      <div class="kpis" id="stats-kpis"></div>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">🏪 Vues par boutique</div>
+        <div id="stats-boutiques"><div class="no-msg">Chargement...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📅 Vues par jour</div>
+        <div id="stats-jours"><div class="no-msg">Chargement...</div></div>
       </div>
     </div>
   </div>
@@ -562,6 +597,51 @@ async function testMailBrief() {
   }
 }
 
+// ── ONGLETS + STATS D'USAGE ──────────────────────────────────────────
+function switchTab(name){
+  const isStats = name === 'stats';
+  document.getElementById('view-messages').style.display = isStats ? 'none' : '';
+  document.getElementById('view-stats').style.display = isStats ? '' : 'none';
+  document.getElementById('tab-messages').classList.toggle('active', !isStats);
+  document.getElementById('tab-stats').classList.toggle('active', isStats);
+  if (isStats) loadStats();
+}
+function statKpi(n,l){ return '<div class="kpi"><div class="kpi-num">'+n+'</div><div class="kpi-lab">'+l+'</div></div>'; }
+function statEsc(s){ return (s||'').toString().replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function statBar(name,val,max){
+  const pct = Math.max(4, Math.round(val/max*100));
+  return '<div class="bar-row"><div class="bar-name">'+statEsc(name)+'</div><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%"></div></div><div class="bar-val">'+val+'</div></div>';
+}
+function frDate(iso){ const p=iso.split('-'); return p[2]+'/'+p[1]; }
+async function loadStats(){
+  const sub=document.getElementById('stats-sub'), elK=document.getElementById('stats-kpis');
+  const elB=document.getElementById('stats-boutiques'), elJ=document.getElementById('stats-jours');
+  sub.textContent='· chargement…';
+  const since=new Date(Date.now()-30*86400000).toISOString();
+  const { data, error } = await sb.from('vues').select('boutique,region,created_at').gte('created_at', since);
+  if (error){
+    sub.textContent='';
+    elK.innerHTML='';
+    elB.innerHTML='<div class="no-msg">Stats indisponibles. La table « vues » est-elle bien créée dans Supabase ?<br><span style="font-size:11px;color:#9CA3AF">'+statEsc(error.message)+'</span></div>';
+    elJ.innerHTML='';
+    return;
+  }
+  const rows=data||[];
+  const total=rows.length;
+  const setB={}; rows.forEach(function(r){ setB[r.boutique||'—']=true; });
+  const jours={}; rows.forEach(function(r){ const d=(r.created_at||'').slice(0,10); if(d) jours[d]=(jours[d]||0)+1; });
+  const nbJours=Math.max(1,Object.keys(jours).length);
+  elK.innerHTML=statKpi(total,'vues (30 jours)')+statKpi(Object.keys(setB).length,'boutiques vues')+statKpi(Math.round(total/nbJours),'vues / jour actif');
+  const parB={}; rows.forEach(function(r){ const b=r.boutique||'—'; parB[b]=(parB[b]||0)+1; });
+  const listB=Object.entries(parB).sort(function(a,b){return b[1]-a[1];});
+  if(!listB.length){ elB.innerHTML='<div class="no-msg">Aucune vue pour l\'instant.<br><span style="font-size:11px;color:#9CA3AF">Les vues s\'enregistrent quand une boutique ouvre sa page (QR / écran).</span></div>'; }
+  else { const maxB=listB[0][1]; elB.innerHTML=listB.map(function(e){return statBar(e[0],e[1],maxB);}).join(''); }
+  const days=[]; for(let i=29;i>=0;i--){ const d=new Date(Date.now()-i*86400000).toISOString().slice(0,10); days.push([d,jours[d]||0]); }
+  const used=days.filter(function(d){return d[1]>0;});
+  if(!used.length){ elJ.innerHTML='<div class="no-msg">Aucune vue sur les 30 derniers jours.</div>'; }
+  else { const maxJ=Math.max.apply(null,days.map(function(d){return d[1];}).concat([1])); elJ.innerHTML=days.map(function(d){return d[1]>0?statBar(frDate(d[0]),d[1],maxJ):'';}).join(''); }
+  sub.textContent='· 30 derniers jours';
+}
 document.getElementById('pwd').addEventListener('keypress', e => { if(e.key==='Enter') login(); });
 </script>
 </body>

@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IZAC — Dashboard Météo Réseau</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#263145">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="IZAC Météo">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <style>
@@ -1063,8 +1070,16 @@ window.addEventListener('load', function() {
     document.getElementById('bsolo-region').textContent = foundReg.nom;
     document.title = 'IZAC Météo · ' + found.nom;
     loadBoutiqueSolo(found, foundReg);
+    try { sb.from('vues').insert({ boutique: found.nom, region: foundReg.nom }).then(function(){}, function(){}); } catch(e) {}
   }
 });
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
 </script>
 </body>
 </html>
