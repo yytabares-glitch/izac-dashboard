@@ -4,78 +4,95 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IZAC — Admin Messages</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+:root{
+  --ink:#263145;--ink-2:#36425a;--ink-70:#5b647a;--ink-55:#828a9c;
+  --line:rgba(38,49,69,.10);--line-2:rgba(38,49,69,.055);
+  --tint:rgba(38,49,69,.045);--tint-2:rgba(38,49,69,.075);
+  --bg:#EDEFF3;--card:#FFFFFF;
+  --shadow:0 1px 2px rgba(38,49,69,.04), 0 22px 48px -30px rgba(38,49,69,.45);
+  --serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+  --ok:#1f7a44;--ok-bg:#e8f4ec;--ok-bd:#c3e2d0;
+  --danger:#b42318;--danger-bg:#fdecea;--danger-bd:#f6cbc5;
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-height:100vh}
-.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh}
-.login-box{background:#fff;border:1px solid #E5E9F2;border-radius:16px;padding:40px;width:380px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
-.login-logo{width:56px;height:56px;background:#0D2750;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;margin:0 auto 16px}
-.login-title{font-size:18px;font-weight:600;color:#0D2750;margin-bottom:6px}
-.login-sub{font-size:12px;color:#6B7280;margin-bottom:24px}
-.form-input{width:100%;padding:10px 14px;border:1px solid #E5E9F2;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;margin-bottom:12px;background:#F8F9FC}
-.form-input:focus{outline:none;border-color:#0D2750;background:#fff}
-.btn-primary{width:100%;padding:11px;background:#0D2750;color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
-.btn-primary:hover{background:#1E4D9B}
-.login-err{font-size:12px;color:#DC2626;margin-top:8px;display:none}
-.admin-wrap{display:none;max-width:1100px;margin:0 auto;padding:20px}
-.hdr{background:#0D2750;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-radius:10px;margin-bottom:20px}
-.hdr-left{display:flex;align-items:center;gap:12px}
-.hdr-logo{width:34px;height:34px;background:#1E4D9B;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
-.hdr-title{color:#fff;font-size:15px;font-weight:600}
-.hdr-sub{color:#7AA3D4;font-size:11px;margin-top:1px}
-.logout-btn{padding:6px 14px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif}
-.grid{display:grid;grid-template-columns:1fr 360px;gap:16px;align-items:start}
-.card{background:#fff;border:1px solid #E5E9F2;border-radius:12px;padding:20px;margin-bottom:16px}
-.card-title{font-size:13px;font-weight:600;color:#0D2750;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #F0F2F7}
-.form-label{font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block}
-.form-row{margin-bottom:14px}
-.form-textarea{width:100%;padding:9px 12px;border:1px solid #E5E9F2;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;background:#F8F9FC;color:#1A1F36;resize:vertical;min-height:80px}
-.form-textarea:focus{outline:none;border-color:#0D2750;background:#fff}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased;letter-spacing:.01em}
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.login-box{background:var(--card);border:1px solid var(--line-2);border-radius:20px;padding:44px 40px;width:390px;text-align:center;box-shadow:var(--shadow)}
+.login-logo{width:62px;height:62px;background:var(--ink);border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:24px;font-weight:600;color:#fff;letter-spacing:.04em;margin:0 auto 18px}
+.login-title{font-family:var(--serif);font-size:22px;font-weight:600;color:var(--ink);margin-bottom:6px;letter-spacing:.01em}
+.login-sub{font-size:12px;color:var(--ink-70);margin-bottom:26px;letter-spacing:.01em}
+.form-input{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:10px;font-family:var(--sans);font-size:14px;margin-bottom:12px;background:#fff;color:var(--ink)}
+.form-input:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(38,49,69,.08)}
+.btn-primary{width:100%;padding:12px;background:var(--ink);color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;letter-spacing:.02em;transition:opacity .2s}
+.btn-primary:hover{opacity:.88}
+.login-err{font-size:12px;color:var(--danger);margin-top:8px;display:none}
+.admin-wrap{display:none;max-width:1100px;margin:0 auto;padding:24px 22px 48px}
+.hdr{background:var(--ink);padding:20px 26px;display:flex;align-items:center;justify-content:space-between;border-radius:16px;margin-bottom:22px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.hdr::after{content:"";position:absolute;inset:0;background:radial-gradient(130% 200% at 100% -20%,rgba(255,255,255,.07),transparent 55%);pointer-events:none}
+.hdr-left{display:flex;align-items:center;gap:16px;position:relative;z-index:1}
+.hdr-logo{font-family:var(--serif);font-size:26px;font-weight:600;color:#fff;letter-spacing:.06em;line-height:1}
+.hdr-title{color:#fff;font-size:14px;font-weight:600;letter-spacing:.02em}
+.hdr-sub{color:rgba(255,255,255,.5);font-size:10.5px;margin-top:3px;letter-spacing:.05em}
+.logout-btn{padding:7px 15px;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.16);border-radius:8px;font-size:12px;cursor:pointer;font-family:var(--sans);position:relative;z-index:1;transition:background .2s}
+.logout-btn:hover{background:rgba(255,255,255,.15)}
+.grid{display:grid;grid-template-columns:1fr 360px;gap:18px;align-items:start}
+.card{background:var(--card);border:1px solid var(--line-2);border-radius:16px;padding:22px;margin-bottom:18px;box-shadow:var(--shadow)}
+.card-title{font-family:var(--serif);font-size:16px;font-weight:600;color:var(--ink);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line-2);letter-spacing:.01em}
+.form-label{font-size:10px;font-weight:700;color:var(--ink-55);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;display:block}
+.form-row{margin-bottom:16px}
+.form-textarea{width:100%;padding:10px 13px;border:1px solid var(--line);border-radius:9px;font-family:var(--sans);font-size:13px;background:#fff;color:var(--ink);resize:vertical;min-height:84px}
+.form-textarea:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(38,49,69,.08)}
 .emoji-grid{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-.emoji-btn{width:36px;height:36px;border:1.5px solid #E5E9F2;border-radius:8px;background:#F8F9FC;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.emoji-btn.selected{border-color:#0D2750;background:#EFF6FF}
+.emoji-btn{width:38px;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--tint);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.emoji-btn:hover{border-color:var(--ink-55)}
+.emoji-btn.selected{border-color:var(--ink);background:var(--ink);transform:scale(1.05)}
 .date-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.send-btn{width:100%;padding:13px;background:#0D2750;color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px}
-.send-btn:hover{background:#1E4D9B}
-.send-btn:disabled{background:#9CA3AF;cursor:not-allowed}
-.cible-tabs{display:flex;gap:3px;margin-bottom:12px;background:#F5F7FA;border-radius:8px;padding:3px}
-.cible-tab{flex:1;padding:7px;border:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;color:#6B7280;background:transparent}
-.cible-tab.active{background:#fff;color:#0D2750;font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+.send-btn{width:100%;padding:14px;background:var(--ink);color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.02em;transition:opacity .2s}
+.send-btn:hover{opacity:.9}
+.send-btn:disabled{background:var(--ink-55);cursor:not-allowed;opacity:1}
+.cible-tabs{display:flex;gap:3px;margin-bottom:14px;background:var(--tint);border-radius:10px;padding:4px}
+.cible-tab{flex:1;padding:8px;border:none;border-radius:7px;font-family:var(--sans);font-size:11px;font-weight:600;cursor:pointer;color:var(--ink-55);background:transparent;transition:all .2s}
+.cible-tab.active{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(38,49,69,.1)}
 .cible-content{display:none}
 .cible-content.active{display:block}
-.region-btn{display:flex;align-items:center;justify-content:space-between;width:100%;padding:8px 12px;border:1.5px solid #E5E9F2;border-radius:7px;background:#F8F9FC;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;margin-bottom:6px;color:#1A1F36}
-.region-btn.selected{border-color:#0D2750;background:#EFF6FF;color:#0D2750}
+.region-btn{display:flex;align-items:center;justify-content:space-between;width:100%;padding:9px 13px;border:1px solid var(--line);border-radius:9px;background:var(--tint);font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;margin-bottom:6px;color:var(--ink);transition:all .15s}
+.region-btn:hover{border-color:var(--ink-55)}
+.region-btn.selected{border-color:var(--ink);background:var(--ink);color:#fff}
 .mag-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
-.mag-btn{padding:6px 8px;border:1px solid #E5E9F2;border-radius:6px;background:#F8F9FC;font-size:10px;font-weight:500;cursor:pointer;text-align:left;color:#1A1F36}
-.mag-btn.selected{border-color:#0D2750;background:#EFF6FF;color:#0D2750;font-weight:600}
-.sel-count{font-size:11px;color:#0D2750;font-weight:600;margin-top:8px;padding:6px 10px;background:#EFF6FF;border-radius:6px;display:none}
-.preview-box{background:linear-gradient(135deg,#EFF6FF,#F0FDF4);border:1px solid #BFDBFE;border-radius:10px;padding:14px;margin-top:12px}
-.preview-title{font-size:10px;font-weight:600;color:#1E4D9B;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px}
-.preview-text{font-size:13px;color:#1A1F36;line-height:1.6}
-.msg-card{border:1px solid #E5E9F2;border-radius:8px;padding:12px 14px;margin-bottom:8px}
-.msg-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-.msg-title-txt{font-size:13px;font-weight:600;color:#1A1F36}
-.badge{font-size:9px;font-weight:600;padding:2px 7px;border-radius:10px}
-.badge-actif{background:#EAF3DE;color:#27500A}
-.badge-off{background:#F1EFE8;color:#444441}
-.badge-prog{background:#E6F1FB;color:#0C447C}
-.msg-texte{font-size:11px;color:#6B7280;margin-bottom:4px;line-height:1.4}
-.msg-meta{font-size:10px;color:#9CA3AF;font-family:'DM Mono',monospace}
-.msg-actions{display:flex;gap:6px;margin-top:8px}
-.msg-btn{padding:4px 10px;border-radius:5px;font-size:11px;cursor:pointer;border:1px solid;font-family:'DM Sans',sans-serif;font-weight:500}
-.btn-del{background:#FCEBEB;color:#791F1F;border-color:#F7C1C1}
-.btn-tog{background:#EAF3DE;color:#27500A;border-color:#C0DD97}
-.no-msg{text-align:center;padding:24px;color:#9CA3AF;font-size:12px}
-.status{padding:10px 14px;border-radius:8px;font-size:12px;font-weight:500;margin-top:10px;display:none;text-align:center}
-.status-ok{background:#EAF3DE;color:#27500A;border:1px solid #C0DD97}
-.status-err{background:#FCEBEB;color:#791F1F;border:1px solid #F7C1C1}
-.status-loading{background:#E6F1FB;color:#0C447C;border:1px solid #B5D4F4}
+.mag-btn{padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:var(--tint);font-size:10px;font-weight:600;cursor:pointer;text-align:left;color:var(--ink);transition:all .15s}
+.mag-btn:hover{border-color:var(--ink-55)}
+.mag-btn.selected{border-color:var(--ink);background:var(--ink);color:#fff}
+.sel-count{font-size:11px;color:var(--ink);font-weight:700;margin-top:8px;padding:7px 11px;background:var(--tint-2);border-radius:8px;display:none}
+.preview-box{background:var(--tint);border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:14px}
+.preview-title{font-size:9.5px;font-weight:700;color:var(--ink-55);text-transform:uppercase;letter-spacing:.09em;margin-bottom:9px}
+.preview-text{font-size:13px;color:var(--ink);line-height:1.6}
+.msg-card{border:1px solid var(--line-2);border-radius:11px;padding:14px 16px;margin-bottom:10px;background:#fff;transition:border-color .15s}
+.msg-card:hover{border-color:var(--line)}
+.msg-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px}
+.msg-title-txt{font-size:13px;font-weight:700;color:var(--ink);letter-spacing:.01em}
+.badge{font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:.03em;white-space:nowrap}
+.badge-actif{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-bd)}
+.badge-off{background:var(--tint-2);color:var(--ink-55);border:1px solid var(--line)}
+.badge-prog{background:var(--tint-2);color:var(--ink);border:1px solid var(--line)}
+.msg-texte{font-size:11.5px;color:var(--ink-70);margin-bottom:5px;line-height:1.45}
+.msg-meta{font-size:10px;color:var(--ink-55)}
+.msg-actions{display:flex;gap:7px;margin-top:9px}
+.msg-btn{padding:5px 11px;border-radius:7px;font-size:11px;cursor:pointer;border:1px solid;font-family:var(--sans);font-weight:600;transition:opacity .15s}
+.msg-btn:hover{opacity:.82}
+.btn-del{background:var(--danger-bg);color:var(--danger);border-color:var(--danger-bd)}
+.btn-tog{background:var(--ok-bg);color:var(--ok);border-color:var(--ok-bd)}
+.no-msg{text-align:center;padding:26px;color:var(--ink-55);font-size:12px}
+.status{padding:11px 14px;border-radius:9px;font-size:12px;font-weight:600;margin-top:11px;display:none;text-align:center;letter-spacing:.01em}
+.status-ok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-bd)}
+.status-err{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-bd)}
+.status-loading{background:var(--tint-2);color:var(--ink);border:1px solid var(--line)}
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top:2px solid #fff;border-radius:50%;animation:spin 0.8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.exemple-item{padding:8px 10px;background:#F8F9FC;border:1px solid #E5E9F2;border-radius:7px;cursor:pointer;font-size:12px;color:#1A1F36;margin-bottom:5px;transition:background 0.1s}
-.exemple-item:hover{background:#EFF6FF;border-color:#B5D4F4}
-.select-all{font-size:11px;color:#1E4D9B;cursor:pointer;text-decoration:underline;margin-bottom:8px;display:inline-block}
+.exemple-item{padding:9px 11px;background:var(--tint);border:1px solid var(--line-2);border-radius:9px;cursor:pointer;font-size:12px;color:var(--ink);margin-bottom:6px;transition:all .15s}
+.exemple-item:hover{background:var(--tint-2);border-color:var(--line)}
+.select-all{font-size:11px;color:var(--ink);cursor:pointer;text-decoration:underline;margin-bottom:8px;display:inline-block;font-weight:600}
 </style>
 </head>
 <body>
@@ -83,8 +100,7 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
 <div class="login-wrap" id="login-wrap">
   <div class="login-box">
     <div class="login-logo">IZ</div>
-    <div class="login-title">IZAC Admin</div>
-    <div class="login-sub">Pilotage des messages boutiques en temps réel</div>
+    <div class="login-sub">Pilotage des messages en temps réel</div>
     <input type="email" class="form-input" id="email" placeholder="Email" onkeypress="if(event.key==='Enter')login()">
     <input type="password" class="form-input" id="pwd" placeholder="Mot de passe" onkeypress="if(event.key==='Enter')login()">
     <button class="btn-primary" onclick="login()">Accéder →</button>
@@ -98,7 +114,7 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
       <div class="hdr-logo">IZ</div>
       <div>
         <div class="hdr-title">IZAC — Pilotage Messages Boutiques</div>
-        <div class="hdr-sub" id="hdr-status">Connecté · messages.json synchronisé avec GitHub</div>
+        <div class="hdr-sub" id="hdr-status">Connecté · synchronisé en temps réel</div>
       </div>
     </div>
     <button class="logout-btn" onclick="logout()">Déconnexion</button>
@@ -174,15 +190,15 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
       <div class="status" id="status"></div>
 
       <!-- EMAIL — MODE TEST -->
-      <div class="card" style="margin-top:16px;border:1.5px dashed #1E4D9B;background:#F8FBFF">
+      <div class="card" style="margin-top:16px;border:1.5px dashed #263145;background:#F8FBFF">
         <div class="card-title">📧 Envoi par mail — MODE TEST</div>
         <p style="font-size:12px;color:#6B7280;margin:0 0 12px;line-height:1.5">
           Les mails partent vers <strong>tabares.yendi@icloud.com</strong> pour valider le système. On branchera les vraies adresses boutiques ensuite.
         </p>
-        <button class="send-btn" style="background:#1E4D9B;margin-bottom:8px" onclick="testMailMessage()">
+        <button class="send-btn" style="background:#263145;margin-bottom:8px" onclick="testMailMessage()">
           📨 Tester l'envoi de CE message
         </button>
-        <button class="send-btn" style="background:#0D2750" onclick="testMailBrief()">
+        <button class="send-btn" style="background:#263145" onclick="testMailBrief()">
           🌤 Tester un brief météo du jour
         </button>
         <div class="status" id="mail-status"></div>
