@@ -248,8 +248,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
 <div class="view" id="view-previsionnel">
   <div class="prev-layout">
     <div class="prev-header-bar">
-      <span style="font-size:13px;font-weight:600;color:#263145">📈 Prévisionnel météo × implantation — 10 prochains jours</span>
-      <span style="font-size:11px;color:#6B7280">Par boutique · Conseils adaptés à la météo prévue chaque jour</span>
+      <span style="font-size:13px;font-weight:600;color:#263145">📈 Prévisionnel météo — 10 prochains jours</span>
+      <span style="font-size:11px;color:#6B7280">Par boutique</span>
       <span class="cb-info" id="prev-status" style="margin-left:auto"></span>
     </div>
     <div id="prev-body"><div class="prev-loading">Cliquez sur l'onglet pour charger les prévisions...</div></div>
@@ -1008,10 +1008,10 @@ function init(){
     String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear()+' '+
     String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
   const y=now.getFullYear(),m=String(now.getMonth()+1).padStart(2,'0');
-  document.getElementById('date-p1').value=`${y-1}-${m}-01`;
-  document.getElementById('date-p1-fin').value=`${y-1}-${m}-${new Date(y-1,now.getMonth()+1,0).getDate()}`;
-  document.getElementById('date-p2').value=`${y}-${m}-01`;
-  document.getElementById('date-p2-fin').value=`${y}-${m}-${new Date(y,now.getMonth()+1,0).getDate()}`;
+  document.getElementById('date-p1').value=`${y-2}-${m}-01`;
+  document.getElementById('date-p1-fin').value=`${y-2}-${m}-${new Date(y-2,now.getMonth()+1,0).getDate()}`;
+  document.getElementById('date-p2').value=`${y-1}-${m}-01`;
+  document.getElementById('date-p2-fin').value=`${y-1}-${m}-${new Date(y-1,now.getMonth()+1,0).getDate()}`;
   renderTempsReel();
 }
 init();
