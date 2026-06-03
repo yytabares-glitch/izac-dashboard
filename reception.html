@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Réception — IZAC</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+:root{--ink:#263145;--ink70:#5b647a;--ink55:#828a9c;--line:rgba(38,49,69,.12);--bg:#EDEFF3;--card:#fff;
+--ok:#1f7a44;--okbg:#e8f4ec;--warn:#b4660f;--warnbg:#fbf0e3;--att:#5b647a;--attbg:#eef1f6}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',system-ui,sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:18px 16px 50px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+h1{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:23px;margin:0}
+.sub{font-size:12px;color:var(--ink55);font-weight:600}
+.scanbar{background:var(--ink);border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.scanbar input{flex:1;border:none;border-radius:9px;padding:12px 14px;font-size:15px;font-family:inherit;outline:none}
+.scanbar .hint{color:#aeb6c6;font-size:11px;max-width:220px;line-height:1.35}
+.flash{min-height:15px;font-size:12px;font-weight:600;margin:-4px 2px 12px}
+.flash.ok{color:var(--ok)} .flash.warn{color:var(--warn)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+.kn{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:23px;line-height:1}
+.kl{font-size:10.5px;color:var(--ink55);margin-top:4px;font-weight:500}
+.cols{display:grid;grid-template-columns:1fr 1.25fr;gap:16px;align-items:start}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+.panel-h{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:15px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:baseline}
+.panel-h span{font-family:'Hanken Grotesk';font-size:12px;color:var(--ink55);font-weight:500}
+#filter{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:13px;font-family:inherit;outline:none;margin-bottom:10px}
+.tabs{display:flex;gap:8px;margin-bottom:10px}
+.chip{border:1px solid var(--line);background:#fff;color:var(--ink70);border-radius:20px;padding:6px 13px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.late{color:var(--warn);font-weight:700}
+.list{max-height:560px;overflow:auto}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 11px;border:1px solid var(--line);border-radius:10px;margin-bottom:7px;cursor:pointer;transition:.12s}
+.row:hover{border-color:rgba(38,49,69,.3)} .row.sel{border-color:var(--ink);background:#fafbfd}
+.row-code{font-weight:600;font-size:12.5px} .row-sub{font-size:11px;color:var(--ink55);margin-top:2px}
+.badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.b-att{background:var(--attbg);color:var(--att)} .b-ok{background:var(--okbg);color:var(--ok)} .b-warn{background:var(--warnbg);color:var(--warn)}
+.empty{color:var(--ink55);font-size:13px;text-align:center;padding:40px 10px}
+.d-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}
+.d-title{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:18px}
+.d-sub{font-size:12px;color:var(--ink70);margin-top:3px}
+.prog{background:#fafbfd;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12.5px;color:var(--ink70);margin-bottom:12px}
+.prog b{color:var(--ink)}
+.d-acts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:9px;padding:9px 13px;font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer}
+.btn:hover{border-color:rgba(38,49,69,.3)}
+.btn-ok{background:var(--ink);color:#fff;border-color:var(--ink)} .btn-warn{color:var(--warn);border-color:var(--warnbg)}
+.ecart-box{background:var(--warnbg);color:var(--warn);border-radius:9px;padding:9px 12px;font-size:12px;font-weight:600;margin-bottom:10px}
+.ecart-edit{display:flex;gap:8px;margin-bottom:10px}
+.ecart-edit input{flex:1;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:12.5px;font-family:inherit;outline:none}
+.lines-h{font-size:11px;color:var(--ink55);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin:6px 0 8px}
+.lines{max-height:360px;overflow:auto}
+.line{display:flex;align-items:center;gap:11px;padding:9px 10px;border-bottom:1px solid rgba(38,49,69,.07);cursor:pointer}
+.line:hover{background:#fafbfd}
+.line.done .line-lib{color:var(--ink55);text-decoration:line-through}
+.chk{width:22px;height:22px;border:1.5px solid var(--line);border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700}
+.line.done .chk{background:var(--ok);border-color:var(--ok)}
+.line-main{flex:1;min-width:0}
+.line-lib{font-size:13px;font-weight:600} .line-d{font-size:10.5px;color:var(--ink55);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.line-q{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.bar{height:5px;border-radius:4px;background:#e7eaf0;overflow:hidden;margin-top:7px}
+.bar i{display:block;height:100%;background:var(--ok)}
+.gate{max-width:420px;margin:60px auto;background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;text-align:center}
+.gate h2{font-family:'Fraunces',serif;font-weight:600;margin:0 0 6px}
+.gate p{color:var(--ink70);font-size:13px}.gate select{width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:14px;margin-top:10px}
+@media(max-width:780px){.cols{grid-template-columns:1fr}.scanbar .hint{display:none}.list{max-height:300px}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="empty" id="boot">Chargement…</div></div>
+<script>
+const SUPA_URL='https://imurxmsglmpgxdbavalk.supabase.co';
+const SUPA_KEY='sb_publishable_-FqQ5I6tx4rCUwUqmsf5DA_IFsfkUlQ';
+let sb=null, MAG=null, COLIS=[], byCode={}, byOrder={};
+const state={};   // code -> {statut, note, ok:Set(ids)}
+let current=null, viewMode='todo';
+function today0(){const d=new Date();d.setHours(0,0,0,0);return d;}
+function fmtJM(s){const d=new Date(s);return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});}
+function isLate(c){return c.created_at && new Date(c.created_at)<today0();}
+
+function esc(s){return (s||'').toString().replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+function qs(k){return new URLSearchParams(location.search).get(k);}
+function statusOf(c){const s=state[c.code];return s&&s.statut?s.statut:'attendu';}
+const BADGE={attendu:['Attendu','b-att'],recu:['Reçu','b-ok'],ecart:['Écart','b-warn']};
+
+async function init(){
+  sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+  MAG = qs('mag');
+  if(!MAG){ return chooseStore(); }
+  await loadStore();
+}
+async function chooseStore(){
+  const {data} = await sb.from('colis').select('magasin');
+  const mags=[...new Set((data||[]).map(r=>r.magasin))].sort();
+  document.getElementById('app').innerHTML='<div class="gate"><h2>Réception IZAC</h2>'
+    +'<p>Sélectionnez votre magasin.</p><select id="magsel"><option value="">— magasin —</option>'
+    +mags.map(m=>'<option value="'+esc(m)+'">Magasin '+esc(m)+'</option>').join('')+'</select></div>';
+  document.getElementById('magsel').addEventListener('change',e=>{ if(e.target.value) location.search='?mag='+e.target.value; });
+}
+async function loadStore(){
+  const {data:colis} = await sb.from('colis').select('*').eq('magasin',MAG).order('cde');
+  COLIS = colis||[]; byCode={}; byOrder={};
+  const codes = COLIS.map(c=>c.code);
+  let recs=[];
+  if(codes.length){ const rr = await sb.from('reception').select('*').in('colis_code',codes); recs=rr.data||[]; }
+  COLIS.forEach(c=>{
+    let cont=c.contenu; if(typeof cont==='string'){try{cont=JSON.parse(cont||'[]');}catch(e){cont=[];}} if(!Array.isArray(cont))cont=[];
+    c.art=cont.map((a,i)=>({ean:a.ean,qte:a.qte,lib:a.lib,fam:a.fam,taille:a.taille,coul:a.coul,id:i}));
+    byCode[c.code]=c; (byOrder[c.cde]=byOrder[c.cde]||[]).push(c.code);
+  });
+  recs.forEach(r=>{ state[r.colis_code]={statut:r.statut,note:r.note||'',ok:new Set(r.lignes_ok||[])}; });
+  renderShell(); renderKpis(); renderList();
+  Object.assign(window,{COLIS,byCode,byOrder,state,onScan,openColis,receiveColis,toggleLine,saveEcart,toggleEcart,checkAll,recapFlux,setView});
+}
+function renderShell(){
+  document.getElementById('app').innerHTML=
+   '<header><div><h1>Réception marchandises</h1><div class="sub">Magasin '+esc(MAG)+'</div></div>'
+   +'<button class="btn" onclick="recapFlux()">Récap écarts (service Flux)</button></header>'
+   +'<div class="scanbar"><input id="scan" placeholder="Scannez un colis, puis ses articles…" autofocus autocomplete="off">'
+   +'<span class="hint">Scannez le code-barres d\'un colis pour le recevoir, puis les articles pour les contrôler.</span></div>'
+   +'<div id="flash" class="flash"></div><div class="kpis" id="kpis"></div>'
+   +'<div class="cols"><div class="panel"><div class="panel-h">Mes colis <span id="count"></span></div>'
+   +'<div id="tabs" class="tabs"></div>'
+   +'<input id="filter" placeholder="Filtrer (commande ou colis)…" autocomplete="off"><div id="list" class="list"></div></div>'
+   +'<div class="panel"><div id="detail"><div class="empty">Scannez ou sélectionnez un colis.</div></div></div></div>';
+  document.getElementById('scan').addEventListener('keydown',e=>{if(e.key==='Enter'){onScan(e.target.value);e.target.value='';}});
+  document.getElementById('filter').addEventListener('input',renderList);
+}
+function kpi(n,l){return '<div class="kpi"><div class="kn">'+n+'</div><div class="kl">'+l+'</div></div>';}
+function renderKpis(){
+  const recu=COLIS.filter(c=>statusOf(c)==='recu').length, ec=COLIS.filter(c=>statusOf(c)==='ecart').length, att=COLIS.length-recu-ec;
+  document.getElementById('kpis').innerHTML=kpi(att,'à recevoir')+kpi(recu,'reçus')+kpi(ec,'écarts');
+}
+function renderTabs(){
+  const todo=COLIS.filter(c=>statusOf(c)!=='recu').length, done=COLIS.filter(c=>statusOf(c)==='recu').length;
+  const t=document.getElementById('tabs'); if(!t)return;
+  t.innerHTML='<button class="chip'+(viewMode==='todo'?' on':'')+'" onclick="setView(\'todo\')">À traiter ('+todo+')</button>'
+    +'<button class="chip'+(viewMode==='done'?' on':'')+'" onclick="setView(\'done\')">Reçus ('+done+')</button>';
+}
+function setView(m){viewMode=m;renderTabs();renderList();}
+function renderList(){
+  renderTabs();
+  const f=document.getElementById('filter'); const q=(f?f.value:'').toLowerCase().trim();
+  let items=COLIS.filter(c=>viewMode==='done'?statusOf(c)==='recu':statusOf(c)!=='recu');
+  items=items.filter(c=>!q||c.code.toLowerCase().includes(q)||(c.cde||'').toLowerCase().includes(q));
+  if(viewMode==='todo') items.sort((a,b)=>(a.created_at||'').localeCompare(b.created_at||''));
+  document.getElementById('count').textContent='('+items.length+')';
+  document.getElementById('list').innerHTML=items.map(c=>{const b=BADGE[statusOf(c)];
+    const late=(statusOf(c)!=='recu'&&isLate(c))?' · <span class="late">depuis '+fmtJM(c.created_at)+'</span>':'';
+    return '<div class="row'+(current===c.code?' sel':'')+'" onclick="openColis(\''+c.code+'\')"><div class="row-main"><div class="row-code">Colis '+esc(c.code)+'</div><div class="row-sub">Cde '+esc(c.cde)+' · '+c.pieces+' pcs'+late+'</div></div><span class="badge '+b[1]+'">'+b[0]+'</span></div>';
+  }).join('')||'<div class="empty">'+(viewMode==='done'?'Aucun colis reçu.':'Rien à recevoir — tout est traité ✓')+'</div>';
+}
+function openColis(code){
+  current=code;const c=byCode[code];if(!c)return;
+  const sames=byOrder[c.cde]||[],recuN=sames.filter(x=>statusOf(byCode[x])==='recu').length,missing=sames.filter(x=>statusOf(byCode[x])!=='recu');
+  const st=state[code]||{}; const ok=st.ok||new Set();
+  const lines=c.art.map(a=>{const on=ok.has(a.id);const lib=esc(a.fam)+(a.coul?' · '+esc(a.coul):'')+(a.taille?' · T.'+esc(a.taille):'');
+    return '<div class="line'+(on?' done':'')+'" onclick="toggleLine(\''+code+'\','+a.id+')"><div class="chk">'+(on?'✓':'')+'</div><div class="line-main"><div class="line-lib">'+lib+'</div>'+(a.lib&&a.lib!==a.fam?'<div class="line-d">'+esc(a.lib)+'</div>':'')+'</div><div class="line-q">×'+a.qte+'</div></div>';
+  }).join('');
+  const okN=c.art.filter(a=>ok.has(a.id)).length, pct=c.art.length?Math.round(100*okN/c.art.length):0;
+  const stt=statusOf(c);
+  let h='<div class="d-h"><div><div class="d-title">Colis '+esc(code)+'</div><div class="d-sub">Commande '+esc(c.cde)+' · '+c.pieces+' pièces</div></div><span class="badge '+BADGE[stt][1]+'">'+BADGE[stt][0]+'</span></div>';
+  h+='<div class="prog">Commande '+esc(c.cde)+' : <b>'+recuN+'/'+sames.length+'</b> colis reçus'+(missing.length?' · manquants : '+missing.map(esc).join(', '):' · complet ✓')+'</div>';
+  h+='<div class="d-acts"><button class="btn btn-ok" onclick="receiveColis(\''+code+'\')">Marquer le colis reçu</button><button class="btn" onclick="checkAll(\''+code+'\')">Tout cocher</button><button class="btn btn-warn" onclick="toggleEcart(\''+code+'\')">Signaler un écart</button></div>';
+  if(stt==='ecart')h+='<div class="ecart-box">⚠ Écart : '+esc(st.note||'(non précisé)')+'</div>';
+  h+='<div id="ecart-edit"></div>';
+  h+='<div class="lines-h">'+c.art.length+' références — contrôle '+okN+'/'+c.art.length+'<div class="bar"><i style="width:'+pct+'%"></i></div></div><div class="lines">'+lines+'</div>';
+  document.getElementById('detail').innerHTML=h;renderList();
+}
+function st_(code){return state[code]=state[code]||{statut:'',note:'',ok:new Set()};}
+async function persist(code){
+  const s=st_(code);
+  try{ await sb.from('reception').upsert({colis_code:code,magasin:MAG,statut:s.statut||'attendu',note:s.note||'',lignes_ok:[...s.ok]},{onConflict:'colis_code'}); }
+  catch(e){ flash('Sauvegarde impossible (réseau)',true); }
+}
+function toggleLine(code,id){const s=st_(code);if(s.ok.has(id))s.ok.delete(id);else s.ok.add(id);persist(code);openColis(code);}
+function checkAll(code){const s=st_(code);byCode[code].art.forEach(a=>s.ok.add(a.id));persist(code);openColis(code);}
+function receiveColis(code){const s=st_(code);s.statut='recu';persist(code);renderKpis();openColis(code);}
+function toggleEcart(code){const s=st_(code);const b=document.getElementById('ecart-edit');
+  b.innerHTML='<div class="ecart-edit"><input id="ecart-in" placeholder="Écart (colis manquant, abîmé, pièces en moins…)" value="'+esc(s.note||'')+'"><button class="btn btn-warn" onclick="saveEcart(\''+code+'\')">Enregistrer</button></div>';
+  const el=document.getElementById('ecart-in'); if(el)el.focus();}
+function saveEcart(code){const s=st_(code);s.statut='ecart';s.note=(document.getElementById('ecart-in')||{value:''}).value.trim();persist(code);renderKpis();openColis(code);}
+function flash(m,w){const e=document.getElementById('flash');if(!e)return;e.textContent=m;e.className='flash '+(w?'warn':'ok');setTimeout(()=>{e.textContent='';e.className='flash';},2200);}
+function onScan(v){v=(v||'').trim();if(!v)return;
+  if(byCode[v]){openColis(v);receiveColis(v);flash('Colis '+v+' reçu ✓');return;}
+  if(current){const a=byCode[current].art.find(x=>x.ean===v);if(a){st_(current).ok.add(a.id);persist(current);openColis(current);flash('Article coché ✓');return;}}
+  flash('Code inconnu : '+v,true);
+}
+function recapFlux(){
+  const ecs=COLIS.filter(c=>statusOf(c)==='ecart');
+  if(!ecs.length){flash('Aucun écart à signaler.');return;}
+  let t='Magasin '+MAG+' — écarts réception\n\n';
+  ecs.forEach(c=>{t+='Colis '+c.code+' (Cde '+c.cde+') : '+(state[c.code].note||'')+'\n';});
+  try{navigator.clipboard&&navigator.clipboard.writeText(t);}catch(e){}
+  flash(ecs.length+' écart(s) copié(s) pour le mail service Flux ✓');
+}
+window.addEventListener('DOMContentLoaded',init);
+window.__init=init;
+</script>
+</body>
+</html>

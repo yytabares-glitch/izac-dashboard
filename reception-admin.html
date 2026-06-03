@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Réception — Console siège — IZAC</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+:root{--ink:#263145;--ink70:#5b647a;--ink55:#828a9c;--line:rgba(38,49,69,.12);--bg:#EDEFF3;--card:#fff;
+--ok:#1f7a44;--okbg:#e8f4ec;--warn:#b4660f;--warnbg:#fbf0e3}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',system-ui,sans-serif}
+.wrap{max-width:920px;margin:0 auto;padding:20px 16px 50px}
+h1{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:23px;margin:0 0 2px}
+.sub{font-size:12px;color:var(--ink55);font-weight:600;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px}
+.card h2{font-family:'Fraunces',serif;font-weight:600;font-size:16px;margin:0 0 12px}
+label{font-size:12px;font-weight:600;color:var(--ink70);display:block;margin:10px 0 4px}
+input[type=email],input[type=password],input[type=file]{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-family:inherit;font-size:13px}
+.btn{border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:9px;padding:10px 16px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+.btn.sec{background:#fff;color:var(--ink)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.chk{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink70)}
+.log{background:#fafbfd;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:12px;color:var(--ink70);margin-top:12px;white-space:pre-wrap;max-height:200px;overflow:auto;display:none}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink55)}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+.pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--okbg);color:var(--ok)}
+.pill.w{background:var(--warnbg);color:var(--warn)}
+.bar{height:6px;border-radius:4px;background:#e7eaf0;overflow:hidden;width:90px}
+.bar i{display:block;height:100%;background:var(--ok)}
+#login{max-width:380px;margin:50px auto}
+.hide{display:none}
+.muted{font-size:11.5px;color:var(--ink55);margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Console réception</h1>
+  <div class="sub">IZAC · siège</div>
+
+  <div id="login" class="card">
+    <h2>Connexion</h2>
+    <label>Email</label><input id="email" type="email" autocomplete="username">
+    <label>Mot de passe</label><input id="pwd" type="password" autocomplete="current-password">
+    <div class="row"><button class="btn" id="loginBtn">Se connecter</button></div>
+    <div id="loginMsg" class="muted"></div>
+  </div>
+
+  <div id="main" class="hide">
+    <div class="card">
+      <h2>Import des fichiers du jour</h2>
+      <label>Fichiers transporteur (.paq) — vous pouvez en sélectionner plusieurs</label>
+      <input id="paqFiles" type="file" multiple accept=".paq,.txt">
+      <label>Référentiel articles (Fastmag .csv) <span style="font-weight:400;color:var(--ink55)">— pour les noms d'articles</span></label>
+      <input id="catFile" type="file" accept=".csv">
+      <div class="muted" style="margin-top:12px">L'import <b>ajoute</b> les nouveaux colis. Les colis déjà présents — et l'avancement des magasins — sont <b>conservés</b>. Tu peux importer autant de fois que tu veux dans la journée.</div>
+      <div class="row"><button class="btn" id="importBtn">Importer dans les magasins</button></div>
+      <div id="log" class="log"></div>
+    </div>
+
+    <div class="card">
+      <h2>Suivi des magasins <button class="btn sec" id="refreshBtn" style="float:right;padding:6px 12px">Rafraîchir</button></h2>
+      <div id="suivi"><div class="muted">Chargement…</div></div>
+      <div class="row" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+        <span class="muted" style="flex:1;min-width:200px">Entretien : retirer les colis <b>reçus</b> de plus de
+        <input id="cleanDays" type="number" value="7" style="width:56px;border:1px solid var(--line);border-radius:7px;padding:5px 7px;font-family:inherit"> jours (jamais les colis en attente)</span>
+        <button class="btn sec" id="cleanBtn" style="padding:7px 13px">Nettoyer</button>
+      </div>
+    </div>
+    <div class="muted">Connecté · <a href="#" id="logout">se déconnecter</a></div>
+  </div>
+</div>
+<script>
+const SUPA_URL='https://imurxmsglmpgxdbavalk.supabase.co';
+const SUPA_KEY='sb_publishable_-FqQ5I6tx4rCUwUqmsf5DA_IFsfkUlQ';
+let sb=null;
+const CHUNK=800;
+function log(m){const e=document.getElementById('log');e.style.display='block';e.textContent+=m+'\n';e.scrollTop=e.scrollHeight;}
+function chunk(a,n){const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o;}
+
+function parseCSVLine(line){const out=[];let cur='',inq=false;
+  for(let i=0;i<line.length;i++){const ch=line[i];
+    if(inq){if(ch==='"'){if(line[i+1]==='"'){cur+='"';i++;}else inq=false;}else cur+=ch;}
+    else{if(ch==='"')inq=true;else if(ch===';'){out.push(cur);cur='';}else cur+=ch;}}
+  out.push(cur);return out;}
+
+async function buildCatalog(file){
+  if(!file) return {};
+  const buf=await file.arrayBuffer();
+  const txt=new TextDecoder('windows-1252').decode(buf);
+  const lines=txt.split(/\r?\n/);
+  const h=parseCSVLine(lines[0]);
+  const iG=h.indexOf('Gencod'),iD=h.indexOf('Désignation1'),iF=h.indexOf('Famille'),iT=h.indexOf('Taille'),iC=h.indexOf('Couleur');
+  const map={};
+  for(let i=1;i<lines.length;i++){ if(!lines[i])continue; const r=parseCSVLine(lines[i]); const g=r[iG];
+    if(g) map[g]={lib:(r[iD]||'').trim(),fam:(r[iF]||'').trim()||'ARTICLE',taille:(r[iT]||'').trim(),coul:(r[iC]||'').trim()}; }
+  return map;
+}
+async function parsePaq(file){
+  const buf=await file.arrayBuffer();
+  const txt=new TextDecoder('iso-8859-1').decode(buf);
+  const lines=txt.split(/\r?\n/);
+  const cm={},order=[];
+  for(const line of lines){ if(!line)continue; const p=line.split('\t'); if(p.length<9||!p[8])continue;
+    const code=p[8]; const qte=parseInt(p[5]||'1',10)||1;
+    if(!cm[code]){cm[code]={code,magasin:p[0],cde:p[1],art:[]};order.push(code);}
+    cm[code].art.push({ean:p[4],qte}); }
+  return order.map(c=>cm[c]);
+}
+async function cleanupOld(){
+  const days=parseInt(document.getElementById('cleanDays').value||'7',10);
+  const cutoff=new Date(Date.now()-days*864e5).toISOString();
+  const {data}=await sb.from('reception').select('colis_code').eq('statut','recu').lt('updated_at',cutoff);
+  const codes=(data||[]).map(r=>r.colis_code);
+  if(!codes.length){ log('Aucun colis reçu de plus de '+days+' j à retirer.'); return; }
+  for(const ch of chunk(codes,200)){
+    await sb.from('reception').delete().in('colis_code',ch);
+    await sb.from('colis').delete().in('code',ch);
+  }
+  log('🧹 '+codes.length+' colis reçus (> '+days+' j) retirés.');
+  loadSuivi();
+}
+async function doImport(){
+  const paqs=[...document.getElementById('paqFiles').files];
+  const catFile=document.getElementById('catFile').files[0];
+  if(!paqs.length){ log('⚠ Sélectionnez au moins un fichier .paq.'); return; }
+  document.getElementById('importBtn').disabled=true;
+  try{
+    log('Lecture du référentiel…');
+    const cat=await buildCatalog(catFile);
+    log('Référentiel : '+Object.keys(cat).length+' articles.');
+    let colisRows=[],totColis=0;
+    for(const f of paqs){
+      const colis=await parsePaq(f);
+      log(f.name+' : '+colis.length+' colis.');
+      totColis+=colis.length;
+      colis.forEach(c=>{
+        const contenu=c.art.map(a=>{const m=cat[a.ean]||{};return {ean:a.ean,qte:a.qte,lib:m.lib||'',fam:m.fam||'ARTICLE',taille:m.taille||'',coul:m.coul||''};});
+        colisRows.push({code:c.code,magasin:c.magasin,cde:c.cde,pieces:c.art.reduce((s,a)=>s+a.qte,0),contenu,batch:f.name});
+      });
+    }
+    log('Envoi de '+colisRows.length+' colis…');
+    for(const ch of chunk(colisRows,CHUNK)) await sb.from('colis').upsert(ch,{onConflict:'code'});
+    log('✅ Import terminé : '+totColis+' colis traités. Les colis déjà présents (et leur avancement) sont conservés.');
+    loadSuivi();
+  }catch(e){ log('❌ Erreur : '+(e.message||e)); }
+  document.getElementById('importBtn').disabled=false;
+}
+async function loadSuivi(){
+  const el=document.getElementById('suivi');
+  const {data:colis}=await sb.from('colis').select('magasin');
+  const {data:recs}=await sb.from('reception').select('magasin,statut');
+  if(!colis||!colis.length){ el.innerHTML='<div class="muted">Aucune livraison importée.</div>'; return; }
+  const agg={};
+  colis.forEach(c=>{(agg[c.magasin]=agg[c.magasin]||{att:0,recu:0,ec:0}).att++;});
+  (recs||[]).forEach(r=>{const a=agg[r.magasin];if(!a)return;if(r.statut==='recu')a.recu++;else if(r.statut==='ecart')a.ec++;});
+  const mags=Object.keys(agg).sort();
+  let h='<table><thead><tr><th>Magasin</th><th class="n">Colis</th><th class="n">Reçus</th><th>Avancement</th><th class="n">Écarts</th></tr></thead><tbody>';
+  mags.forEach(m=>{const a=agg[m];const pct=a.att?Math.round(100*a.recu/a.att):0;
+    h+='<tr><td><b>'+m+'</b></td><td class="n">'+a.att+'</td><td class="n">'+a.recu+'</td><td><div style="display:flex;align-items:center;gap:8px"><div class="bar"><i style="width:'+pct+'%"></i></div><span class="muted">'+pct+'%</span></div></td><td class="n">'+(a.ec?'<span class="pill w">'+a.ec+'</span>':'0')+'</td></tr>';});
+  h+='</tbody></table>';
+  el.innerHTML=h;
+}
+async function doLogin(){
+  const email=document.getElementById('email').value.trim(), pwd=document.getElementById('pwd').value;
+  const {error}=await sb.auth.signInWithPassword({email,password:pwd});
+  if(error){ document.getElementById('loginMsg').textContent='Identifiants incorrects.'; return; }
+  showMain();
+}
+function showMain(){ document.getElementById('login').classList.add('hide'); document.getElementById('main').classList.remove('hide'); loadSuivi(); }
+async function init(){
+  sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+  const {data}=await sb.auth.getSession();
+  if(data&&data.session) showMain();
+  document.getElementById('loginBtn').addEventListener('click',doLogin);
+  document.getElementById('importBtn').addEventListener('click',doImport);
+  document.getElementById('refreshBtn').addEventListener('click',loadSuivi);
+  document.getElementById('cleanBtn').addEventListener('click',cleanupOld);
+  document.getElementById('logout').addEventListener('click',async e=>{e.preventDefault();await sb.auth.signOut();location.reload();});
+  Object.assign(window,{buildCatalog,parsePaq,doImport,loadSuivi,parseCSVLine});
+}
+window.addEventListener('DOMContentLoaded',init);
+window.__init=init;
+</script>
+</body>
+</html>
