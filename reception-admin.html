@@ -3,57 +3,72 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Réception — Console siège — IZAC</title>
+<title>Console réception — IZAC</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}
-:root{--ink:#263145;--ink70:#5b647a;--ink55:#828a9c;--line:rgba(38,49,69,.12);--bg:#EDEFF3;--card:#fff;
---ok:#1f7a44;--okbg:#e8f4ec;--warn:#b4660f;--warnbg:#fbf0e3}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',system-ui,sans-serif}
-.wrap{max-width:920px;margin:0 auto;padding:20px 16px 50px}
-h1{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:23px;margin:0 0 2px}
-.sub{font-size:12px;color:var(--ink55);font-weight:600;margin-bottom:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px}
-.card h2{font-family:'Fraunces',serif;font-weight:600;font-size:16px;margin:0 0 12px}
-label{font-size:12px;font-weight:600;color:var(--ink70);display:block;margin:10px 0 4px}
-input[type=email],input[type=password],input[type=file]{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-family:inherit;font-size:13px}
-.btn{border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:9px;padding:10px 16px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
-.btn.sec{background:#fff;color:var(--ink)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
-.chk{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink70)}
-.log{background:#fafbfd;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:12px;color:var(--ink70);margin-top:12px;white-space:pre-wrap;max-height:200px;overflow:auto;display:none}
-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
-th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
-th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink55)}
-td.n{text-align:right;font-variant-numeric:tabular-nums}
-.pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--okbg);color:var(--ok)}
-.pill.w{background:var(--warnbg);color:var(--warn)}
-.bar{height:6px;border-radius:4px;background:#e7eaf0;overflow:hidden;width:90px}
+:root{--ink:#1c2535;--ink2:#5b647a;--ink3:#8b93a4;--line:#e4e7ee;--line2:#eef1f5;--bg:#f3f5f8;--card:#fff;
+--accent:#1c2535;--ok:#1f7a44;--okbg:#eaf5ee;--warn:#b4660f;--warnbg:#fbf1e3;--warnline:#f0dcc0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:14px;line-height:1.45}
+.wrap{max-width:980px;margin:0 auto;padding:18px 16px 60px}
+.brand{display:flex;align-items:baseline;gap:12px;margin-bottom:18px}
+.logo{font-family:'Fraunces',serif;font-weight:700;letter-spacing:.22em;font-size:18px}
+.brand .t{font-family:'Fraunces',serif;font-weight:600;font-size:19px}
+.brand .m{font-size:12px;color:var(--ink3);font-weight:600;border-left:1px solid var(--line);padding-left:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-bottom:16px}
+.card h2{font-family:'Fraunces',serif;font-weight:600;font-size:16px;margin:0 0 4px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.card .desc{font-size:12.5px;color:var(--ink3);margin:0 0 14px}
+label{font-size:12px;font-weight:600;color:var(--ink2);display:block;margin:12px 0 5px}
+input[type=email],input[type=password],input[type=file],input[type=text],input[type=number]{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:13px;outline:none}
+input:focus{border-color:var(--ink3)}
+.btn{border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:.12s}
+.btn:hover{opacity:.9}.btn.sec{background:#fff;color:var(--ink);border-color:var(--line)}.btn.sec:hover{border-color:var(--ink3)}
+.btn.sm{padding:7px 12px;font-size:12px}.btn:disabled{opacity:.45;cursor:default}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+.log{background:#fafbfd;border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:12px;color:var(--ink2);margin-top:13px;white-space:pre-wrap;max-height:220px;overflow:auto;display:none;font-family:ui-monospace,Menlo,monospace}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line2)}
+thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);border-bottom:1px solid var(--line)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tbody tr:hover{background:#fafbfd}
+.code{font-weight:700}
+.pill{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px}
+.pill.ok{background:var(--okbg);color:var(--ok)} .pill.w{background:var(--warnbg);color:var(--warn)} .pill.g{background:#eef1f6;color:var(--ink3)}
+.bar{height:6px;border-radius:5px;background:#edf0f5;overflow:hidden;width:96px}
 .bar i{display:block;height:100%;background:var(--ok)}
-#login{max-width:380px;margin:50px auto}
+.scroll{max-height:420px;overflow:auto;border:1px solid var(--line2);border-radius:11px}
+.scroll thead th{position:sticky;top:0;background:#fff}
+.muted{font-size:12px;color:var(--ink3)}
+.acc-pin{display:flex;gap:6px;align-items:center}
+.acc-pin input{width:90px;padding:7px 9px}
+#login{max-width:380px;margin:9vh auto 0;box-shadow:0 10px 40px rgba(28,37,53,.06)}
+#login .logo{display:block;text-align:center;font-size:20px;margin-bottom:6px}
 .hide{display:none}
-.muted{font-size:11.5px;color:var(--ink55);margin-top:6px}
+.err{color:var(--warn);font-size:12px;font-weight:600;margin-top:10px;min-height:14px}
+.foot{font-size:12px;color:var(--ink3);text-align:center;margin-top:8px}
+.foot a{color:var(--ink2);cursor:pointer}
+.status{font-size:12.5px;padding:10px 12px;border-radius:10px;background:#fafbfd;border:1px solid var(--line);margin-bottom:12px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Console réception</h1>
-  <div class="sub">IZAC · siège</div>
+  <div class="brand"><span class="logo">I Z A C</span><span class="t">Console réception</span><span class="m">siège</span></div>
 
   <div id="login" class="card">
-    <h2>Connexion</h2>
+    <span class="logo">I Z A C</span>
+    <h2 style="justify-content:center">Connexion</h2>
     <label>Email</label><input id="email" type="email" autocomplete="username">
     <label>Mot de passe</label><input id="pwd" type="password" autocomplete="current-password">
-    <div class="row"><button class="btn" id="loginBtn">Se connecter</button></div>
-    <div id="loginMsg" class="muted"></div>
+    <div class="row" style="justify-content:center"><button class="btn" id="loginBtn">Se connecter</button></div>
+    <div class="err" id="loginErr" style="text-align:center"></div>
   </div>
 
   <div id="main" class="hide">
     <div class="card">
-      <h2>Référentiel articles <span style="font-weight:400;color:var(--ink55);font-size:12px">— à charger une seule fois</span></h2>
-      <div id="catStatus" class="muted">Vérification…</div>
+      <h2>1 · Référentiel articles <span class="muted" style="font-weight:400">une seule fois</span></h2>
+      <div class="status" id="catStatus">Vérification…</div>
       <label>Fichier référentiel Fastmag (.csv)</label>
       <input id="catFile" type="file" accept=".csv">
       <div class="row"><button class="btn sec" id="catBtn">Charger le référentiel</button></div>
@@ -61,166 +76,172 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
     </div>
 
     <div class="card">
-      <h2>Import des fichiers du jour</h2>
+      <h2>2 · Import des livraisons du jour</h2>
+      <p class="desc">Dépose uniquement les fichiers <b>.paq</b>. Les noms viennent du référentiel. L'import <b>ajoute</b> les nouveaux colis et conserve les autres (et l'avancement des magasins).</p>
       <label>Fichiers transporteur (.paq) — plusieurs possibles</label>
       <input id="paqFiles" type="file" multiple accept=".paq,.txt">
-      <div class="muted" style="margin-top:12px">Dépose seulement les <b>.paq</b> : les noms d'articles viennent du référentiel déjà chargé. L'import <b>ajoute</b> les nouveaux colis et <b>conserve</b> les autres (et l'avancement des magasins). Tu peux importer autant de fois que tu veux dans la journée.</div>
       <div class="row"><button class="btn" id="importBtn">Importer dans les magasins</button></div>
       <div id="log" class="log"></div>
     </div>
 
     <div class="card">
-      <h2>Suivi des magasins <button class="btn sec" id="refreshBtn" style="float:right;padding:6px 12px">Rafraîchir</button></h2>
+      <h2>3 · Suivi des magasins <button class="btn sec sm" id="refreshBtn">Rafraîchir</button></h2>
       <div id="suivi"><div class="muted">Chargement…</div></div>
-      <div class="row" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+      <div class="row" style="border-top:1px solid var(--line2);padding-top:13px;margin-top:14px">
         <span class="muted" style="flex:1;min-width:200px">Entretien : retirer les colis <b>reçus</b> de plus de
-        <input id="cleanDays" type="number" value="7" style="width:56px;border:1px solid var(--line);border-radius:7px;padding:5px 7px;font-family:inherit"> jours (jamais les colis en attente)</span>
-        <button class="btn sec" id="cleanBtn" style="padding:7px 13px">Nettoyer</button>
+        <input id="cleanDays" type="number" value="7" style="width:54px;display:inline-block;padding:5px 7px"> jours (jamais les colis en attente)</span>
+        <button class="btn sec sm" id="cleanBtn">Nettoyer</button>
       </div>
     </div>
-    <div class="muted">Connecté · <a href="#" id="logout">se déconnecter</a></div>
+
+    <div class="card">
+      <h2>4 · Accès des magasins <span class="muted" style="font-weight:400">identifiant + PIN</span></h2>
+      <p class="desc">Chaque magasin se connecte avec son <b>code</b> et un <b>PIN</b> que tu définis ici. Donne à chaque boutique son lien + son PIN. Le PIN n'est jamais stocké en clair.</p>
+      <div id="acces"><div class="muted">Importe d'abord des livraisons.</div></div>
+    </div>
+
+    <div class="foot">Connecté · <a id="logout">se déconnecter</a></div>
   </div>
 </div>
 <script>
 const SUPA_URL='https://imurxmsglmpgxdbavalk.supabase.co';
 const SUPA_KEY='sb_publishable_-FqQ5I6tx4rCUwUqmsf5DA_IFsfkUlQ';
-let sb=null;
-const CHUNK=800;
+let sb=null; const CHUNK=800;
+const storeBase=location.href.replace(/[^/]*$/,'reception.html').split('#')[0].split('?')[0];
 function log(m){const e=document.getElementById('log');e.style.display='block';e.textContent+=m+'\n';e.scrollTop=e.scrollHeight;}
+function clog(m){const e=document.getElementById('catlog');e.style.display='block';e.textContent+=m+'\n';e.scrollTop=e.scrollHeight;}
 function chunk(a,n){const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o;}
+async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
 
 function parseCSVLine(line){const out=[];let cur='',inq=false;
   for(let i=0;i<line.length;i++){const ch=line[i];
     if(inq){if(ch==='"'){if(line[i+1]==='"'){cur+='"';i++;}else inq=false;}else cur+=ch;}
     else{if(ch==='"')inq=true;else if(ch===';'){out.push(cur);cur='';}else cur+=ch;}}
   out.push(cur);return out;}
-
-function clog(m){const e=document.getElementById('catlog');e.style.display='block';e.textContent+=m+'\n';e.scrollTop=e.scrollHeight;}
 function parseCatalogueText(txt){
-  const lines=txt.split(/\r?\n/);
-  const h=parseCSVLine(lines[0]);
+  const lines=txt.split(/\r?\n/); const h=parseCSVLine(lines[0]);
   const iG=h.indexOf('Gencod'),iD=h.indexOf('Désignation1'),iF=h.indexOf('Famille'),iT=h.indexOf('Taille'),iC=h.indexOf('Couleur');
   const seen={},rows=[];
   for(let i=1;i<lines.length;i++){ if(!lines[i])continue; const r=parseCSVLine(lines[i]); const g=(r[iG]||'').trim();
     if(!g||seen[g])continue; seen[g]=1;
     rows.push({ean:g,lib:(r[iD]||'').trim(),fam:(r[iF]||'').trim()||'ARTICLE',taille:(r[iT]||'').trim(),coul:(r[iC]||'').trim()}); }
-  return rows;
-}
-async function parseCatalogue(file){
-  const buf=await file.arrayBuffer();
-  return parseCatalogueText(new TextDecoder('windows-1252').decode(buf));
-}
-function enrich(art,nameMap){
-  return art.map(a=>{const m=nameMap[a.ean]||{};return {ean:a.ean,qte:a.qte,lib:m.lib||'',fam:m.fam||'ARTICLE',taille:m.taille||'',coul:m.coul||''};});
-}
-async function importCatalogue(){
-  const f=document.getElementById('catFile').files[0];
-  if(!f){ clog('⚠ Choisis le fichier référentiel .csv.'); return; }
-  document.getElementById('catBtn').disabled=true;
-  try{
-    clog('Lecture du fichier…');
-    const rows=await parseCatalogue(f);
-    clog(rows.length+' articles trouvés. Envoi vers la base (un peu long, ne ferme pas l\'onglet)…');
-    let done=0;
-    for(const ch of chunk(rows,1000)){ await sb.from('articles').upsert(ch,{onConflict:'ean'}); done+=ch.length; if(done%20000<1000) clog('  '+done+' / '+rows.length+'…'); }
-    clog('✅ Référentiel chargé : '+rows.length+' articles. Tu n\'as plus à le redéposer.');
-    loadCatStatus();
-  }catch(e){ clog('❌ Erreur : '+(e.message||e)); }
-  document.getElementById('catBtn').disabled=false;
-}
-async function loadCatStatus(){
-  const el=document.getElementById('catStatus'); if(!el)return;
-  try{
-    const {count}=await sb.from('articles').select('ean',{count:'exact',head:true});
-    el.innerHTML=(count&&count>0)?('✅ Référentiel en base : <b>'+Number(count).toLocaleString('fr-FR')+'</b> articles. (À recharger seulement s\'il change.)')
-      :'⚠ Aucun référentiel chargé — charge-le une fois ci-dessous (sinon les colis s\'afficheront sans nom d\'article).';
-  }catch(e){ el.textContent='Statut référentiel indisponible.'; }
-}
+  return rows;}
+async function parseCatalogue(file){const buf=await file.arrayBuffer();return parseCatalogueText(new TextDecoder('windows-1252').decode(buf));}
+function enrich(art,m){return art.map(a=>{const x=m[a.ean]||{};return {ean:a.ean,qte:a.qte,lib:x.lib||'',fam:x.fam||'ARTICLE',taille:x.taille||'',coul:x.coul||''};});}
 async function parsePaq(file){
-  const buf=await file.arrayBuffer();
-  const txt=new TextDecoder('iso-8859-1').decode(buf);
-  const lines=txt.split(/\r?\n/);
+  const buf=await file.arrayBuffer(); const txt=new TextDecoder('iso-8859-1').decode(buf); const lines=txt.split(/\r?\n/);
   const cm={},order=[];
   for(const line of lines){ if(!line)continue; const p=line.split('\t'); if(p.length<9||!p[8])continue;
     const code=p[8]; const qte=parseInt(p[5]||'1',10)||1;
     if(!cm[code]){cm[code]={code,magasin:p[0],cde:p[1],art:[]};order.push(code);}
     cm[code].art.push({ean:p[4],qte}); }
-  return order.map(c=>cm[c]);
+  return order.map(c=>cm[c]);}
+
+async function importCatalogue(){
+  const f=document.getElementById('catFile').files[0];
+  if(!f){clog('⚠ Choisis le fichier référentiel .csv.');return;}
+  document.getElementById('catBtn').disabled=true;
+  try{
+    clog('Lecture du fichier…'); const rows=await parseCatalogue(f);
+    clog(rows.length+' articles. Envoi vers la base (un peu long, ne ferme pas l\'onglet)…');
+    let done=0; for(const ch of chunk(rows,1000)){await sb.from('articles').upsert(ch,{onConflict:'ean'});done+=ch.length;if(done%20000<1000)clog('  '+done+' / '+rows.length+'…');}
+    clog('✅ Référentiel chargé : '+rows.length+' articles. Tu n\'as plus à le redéposer.'); loadCatStatus();
+  }catch(e){clog('❌ Erreur : '+(e.message||e));}
+  document.getElementById('catBtn').disabled=false;
+}
+async function loadCatStatus(){
+  const el=document.getElementById('catStatus'); if(!el)return;
+  try{const {count}=await sb.from('articles').select('ean',{count:'exact',head:true});
+    el.innerHTML=(count&&count>0)?('✅ Référentiel en base : <b>'+Number(count).toLocaleString('fr-FR')+'</b> articles. (À recharger seulement s\'il change.)')
+      :'⚠ Aucun référentiel — charge-le une fois ci-dessous, sinon les colis s\'afficheront sans nom.';
+  }catch(e){el.textContent='Statut indisponible.';}
+}
+async function doImport(){
+  const paqs=[...document.getElementById('paqFiles').files];
+  if(!paqs.length){log('⚠ Sélectionne au moins un fichier .paq.');return;}
+  document.getElementById('importBtn').disabled=true;
+  try{
+    let allColis=[],tot=0; const eans=new Set();
+    for(const f of paqs){const colis=await parsePaq(f);log(f.name+' : '+colis.length+' colis.');tot+=colis.length;
+      colis.forEach(c=>{allColis.push(Object.assign({},c,{batch:f.name}));c.art.forEach(a=>eans.add(a.ean));});}
+    log('Récupération des noms ('+eans.size+' articles)…'); const nameMap={};
+    for(const ch of chunk([...eans],300)){const {data}=await sb.from('articles').select('ean,lib,fam,taille,coul').in('ean',ch);(data||[]).forEach(a=>{nameMap[a.ean]={lib:a.lib,fam:a.fam,taille:a.taille,coul:a.coul};});}
+    let manq=0; eans.forEach(e=>{if(!nameMap[e])manq++;}); if(manq)log('ℹ '+manq+' article(s) sans nom (références récentes) — recharge le référentiel si tu en vois beaucoup.');
+    const rows=allColis.map(c=>({code:c.code,magasin:c.magasin,cde:c.cde,pieces:c.art.reduce((s,a)=>s+a.qte,0),contenu:enrich(c.art,nameMap),batch:c.batch}));
+    log('Envoi de '+rows.length+' colis…');
+    for(const ch of chunk(rows,CHUNK)) await sb.from('colis').upsert(ch,{onConflict:'code'});
+    log('✅ Import terminé : '+tot+' colis. Colis déjà présents (et avancement) conservés.');
+    loadSuivi(); loadAcces();
+  }catch(e){log('❌ Erreur : '+(e.message||e));}
+  document.getElementById('importBtn').disabled=false;
 }
 async function cleanupOld(){
   const days=parseInt(document.getElementById('cleanDays').value||'7',10);
   const cutoff=new Date(Date.now()-days*864e5).toISOString();
   const {data}=await sb.from('reception').select('colis_code').eq('statut','recu').lt('updated_at',cutoff);
   const codes=(data||[]).map(r=>r.colis_code);
-  if(!codes.length){ log('Aucun colis reçu de plus de '+days+' j à retirer.'); return; }
-  for(const ch of chunk(codes,200)){
-    await sb.from('reception').delete().in('colis_code',ch);
-    await sb.from('colis').delete().in('code',ch);
-  }
-  log('🧹 '+codes.length+' colis reçus (> '+days+' j) retirés.');
-  loadSuivi();
-}
-async function doImport(){
-  const paqs=[...document.getElementById('paqFiles').files];
-  if(!paqs.length){ log('⚠ Sélectionnez au moins un fichier .paq.'); return; }
-  document.getElementById('importBtn').disabled=true;
-  try{
-    let allColis=[],totColis=0; const eans=new Set();
-    for(const f of paqs){
-      const colis=await parsePaq(f);
-      log(f.name+' : '+colis.length+' colis.');
-      totColis+=colis.length;
-      colis.forEach(c=>{ allColis.push(Object.assign({},c,{batch:f.name})); c.art.forEach(a=>eans.add(a.ean)); });
-    }
-    log('Récupération des noms ('+eans.size+' articles)…');
-    const nameMap={};
-    for(const ch of chunk([...eans],300)){
-      const {data}=await sb.from('articles').select('ean,lib,fam,taille,coul').in('ean',ch);
-      (data||[]).forEach(a=>{nameMap[a.ean]={lib:a.lib,fam:a.fam,taille:a.taille,coul:a.coul};});
-    }
-    let manquants=0; eans.forEach(e=>{ if(!nameMap[e]) manquants++; });
-    if(manquants) log('ℹ '+manquants+' article(s) sans nom (références récentes) — recharge le référentiel si tu en vois beaucoup.');
-    const colisRows=allColis.map(c=>({code:c.code,magasin:c.magasin,cde:c.cde,pieces:c.art.reduce((s,a)=>s+a.qte,0),contenu:enrich(c.art,nameMap),batch:c.batch}));
-    log('Envoi de '+colisRows.length+' colis…');
-    for(const ch of chunk(colisRows,CHUNK)) await sb.from('colis').upsert(ch,{onConflict:'code'});
-    log('✅ Import terminé : '+totColis+' colis traités. Colis déjà présents (et avancement) conservés.');
-    loadSuivi();
-  }catch(e){ log('❌ Erreur : '+(e.message||e)); }
-  document.getElementById('importBtn').disabled=false;
+  if(!codes.length){log('Aucun colis reçu de plus de '+days+' j à retirer.');return;}
+  for(const ch of chunk(codes,200)){await sb.from('reception').delete().in('colis_code',ch);await sb.from('colis').delete().in('code',ch);}
+  log('🧹 '+codes.length+' colis reçus (> '+days+' j) retirés.'); loadSuivi();
 }
 async function loadSuivi(){
   const el=document.getElementById('suivi');
-  const {data:colis}=await sb.from('colis').select('magasin');
+  const {data:colis}=await sb.from('colis').select('magasin,cde');
   const {data:recs}=await sb.from('reception').select('magasin,statut');
-  if(!colis||!colis.length){ el.innerHTML='<div class="muted">Aucune livraison importée.</div>'; return; }
+  if(!colis||!colis.length){el.innerHTML='<div class="muted">Aucune livraison importée.</div>';return;}
   const agg={};
-  colis.forEach(c=>{(agg[c.magasin]=agg[c.magasin]||{att:0,recu:0,ec:0}).att++;});
+  colis.forEach(c=>{const a=agg[c.magasin]=agg[c.magasin]||{att:0,recu:0,ec:0,cmds:new Set()};a.att++;a.cmds.add(c.cde);});
   (recs||[]).forEach(r=>{const a=agg[r.magasin];if(!a)return;if(r.statut==='recu')a.recu++;else if(r.statut==='ecart')a.ec++;});
   const mags=Object.keys(agg).sort();
-  let h='<table><thead><tr><th>Magasin</th><th class="n">Colis</th><th class="n">Reçus</th><th>Avancement</th><th class="n">Écarts</th></tr></thead><tbody>';
-  mags.forEach(m=>{const a=agg[m];const pct=a.att?Math.round(100*a.recu/a.att):0;
-    h+='<tr><td><b>'+m+'</b></td><td class="n">'+a.att+'</td><td class="n">'+a.recu+'</td><td><div style="display:flex;align-items:center;gap:8px"><div class="bar"><i style="width:'+pct+'%"></i></div><span class="muted">'+pct+'%</span></div></td><td class="n">'+(a.ec?'<span class="pill w">'+a.ec+'</span>':'0')+'</td></tr>';});
-  h+='</tbody></table>';
-  el.innerHTML=h;
+  let h='<div class="scroll"><table><thead><tr><th>Magasin</th><th class="n">Cmd</th><th class="n">Colis</th><th class="n">Reçus</th><th>Avancement</th><th class="n">Écarts</th></tr></thead><tbody>';
+  mags.forEach(m=>{const a=agg[m],pct=a.att?Math.round(100*a.recu/a.att):0;
+    h+='<tr><td class="code">'+m+'</td><td class="n">'+a.cmds.size+'</td><td class="n">'+a.att+'</td><td class="n">'+a.recu+'</td>'
+     +'<td><div style="display:flex;align-items:center;gap:8px"><div class="bar"><i style="width:'+pct+'%"></i></div><span class="muted">'+pct+'%</span></div></td>'
+     +'<td class="n">'+(a.ec?'<span class="pill w">'+a.ec+'</span>':'<span class="muted">0</span>')+'</td></tr>';});
+  h+='</tbody></table></div>'; el.innerHTML=h;
+}
+async function loadAcces(){
+  const el=document.getElementById('acces');
+  const {data:colis}=await sb.from('colis').select('magasin');
+  const mags=[...new Set((colis||[]).map(r=>r.magasin))].sort();
+  if(!mags.length){el.innerHTML='<div class="muted">Importe d\'abord des livraisons.</div>';return;}
+  const {data:mg}=await sb.from('magasins').select('code,pin_hash');
+  const has={}; (mg||[]).forEach(m=>{if(m.pin_hash)has[m.code]=1;});
+  let h='<div class="scroll"><table><thead><tr><th>Magasin</th><th>État</th><th>Définir / changer le PIN</th><th>Lien</th></tr></thead><tbody>';
+  mags.forEach(m=>{
+    h+='<tr><td class="code">'+m+'</td>'
+     +'<td>'+(has[m]?'<span class="pill ok">PIN défini</span>':'<span class="pill g">à définir</span>')+'</td>'
+     +'<td><div class="acc-pin"><input id="pin-'+m+'" type="text" inputmode="numeric" placeholder="PIN"><button class="btn sm" onclick="setPin(\''+m+'\')">Enregistrer</button></div></td>'
+     +'<td><button class="btn sec sm" onclick="copyLink(\''+m+'\')">Copier le lien</button></td></tr>';});
+  h+='</tbody></table></div>'; el.innerHTML=h;
+}
+async function setPin(code){
+  const inp=document.getElementById('pin-'+code); const pin=(inp.value||'').trim();
+  if(pin.length<4){alert('Choisis un PIN d\'au moins 4 chiffres.');return;}
+  try{const hash=await sha256(pin); await sb.rpc('mag_set_pin',{p_code:code,p_nom:null,p_hash:hash});
+    inp.value=''; loadAcces(); }catch(e){alert('Erreur : '+(e.message||e));}
+}
+function copyLink(code){const url=storeBase+'?mag='+code;
+  try{navigator.clipboard.writeText(url);}catch(e){}
+  alert('Lien copié :\n'+url+'\n\nDonne ce lien + le PIN au magasin '+code+'.');
 }
 async function doLogin(){
   const email=document.getElementById('email').value.trim(), pwd=document.getElementById('pwd').value;
   const {error}=await sb.auth.signInWithPassword({email,password:pwd});
-  if(error){ document.getElementById('loginMsg').textContent='Identifiants incorrects.'; return; }
+  if(error){document.getElementById('loginErr').textContent='Identifiants incorrects.';return;}
   showMain();
 }
-function showMain(){ document.getElementById('login').classList.add('hide'); document.getElementById('main').classList.remove('hide'); loadCatStatus(); loadSuivi(); }
+function showMain(){document.getElementById('login').classList.add('hide');document.getElementById('main').classList.remove('hide');loadCatStatus();loadSuivi();loadAcces();}
 async function init(){
   sb=supabase.createClient(SUPA_URL,SUPA_KEY);
-  const {data}=await sb.auth.getSession();
-  if(data&&data.session) showMain();
+  const {data}=await sb.auth.getSession(); if(data&&data.session)showMain();
   document.getElementById('loginBtn').addEventListener('click',doLogin);
   document.getElementById('importBtn').addEventListener('click',doImport);
-  document.getElementById('refreshBtn').addEventListener('click',loadSuivi);
+  document.getElementById('refreshBtn').addEventListener('click',()=>{loadSuivi();loadAcces();});
   document.getElementById('cleanBtn').addEventListener('click',cleanupOld);
   document.getElementById('catBtn').addEventListener('click',importCatalogue);
   document.getElementById('logout').addEventListener('click',async e=>{e.preventDefault();await sb.auth.signOut();location.reload();});
-  Object.assign(window,{parseCatalogue,parseCatalogueText,parsePaq,enrich,doImport,loadSuivi,parseCSVLine});
+  Object.assign(window,{parseCatalogueText,parsePaq,enrich,parseCSVLine,setPin,copyLink,doImport,loadSuivi,loadAcces});
 }
 window.addEventListener('DOMContentLoaded',init);
 window.__init=init;
