@@ -10,16 +10,17 @@
 <style>
 *{box-sizing:border-box}
 :root{--bg:#EDEFF3;--ink:#263145;--ink2:#5b647a;--ink3:#828a9c;--line:#E5E9F2;--line2:#EEF1F6;--card:#fff;
---blue:#2563EB;--accent:#2563EB;--ok:#059669;--okbg:#e7f5ef;--warn:#D97706;--warnbg:#fbf2e3;--warnline:#f0dcc0}
+--blue:#263145;--accent:#263145;--ok:#263145;--okbg:#eef1f6;--warn:#263145;--warnbg:#eef1f6;--warnline:#d6dbe4}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
 .wrap{max-width:1240px;margin:0 auto;padding:20px 26px 60px}
-.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px}
-.brand{display:flex;align-items:center;gap:13px}
-.mark{font-weight:800;letter-spacing:.16em;font-size:17px}
-.sep{width:1px;height:18px;background:var(--line)}
-.brand .sub{font-size:13px;color:var(--ink2);font-weight:600}
-.foot-log{font-size:12.5px;color:var(--ink3)} .foot-log a{color:var(--ink2);cursor:pointer;font-weight:600}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;background:var(--ink);border-radius:16px;padding:15px 22px;box-shadow:0 4px 18px rgba(38,49,69,.16)}
+.brand{display:flex;align-items:center;gap:14px}
+.mark{font-weight:800;letter-spacing:.18em;font-size:20px;color:var(--ink)}
+.top .mark{color:#fff}
+.sep{width:1px;height:20px;background:rgba(255,255,255,.22)}
+.brand .sub{font-size:13px;color:rgba(255,255,255,.72);font-weight:600}
+.foot-log{font-size:12.5px;color:rgba(255,255,255,.72)} .foot-log a{color:#fff;cursor:pointer;font-weight:600;text-decoration:underline}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:14px 16px;margin-bottom:13px}
 .card h2{font-size:13px;font-weight:700;margin:0 0 3px;display:flex;align-items:center;gap:8px;justify-content:space-between}
@@ -50,7 +51,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 tbody tr:hover{background:#fafaf8}
 .code{font-weight:700}
 .pill{font-size:10px;font-weight:700;padding:3px 9px;border-radius:30px}
-.pill.ok{background:var(--okbg);color:var(--ok)}.pill.w{background:var(--warnbg);color:var(--warn)}.pill.g{background:#eef0f3;color:var(--ink3)}
+.pill.ok{background:var(--okbg);color:var(--ok)}.pill.w{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}.pill.g{background:#eef0f3;color:var(--ink3)}
 .bar{height:6px;border-radius:6px;background:#edeeea;overflow:hidden;width:84px;display:inline-block;vertical-align:middle}
 .bar i{display:block;height:100%;background:var(--ok)}
 .muted{font-size:12px;color:var(--ink3)}
@@ -158,10 +159,17 @@ async function importCatalogue(){
   const f=document.getElementById('catFile').files[0];
   if(!f){clog('⚠ Choisis le fichier .csv.');return;}
   document.getElementById('catBtn').disabled=true;
-  try{clog('Lecture…'); const rows=await parseCatalogue(f);
-    clog(rows.length+' articles. Envoi (un peu long, ne ferme pas l\'onglet)…');
-    let done=0; for(const ch of chunk(rows,1000)){await sb.from('articles').upsert(ch,{onConflict:'ean'});done+=ch.length;if(done%20000<1000)clog('  '+done+' / '+rows.length+'…');}
-    clog('✅ Référentiel chargé : '+rows.length+' articles.'); loadCatStatus();
+  try{clog('Lecture du fichier…'); const rows=await parseCatalogue(f);
+    clog(rows.length+' articles à charger. Envoi en cours — 1 à 2 min, NE FERME PAS l\'onglet…');
+    let done=0,errs=0;
+    for(const ch of chunk(rows,2000)){
+      const {error}=await sb.from('articles').upsert(ch,{onConflict:'ean'});
+      if(error){errs++;clog('  ⚠ erreur sur un lot : '+(error.message||error));}
+      done+=ch.length; if(done%20000<2000)clog('  '+done+' / '+rows.length+'…');
+    }
+    const {count}=await sb.from('articles').select('ean',{count:'exact',head:true});
+    clog('✅ Terminé : '+rows.length+' envoyés'+(errs?(' — ⚠ '+errs+' lot(s) en erreur, relance le chargement'):'')+'. En base : '+(count||'?')+' articles. → Réimporte le .paq maintenant.');
+    loadCatStatus();
   }catch(e){clog('❌ '+(e.message||e));}
   document.getElementById('catBtn').disabled=false;
 }
