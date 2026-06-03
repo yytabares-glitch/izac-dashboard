@@ -158,13 +158,21 @@ const isLate=c=>c.created_at&&new Date(c.created_at)<today0();
 const statusOf=c=>{const s=state[c.code];return s&&s.statut?s.statut:'attendu';};
 const BADGE={attendu:['À recevoir','b-attendu'],recu:['Reçu','b-recu'],ecart:['Écart','b-ecart']};
 // nom : RÉFÉRENCE · T.taille · couleur   (famille à part, en gris)
-function artName(a){const r=(a.ref||'').trim()||(a.lib||'').trim()||(a.fam||'').trim()||'Article';const parts=[r];if(a.taille)parts.push('T.'+String(a.taille).trim());if(a.coul)parts.push(String(a.coul).trim());return parts.join(' · ');}
-function artFam(a){return (a.fam||'').trim();}
+function artName(a){
+  let r=(a.ref||'').trim()||(a.lib||'').trim();
+  const f=(a.fam||'').trim();
+  if(!r) r=(f&&f.toUpperCase()!=='ARTICLE')?f:('Code '+(a.ean||'?'));
+  const parts=[r];
+  if(a.taille&&String(a.taille).trim())parts.push('T.'+String(a.taille).trim());
+  if(a.coul&&String(a.coul).trim())parts.push(String(a.coul).trim());
+  return parts.join(' · ');
+}
+function artFam(a){const f=(a.fam||'').trim();return (f&&f.toUpperCase()!=='ARTICLE')?f:'';}
 
 async function init(){
   sb=supabase.createClient(SUPA_URL,SUPA_KEY);
   MAG=qs('mag'); renderLogin();
-  Object.assign(window,{doLogin,loadData,onScan,openColis,conform,signalMiss,clearEcart,toggleLine,saveNote,fluxEmail,confirmEmail,closeModal,buildFlux,setMode,setFilter,toggleCmd,state});
+  Object.assign(window,{doLogin,loadData,onScan,openColis,conform,signalMiss,clearEcart,toggleLine,saveNote,fluxEmail,confirmEmail,closeModal,buildFlux,setMode,setFilter,toggleCmd,artName,artFam,state});
 }
 function renderLogin(){
   document.getElementById('app').innerHTML=
