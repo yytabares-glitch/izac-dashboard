@@ -52,12 +52,19 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
 
   <div id="main" class="hide">
     <div class="card">
-      <h2>Import des fichiers du jour</h2>
-      <label>Fichiers transporteur (.paq) — vous pouvez en sélectionner plusieurs</label>
-      <input id="paqFiles" type="file" multiple accept=".paq,.txt">
-      <label>Référentiel articles (Fastmag .csv) <span style="font-weight:400;color:var(--ink55)">— pour les noms d'articles</span></label>
+      <h2>Référentiel articles <span style="font-weight:400;color:var(--ink55);font-size:12px">— à charger une seule fois</span></h2>
+      <div id="catStatus" class="muted">Vérification…</div>
+      <label>Fichier référentiel Fastmag (.csv)</label>
       <input id="catFile" type="file" accept=".csv">
-      <div class="muted" style="margin-top:12px">L'import <b>ajoute</b> les nouveaux colis. Les colis déjà présents — et l'avancement des magasins — sont <b>conservés</b>. Tu peux importer autant de fois que tu veux dans la journée.</div>
+      <div class="row"><button class="btn sec" id="catBtn">Charger le référentiel</button></div>
+      <div id="catlog" class="log"></div>
+    </div>
+
+    <div class="card">
+      <h2>Import des fichiers du jour</h2>
+      <label>Fichiers transporteur (.paq) — plusieurs possibles</label>
+      <input id="paqFiles" type="file" multiple accept=".paq,.txt">
+      <div class="muted" style="margin-top:12px">Dépose seulement les <b>.paq</b> : les noms d'articles viennent du référentiel déjà chargé. L'import <b>ajoute</b> les nouveaux colis et <b>conserve</b> les autres (et l'avancement des magasins). Tu peux importer autant de fois que tu veux dans la journée.</div>
       <div class="row"><button class="btn" id="importBtn">Importer dans les magasins</button></div>
       <div id="log" class="log"></div>
     </div>
@@ -88,17 +95,46 @@ function parseCSVLine(line){const out=[];let cur='',inq=false;
     else{if(ch==='"')inq=true;else if(ch===';'){out.push(cur);cur='';}else cur+=ch;}}
   out.push(cur);return out;}
 
-async function buildCatalog(file){
-  if(!file) return {};
-  const buf=await file.arrayBuffer();
-  const txt=new TextDecoder('windows-1252').decode(buf);
+function clog(m){const e=document.getElementById('catlog');e.style.display='block';e.textContent+=m+'\n';e.scrollTop=e.scrollHeight;}
+function parseCatalogueText(txt){
   const lines=txt.split(/\r?\n/);
   const h=parseCSVLine(lines[0]);
   const iG=h.indexOf('Gencod'),iD=h.indexOf('Désignation1'),iF=h.indexOf('Famille'),iT=h.indexOf('Taille'),iC=h.indexOf('Couleur');
-  const map={};
-  for(let i=1;i<lines.length;i++){ if(!lines[i])continue; const r=parseCSVLine(lines[i]); const g=r[iG];
-    if(g) map[g]={lib:(r[iD]||'').trim(),fam:(r[iF]||'').trim()||'ARTICLE',taille:(r[iT]||'').trim(),coul:(r[iC]||'').trim()}; }
-  return map;
+  const seen={},rows=[];
+  for(let i=1;i<lines.length;i++){ if(!lines[i])continue; const r=parseCSVLine(lines[i]); const g=(r[iG]||'').trim();
+    if(!g||seen[g])continue; seen[g]=1;
+    rows.push({ean:g,lib:(r[iD]||'').trim(),fam:(r[iF]||'').trim()||'ARTICLE',taille:(r[iT]||'').trim(),coul:(r[iC]||'').trim()}); }
+  return rows;
+}
+async function parseCatalogue(file){
+  const buf=await file.arrayBuffer();
+  return parseCatalogueText(new TextDecoder('windows-1252').decode(buf));
+}
+function enrich(art,nameMap){
+  return art.map(a=>{const m=nameMap[a.ean]||{};return {ean:a.ean,qte:a.qte,lib:m.lib||'',fam:m.fam||'ARTICLE',taille:m.taille||'',coul:m.coul||''};});
+}
+async function importCatalogue(){
+  const f=document.getElementById('catFile').files[0];
+  if(!f){ clog('⚠ Choisis le fichier référentiel .csv.'); return; }
+  document.getElementById('catBtn').disabled=true;
+  try{
+    clog('Lecture du fichier…');
+    const rows=await parseCatalogue(f);
+    clog(rows.length+' articles trouvés. Envoi vers la base (un peu long, ne ferme pas l\'onglet)…');
+    let done=0;
+    for(const ch of chunk(rows,1000)){ await sb.from('articles').upsert(ch,{onConflict:'ean'}); done+=ch.length; if(done%20000<1000) clog('  '+done+' / '+rows.length+'…'); }
+    clog('✅ Référentiel chargé : '+rows.length+' articles. Tu n\'as plus à le redéposer.');
+    loadCatStatus();
+  }catch(e){ clog('❌ Erreur : '+(e.message||e)); }
+  document.getElementById('catBtn').disabled=false;
+}
+async function loadCatStatus(){
+  const el=document.getElementById('catStatus'); if(!el)return;
+  try{
+    const {count}=await sb.from('articles').select('ean',{count:'exact',head:true});
+    el.innerHTML=(count&&count>0)?('✅ Référentiel en base : <b>'+Number(count).toLocaleString('fr-FR')+'</b> articles. (À recharger seulement s\'il change.)')
+      :'⚠ Aucun référentiel chargé — charge-le une fois ci-dessous (sinon les colis s\'afficheront sans nom d\'article).';
+  }catch(e){ el.textContent='Statut référentiel indisponible.'; }
 }
 async function parsePaq(file){
   const buf=await file.arrayBuffer();
@@ -126,26 +162,28 @@ async function cleanupOld(){
 }
 async function doImport(){
   const paqs=[...document.getElementById('paqFiles').files];
-  const catFile=document.getElementById('catFile').files[0];
   if(!paqs.length){ log('⚠ Sélectionnez au moins un fichier .paq.'); return; }
   document.getElementById('importBtn').disabled=true;
   try{
-    log('Lecture du référentiel…');
-    const cat=await buildCatalog(catFile);
-    log('Référentiel : '+Object.keys(cat).length+' articles.');
-    let colisRows=[],totColis=0;
+    let allColis=[],totColis=0; const eans=new Set();
     for(const f of paqs){
       const colis=await parsePaq(f);
       log(f.name+' : '+colis.length+' colis.');
       totColis+=colis.length;
-      colis.forEach(c=>{
-        const contenu=c.art.map(a=>{const m=cat[a.ean]||{};return {ean:a.ean,qte:a.qte,lib:m.lib||'',fam:m.fam||'ARTICLE',taille:m.taille||'',coul:m.coul||''};});
-        colisRows.push({code:c.code,magasin:c.magasin,cde:c.cde,pieces:c.art.reduce((s,a)=>s+a.qte,0),contenu,batch:f.name});
-      });
+      colis.forEach(c=>{ allColis.push(Object.assign({},c,{batch:f.name})); c.art.forEach(a=>eans.add(a.ean)); });
     }
+    log('Récupération des noms ('+eans.size+' articles)…');
+    const nameMap={};
+    for(const ch of chunk([...eans],300)){
+      const {data}=await sb.from('articles').select('ean,lib,fam,taille,coul').in('ean',ch);
+      (data||[]).forEach(a=>{nameMap[a.ean]={lib:a.lib,fam:a.fam,taille:a.taille,coul:a.coul};});
+    }
+    let manquants=0; eans.forEach(e=>{ if(!nameMap[e]) manquants++; });
+    if(manquants) log('ℹ '+manquants+' article(s) sans nom (références récentes) — recharge le référentiel si tu en vois beaucoup.');
+    const colisRows=allColis.map(c=>({code:c.code,magasin:c.magasin,cde:c.cde,pieces:c.art.reduce((s,a)=>s+a.qte,0),contenu:enrich(c.art,nameMap),batch:c.batch}));
     log('Envoi de '+colisRows.length+' colis…');
     for(const ch of chunk(colisRows,CHUNK)) await sb.from('colis').upsert(ch,{onConflict:'code'});
-    log('✅ Import terminé : '+totColis+' colis traités. Les colis déjà présents (et leur avancement) sont conservés.');
+    log('✅ Import terminé : '+totColis+' colis traités. Colis déjà présents (et avancement) conservés.');
     loadSuivi();
   }catch(e){ log('❌ Erreur : '+(e.message||e)); }
   document.getElementById('importBtn').disabled=false;
@@ -171,7 +209,7 @@ async function doLogin(){
   if(error){ document.getElementById('loginMsg').textContent='Identifiants incorrects.'; return; }
   showMain();
 }
-function showMain(){ document.getElementById('login').classList.add('hide'); document.getElementById('main').classList.remove('hide'); loadSuivi(); }
+function showMain(){ document.getElementById('login').classList.add('hide'); document.getElementById('main').classList.remove('hide'); loadCatStatus(); loadSuivi(); }
 async function init(){
   sb=supabase.createClient(SUPA_URL,SUPA_KEY);
   const {data}=await sb.auth.getSession();
@@ -180,8 +218,9 @@ async function init(){
   document.getElementById('importBtn').addEventListener('click',doImport);
   document.getElementById('refreshBtn').addEventListener('click',loadSuivi);
   document.getElementById('cleanBtn').addEventListener('click',cleanupOld);
+  document.getElementById('catBtn').addEventListener('click',importCatalogue);
   document.getElementById('logout').addEventListener('click',async e=>{e.preventDefault();await sb.auth.signOut();location.reload();});
-  Object.assign(window,{buildCatalog,parsePaq,doImport,loadSuivi,parseCSVLine});
+  Object.assign(window,{parseCatalogue,parseCatalogueText,parsePaq,enrich,doImport,loadSuivi,parseCSVLine});
 }
 window.addEventListener('DOMContentLoaded',init);
 window.__init=init;
