@@ -9,11 +9,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}
-:root{--bg:#f4f4f2;--ink:#14161b;--ink2:#646b78;--ink3:#9aa0ab;--line:#e7e7e3;--line2:#f0f0ec;--card:#fff;
---accent:#14161b;--ok:#177245;--okbg:#eaf4ee;--warn:#9a5816;--warnbg:#f7efe3;--warnline:#ecdcc2}
+:root{--bg:#EDEFF3;--ink:#263145;--ink2:#5b647a;--ink3:#828a9c;--line:#E5E9F2;--line2:#EEF1F6;--card:#fff;
+--blue:#2563EB;--accent:#2563EB;--ok:#059669;--okbg:#e7f5ef;--warn:#D97706;--warnbg:#fbf2e3;--warnline:#f0dcc0}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
-.wrap{max-width:1000px;margin:0 auto;padding:18px 18px 60px}
+.wrap{max-width:1240px;margin:0 auto;padding:20px 26px 60px}
 .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px}
 .brand{display:flex;align-items:center;gap:13px}
 .mark{font-weight:800;letter-spacing:.16em;font-size:17px}
@@ -21,12 +21,12 @@ body{background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',system-u
 .brand .sub{font-size:13px;color:var(--ink2);font-weight:600}
 .foot-log{font-size:12.5px;color:var(--ink3)} .foot-log a{color:var(--ink2);cursor:pointer;font-weight:600}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:16px 18px;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:14px 16px;margin-bottom:13px}
 .card h2{font-size:13px;font-weight:700;margin:0 0 3px;display:flex;align-items:center;gap:8px;justify-content:space-between}
-.card h2 .num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:6px;background:var(--ink);color:#fff;font-size:11px;font-weight:700;flex-shrink:0}
+.card h2 .num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:6px;background:var(--blue);color:#fff;font-size:11px;font-weight:700;flex-shrink:0}
 .card h2 .htxt{display:flex;align-items:center;gap:8px}
-.card .desc{font-size:12px;color:var(--ink3);margin:2px 0 12px;line-height:1.5}
-label{font-size:11.5px;font-weight:700;color:var(--ink2);display:block;margin:11px 0 5px}
+.card .desc{font-size:12px;color:var(--ink3);margin:2px 0 9px;line-height:1.5}
+label{font-size:11.5px;font-weight:700;color:var(--ink2);display:block;margin:8px 0 4px}
 input[type=email],input[type=password],input[type=file],input[type=text],input[type=number]{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-family:inherit;font-size:13px;outline:none;background:#fff}
 input:focus{border-color:var(--ink3)}
 input[type=file]{padding:7px 9px;font-size:12px}
@@ -36,7 +36,7 @@ input[type=file]{padding:7px 9px;font-size:12px}
 .btn.sm{padding:6px 11px;font-size:11.5px;border-radius:8px}
 .btn:disabled{opacity:.45;cursor:default}
 .row{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:12px}
-.status{font-size:12.5px;padding:10px 12px;border-radius:10px;background:#fafaf8;border:1px solid var(--line);margin-bottom:6px}
+.status{font-size:12.5px;padding:8px 11px;border-radius:10px;background:#f5f8fd;border:1px solid var(--line);margin-bottom:6px}
 .log{background:#fafaf8;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:11.5px;color:var(--ink2);margin-top:12px;white-space:pre-wrap;max-height:200px;overflow:auto;display:none;font-family:ui-monospace,Menlo,monospace}
 .toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:11px;flex-wrap:wrap}
 .find{position:relative;flex:1;min-width:160px}
@@ -137,14 +137,14 @@ function parseCSVLine(line){const out=[];let cur='',inq=false;
   out.push(cur);return out;}
 function parseCatalogueText(txt){
   const lines=txt.split(/\r?\n/); const h=parseCSVLine(lines[0]);
-  const iG=h.indexOf('Gencod'),iD=h.indexOf('Désignation1'),iF=h.indexOf('Famille'),iT=h.indexOf('Taille'),iC=h.indexOf('Couleur');
+  const iR=h.indexOf('Référence'),iG=h.indexOf('Gencod'),iD=h.indexOf('Désignation1'),iF=h.indexOf('Famille'),iT=h.indexOf('Taille'),iC=h.indexOf('Couleur');
   const seen={},rows=[];
   for(let i=1;i<lines.length;i++){ if(!lines[i])continue; const r=parseCSVLine(lines[i]); const g=(r[iG]||'').trim();
     if(!g||seen[g])continue; seen[g]=1;
-    rows.push({ean:g,lib:(r[iD]||'').trim(),fam:(r[iF]||'').trim()||'ARTICLE',taille:(r[iT]||'').trim(),coul:(r[iC]||'').trim()}); }
+    rows.push({ean:g,ref:(r[iR]||'').trim(),lib:(r[iD]||'').trim(),fam:(r[iF]||'').trim()||'ARTICLE',taille:(r[iT]||'').trim(),coul:(r[iC]||'').trim()}); }
   return rows;}
 async function parseCatalogue(file){const buf=await file.arrayBuffer();return parseCatalogueText(new TextDecoder('windows-1252').decode(buf));}
-function enrich(art,m){return art.map(a=>{const x=m[a.ean]||{};return {ean:a.ean,qte:a.qte,lib:x.lib||'',fam:x.fam||'ARTICLE',taille:x.taille||'',coul:x.coul||''};});}
+function enrich(art,m){return art.map(a=>{const x=m[a.ean]||{};return {ean:a.ean,qte:a.qte,ref:x.ref||'',lib:x.lib||'',fam:x.fam||'ARTICLE',taille:x.taille||'',coul:x.coul||''};});}
 async function parsePaq(file){
   const buf=await file.arrayBuffer(); const txt=new TextDecoder('iso-8859-1').decode(buf); const lines=txt.split(/\r?\n/);
   const cm={},order=[];
@@ -181,7 +181,7 @@ async function doImport(){
     for(const f of paqs){const colis=await parsePaq(f);log(f.name+' : '+colis.length+' colis.');tot+=colis.length;
       colis.forEach(c=>{all.push(Object.assign({},c,{batch:f.name}));c.art.forEach(a=>eans.add(a.ean));});}
     log('Noms ('+eans.size+' articles)…'); const nm={};
-    for(const ch of chunk([...eans],300)){const {data}=await sb.from('articles').select('ean,lib,fam,taille,coul').in('ean',ch);(data||[]).forEach(a=>{nm[a.ean]={lib:a.lib,fam:a.fam,taille:a.taille,coul:a.coul};});}
+    for(const ch of chunk([...eans],300)){const {data}=await sb.from('articles').select('ean,ref,lib,fam,taille,coul').in('ean',ch);(data||[]).forEach(a=>{nm[a.ean]={ref:a.ref,lib:a.lib,fam:a.fam,taille:a.taille,coul:a.coul};});}
     let manq=0; eans.forEach(e=>{if(!nm[e])manq++;}); if(manq)log('ℹ '+manq+' article(s) sans nom — recharge le référentiel si nombreux.');
     const rows=all.map(c=>({code:c.code,magasin:c.magasin,cde:c.cde,pieces:c.art.reduce((s,a)=>s+a.qte,0),contenu:enrich(c.art,nm),batch:c.batch}));
     log('Envoi de '+rows.length+' colis…');

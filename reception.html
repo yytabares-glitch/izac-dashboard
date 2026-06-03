@@ -9,8 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root{--bg:#f4f4f2;--ink:#14161b;--ink2:#646b78;--ink3:#9aa0ab;--line:#e7e7e3;--line2:#f0f0ec;--card:#fff;
---accent:#14161b;--ok:#177245;--okbg:#eaf4ee;--okline:#cfe6d8;--warn:#9a5816;--warnbg:#f7efe3;--warnline:#ecdcc2}
+:root{--bg:#EDEFF3;--ink:#263145;--ink2:#5b647a;--ink3:#828a9c;--line:#E5E9F2;--line2:#EEF1F6;--card:#fff;
+--blue:#2563EB;--blue2:#1E3A8A;--bluebg:#eaf0fe;--accent:#2563EB;--ok:#059669;--okbg:#e7f5ef;--okline:#c7e9da;--warn:#D97706;--warnbg:#fbf2e3;--warnline:#f0dcc0}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
 .wrap{max-width:1120px;margin:0 auto;padding:18px 18px 64px}
@@ -20,7 +20,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',system-u
 .mark{font-weight:800;letter-spacing:.16em;font-size:17px}
 .sep{width:1px;height:18px;background:var(--line)}
 .brand .sub{font-size:13px;color:var(--ink2);font-weight:600}
-.chip{background:var(--ink);color:#fff;font-size:11px;font-weight:700;padding:4px 11px;border-radius:30px;letter-spacing:.02em}
+.chip{background:var(--blue);color:#fff;font-size:11px;font-weight:700;padding:4px 11px;border-radius:30px;letter-spacing:.02em}
 .btn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:11px;padding:10px 15px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:.12s;display:inline-flex;align-items:center;gap:8px}
 .btn:hover{border-color:var(--ink3)}
 .btn:active{transform:translateY(1px)}
@@ -39,10 +39,11 @@ body{background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',system-u
 .kpi .l{font-size:11.5px;color:var(--ink2);margin-top:6px;font-weight:600}
 .kpi.acc .n{color:var(--warn)}
 /* scan */
-.scan{display:flex;align-items:center;gap:0;margin-bottom:16px;background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:hidden}
-.scan .ic{padding:0 4px 0 16px;color:var(--ink3);font-size:16px}
-.scan input{flex:1;border:none;padding:14px 14px;font-size:15px;font-family:inherit;outline:none;background:transparent;min-width:0}
-.scan .tag{font-size:11px;color:var(--ink3);padding-right:16px;font-weight:600;white-space:nowrap}
+.scan{display:flex;align-items:center;gap:0;margin-bottom:16px;background:var(--bluebg);border:2px solid var(--blue);border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(37,99,235,.12)}
+.scan .ic{padding:0 4px 0 18px;color:var(--blue);font-size:20px}
+.scan input{flex:1;border:none;padding:16px 14px;font-size:15.5px;font-family:inherit;outline:none;background:transparent;min-width:0;font-weight:500}
+.scan input::placeholder{color:#7d93c8}
+.scan .tag{font-size:11px;color:#fff;background:var(--blue);padding:6px 12px;border-radius:30px;margin-right:12px;font-weight:700;white-space:nowrap}
 .flash{min-height:17px;font-size:13px;font-weight:600;margin:0 2px 14px}
 .flash.ok{color:var(--ok)} .flash.warn{color:var(--warn)}
 /* layout */
@@ -74,7 +75,7 @@ body{background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',system-u
 .row{display:flex;align-items:center;gap:11px;padding:11px;border-radius:10px;cursor:pointer;transition:.1s}
 .row:hover{background:#f7f7f4}
 .row.flat{border:1px solid var(--line);margin:0 3px 8px;background:#fff}
-.row.sel{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.row.sel{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue);background:var(--bluebg)}
 .row-main{flex:1;min-width:0}
 .row-t{font-weight:700;font-size:13px}
 .row-s{font-size:11.5px;color:var(--ink2);margin-top:2px}
@@ -126,6 +127,14 @@ body{background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',system-u
 .login input:focus{border-color:var(--ink)}
 .login .btn{width:100%;justify-content:center;margin-top:20px;padding:13px}
 .login .err{color:var(--warn);font-size:12px;font-weight:600;margin-top:13px;min-height:14px}
+.modal{position:fixed;inset:0;background:rgba(38,49,69,.45);display:flex;align-items:center;justify-content:center;padding:18px;z-index:50}
+.modal.hide{display:none}
+.modal-card{background:#fff;border-radius:18px;max-width:540px;width:100%;padding:22px;box-shadow:0 22px 60px rgba(38,49,69,.3);max-height:86vh;overflow:auto}
+.modal-h{font-weight:800;font-size:17px;margin-bottom:4px}
+.modal-sub{font-size:12px;color:var(--ink3);font-weight:600;margin-bottom:13px}
+.modal-warn{background:var(--warnbg);border:1px solid var(--warnline);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:12px;font-weight:600;margin-bottom:14px}
+.modal-body{background:#f5f8fd;border:1px solid var(--line);border-radius:12px;padding:13px 15px;font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--ink);white-space:pre-wrap;line-height:1.55;margin:0 0 16px}
+.modal-acts{display:flex;gap:10px;justify-content:flex-end}
 @media(max-width:820px){.cols{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.scan .tag{display:none}.list{max-height:none}}
 </style>
 </head>
@@ -148,14 +157,14 @@ const fmtJM=s=>new Date(s).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-di
 const isLate=c=>c.created_at&&new Date(c.created_at)<today0();
 const statusOf=c=>{const s=state[c.code];return s&&s.statut?s.statut:'attendu';};
 const BADGE={attendu:['À recevoir','b-attendu'],recu:['Reçu','b-recu'],ecart:['Écart','b-ecart']};
-// nom lisible : DÉSIGNATION · COULEUR · T.taille   (famille à part)
-function artName(a){const parts=[(a.lib||a.fam||'Article')];if(a.coul)parts.push(a.coul);if(a.taille)parts.push('T.'+String(a.taille).trim());return parts.join(' · ');}
-function artFam(a){const f=(a.fam||'').trim();return (f && f.toUpperCase()!==(a.lib||'').toUpperCase())?f:'';}
+// nom : RÉFÉRENCE · T.taille · couleur   (famille à part, en gris)
+function artName(a){const r=(a.ref||'').trim()||(a.lib||'').trim()||(a.fam||'').trim()||'Article';const parts=[r];if(a.taille)parts.push('T.'+String(a.taille).trim());if(a.coul)parts.push(String(a.coul).trim());return parts.join(' · ');}
+function artFam(a){return (a.fam||'').trim();}
 
 async function init(){
   sb=supabase.createClient(SUPA_URL,SUPA_KEY);
   MAG=qs('mag'); renderLogin();
-  Object.assign(window,{doLogin,loadData,onScan,openColis,conform,signalMiss,clearEcart,toggleLine,saveNote,fluxEmail,buildFlux,setMode,setFilter,toggleCmd,state});
+  Object.assign(window,{doLogin,loadData,onScan,openColis,conform,signalMiss,clearEcart,toggleLine,saveNote,fluxEmail,confirmEmail,closeModal,buildFlux,setMode,setFilter,toggleCmd,state});
 }
 function renderLogin(){
   document.getElementById('app').innerHTML=
@@ -186,7 +195,7 @@ function loadData(data){
   COLIS=(data.colis||[]).slice(); byCode={}; byCmd={}; cmds=[];
   COLIS.forEach(c=>{
     let cont=c.contenu; if(typeof cont==='string'){try{cont=JSON.parse(cont||'[]');}catch(e){cont=[];}} if(!Array.isArray(cont))cont=[];
-    c.art=cont.map((a,i)=>({ean:a.ean,qte:+a.qte||1,lib:a.lib,fam:a.fam,taille:a.taille,coul:a.coul,id:i}));
+    c.art=cont.map((a,i)=>({ean:a.ean,qte:+a.qte||1,ref:a.ref,lib:a.lib,fam:a.fam,taille:a.taille,coul:a.coul,id:i}));
     byCode[c.code]=c;
     if(!byCmd[c.cde]){byCmd[c.cde]=[];cmds.push(c.cde);}
     byCmd[c.cde].push(c.code);
@@ -204,8 +213,10 @@ function renderApp(){
    +'<div class="flash" id="flash"></div>'
    +'<div class="cols"><div class="panel"><div class="phead"><div class="seg"><button id="m-cmd" onclick="setMode(\'cmd\')">Par commande</button><button id="m-colis" onclick="setMode(\'colis\')">Par colis</button></div><span class="count" id="count"></span></div>'
    +'<div class="search"><input id="filter" placeholder="Rechercher une commande ou un colis…" autocomplete="off"></div><div id="list" class="list"></div></div>'
-   +'<div class="panel"><div id="detail"><div class="empty">Sélectionnez un colis à gauche,<br>ou scannez son code-barres.</div></div></div></div>';
+   +'<div class="panel"><div id="detail"><div class="empty">Sélectionnez un colis à gauche,<br>ou scannez son code-barres.</div></div></div></div>'
+   +'<div id="modal" class="modal hide"><div class="modal-card"><div class="modal-h">Vérifie avant d\'envoyer au service Flux</div><div class="modal-sub" id="modal-to"></div><div class="modal-warn">⚠ Un email envoyé = demande de traitement. Relis bien : si c\'est faux, corrige avant d\'envoyer.</div><pre class="modal-body" id="modal-body"></pre><div class="modal-acts"><button class="btn" onclick="closeModal()">Corriger</button><button class="btn primary" id="modal-send">✓ Confirmer et envoyer</button></div></div></div>';
   document.getElementById('fluxBtn').addEventListener('click',()=>fluxEmail());
+  document.getElementById('modal-send').addEventListener('click',confirmEmail);
   document.getElementById('logoutBtn').addEventListener('click',()=>{MAG=qs('mag');PINHASH=null;current=null;renderLogin();});
   document.getElementById('scan').addEventListener('keydown',e=>{if(e.key==='Enter'){onScan(e.target.value);e.target.value='';}});
   document.getElementById('filter').addEventListener('input',e=>{fq=e.target.value;renderList();});
@@ -294,12 +305,20 @@ function buildFlux(code){
     body+='\n';});
   return {count:list.length, subject:'Écarts réception — Magasin '+MAG+' — '+d, body};
 }
+let pendingMail=null;
 function fluxEmail(code){
   const f=buildFlux(code);
   if(!f.count){flash('Aucun écart à signaler.');return;}
-  try{window.location.href='mailto:'+FLUX_EMAIL+'?subject='+encodeURIComponent(f.subject)+'&body='+encodeURIComponent(f.body);}catch(e){}
-  flash('Email service Flux prêt — vérifie et envoie.');
+  pendingMail='mailto:'+FLUX_EMAIL+'?subject='+encodeURIComponent(f.subject)+'&body='+encodeURIComponent(f.body);
+  document.getElementById('modal-to').textContent='À : '+FLUX_EMAIL+'   ·   Objet : '+f.subject;
+  document.getElementById('modal-body').textContent=f.body;
+  document.getElementById('modal').classList.remove('hide');
 }
+function confirmEmail(){
+  if(pendingMail){try{window.location.href=pendingMail;}catch(e){}}
+  closeModal(); flash('Email service Flux ouvert — envoie-le depuis ta messagerie.');
+}
+function closeModal(){document.getElementById('modal').classList.add('hide');pendingMail=null;}
 function onScan(v){v=(v||'').trim();if(!v)return;
   if(byCode[v]){openColis(v);flash('Colis '+v+' ouvert — coche les articles présents.');return;}
   if(current){const a=byCode[current].art.find(x=>x.ean===v);if(a){st_(current).ok.add(a.id);persist(current);openColis(current);flash('Article pointé ✓');return;}}
