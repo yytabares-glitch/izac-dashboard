@@ -5,108 +5,125 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Console réception — IZAC</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}
-:root{--ink:#1c2535;--ink2:#5b647a;--ink3:#8b93a4;--line:#e4e7ee;--line2:#eef1f5;--bg:#f3f5f8;--card:#fff;
---accent:#1c2535;--ok:#1f7a44;--okbg:#eaf5ee;--warn:#b4660f;--warnbg:#fbf1e3;--warnline:#f0dcc0}
+:root{--bg:#f4f4f2;--ink:#14161b;--ink2:#646b78;--ink3:#9aa0ab;--line:#e7e7e3;--line2:#f0f0ec;--card:#fff;
+--accent:#14161b;--ok:#177245;--okbg:#eaf4ee;--warn:#9a5816;--warnbg:#f7efe3;--warnline:#ecdcc2}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:14px;line-height:1.45}
-.wrap{max-width:980px;margin:0 auto;padding:18px 16px 60px}
-.brand{display:flex;align-items:baseline;gap:12px;margin-bottom:18px}
-.logo{font-family:'Fraunces',serif;font-weight:700;letter-spacing:.22em;font-size:18px}
-.brand .t{font-family:'Fraunces',serif;font-weight:600;font-size:19px}
-.brand .m{font-size:12px;color:var(--ink3);font-weight:600;border-left:1px solid var(--line);padding-left:12px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-bottom:16px}
-.card h2{font-family:'Fraunces',serif;font-weight:600;font-size:16px;margin:0 0 4px;display:flex;justify-content:space-between;align-items:center;gap:10px}
-.card .desc{font-size:12.5px;color:var(--ink3);margin:0 0 14px}
-label{font-size:12px;font-weight:600;color:var(--ink2);display:block;margin:12px 0 5px}
-input[type=email],input[type=password],input[type=file],input[type=text],input[type=number]{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:13px;outline:none}
+body{background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1000px;margin:0 auto;padding:18px 18px 60px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+.brand{display:flex;align-items:center;gap:13px}
+.mark{font-weight:800;letter-spacing:.16em;font-size:17px}
+.sep{width:1px;height:18px;background:var(--line)}
+.brand .sub{font-size:13px;color:var(--ink2);font-weight:600}
+.foot-log{font-size:12.5px;color:var(--ink3)} .foot-log a{color:var(--ink2);cursor:pointer;font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:16px 18px;margin-bottom:14px}
+.card h2{font-size:13px;font-weight:700;margin:0 0 3px;display:flex;align-items:center;gap:8px;justify-content:space-between}
+.card h2 .num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:6px;background:var(--ink);color:#fff;font-size:11px;font-weight:700;flex-shrink:0}
+.card h2 .htxt{display:flex;align-items:center;gap:8px}
+.card .desc{font-size:12px;color:var(--ink3);margin:2px 0 12px;line-height:1.5}
+label{font-size:11.5px;font-weight:700;color:var(--ink2);display:block;margin:11px 0 5px}
+input[type=email],input[type=password],input[type=file],input[type=text],input[type=number]{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-family:inherit;font-size:13px;outline:none;background:#fff}
 input:focus{border-color:var(--ink3)}
-.btn{border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:.12s}
-.btn:hover{opacity:.9}.btn.sec{background:#fff;color:var(--ink);border-color:var(--line)}.btn.sec:hover{border-color:var(--ink3)}
-.btn.sm{padding:7px 12px;font-size:12px}.btn:disabled{opacity:.45;cursor:default}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
-.log{background:#fafbfd;border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:12px;color:var(--ink2);margin-top:13px;white-space:pre-wrap;max-height:220px;overflow:auto;display:none;font-family:ui-monospace,Menlo,monospace}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line2)}
-thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);border-bottom:1px solid var(--line)}
+input[type=file]{padding:7px 9px;font-size:12px}
+.btn{border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:10px;padding:9px 15px;font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;transition:.12s}
+.btn:hover{opacity:.9}.btn:active{transform:translateY(1px)}
+.btn.sec{background:#fff;color:var(--ink);border-color:var(--line)}.btn.sec:hover{border-color:var(--ink3)}
+.btn.sm{padding:6px 11px;font-size:11.5px;border-radius:8px}
+.btn:disabled{opacity:.45;cursor:default}
+.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.status{font-size:12.5px;padding:10px 12px;border-radius:10px;background:#fafaf8;border:1px solid var(--line);margin-bottom:6px}
+.log{background:#fafaf8;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:11.5px;color:var(--ink2);margin-top:12px;white-space:pre-wrap;max-height:200px;overflow:auto;display:none;font-family:ui-monospace,Menlo,monospace}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:11px;flex-wrap:wrap}
+.find{position:relative;flex:1;min-width:160px}
+.find input{padding-left:11px}
+.count{font-size:11.5px;color:var(--ink3);font-weight:600;white-space:nowrap}
+.scroll{max-height:360px;overflow:auto;border:1px solid var(--line2);border-radius:11px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{text-align:left;padding:8px 11px;border-bottom:1px solid var(--line2);white-space:nowrap}
+thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink3);position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);font-weight:700}
 td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
-tbody tr:hover{background:#fafbfd}
+tbody tr:hover{background:#fafaf8}
 .code{font-weight:700}
-.pill{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px}
-.pill.ok{background:var(--okbg);color:var(--ok)} .pill.w{background:var(--warnbg);color:var(--warn)} .pill.g{background:#eef1f6;color:var(--ink3)}
-.bar{height:6px;border-radius:5px;background:#edf0f5;overflow:hidden;width:96px}
+.pill{font-size:10px;font-weight:700;padding:3px 9px;border-radius:30px}
+.pill.ok{background:var(--okbg);color:var(--ok)}.pill.w{background:var(--warnbg);color:var(--warn)}.pill.g{background:#eef0f3;color:var(--ink3)}
+.bar{height:6px;border-radius:6px;background:#edeeea;overflow:hidden;width:84px;display:inline-block;vertical-align:middle}
 .bar i{display:block;height:100%;background:var(--ok)}
-.scroll{max-height:420px;overflow:auto;border:1px solid var(--line2);border-radius:11px}
-.scroll thead th{position:sticky;top:0;background:#fff}
 .muted{font-size:12px;color:var(--ink3)}
-.acc-pin{display:flex;gap:6px;align-items:center}
-.acc-pin input{width:90px;padding:7px 9px}
-#login{max-width:380px;margin:9vh auto 0;box-shadow:0 10px 40px rgba(28,37,53,.06)}
-#login .logo{display:block;text-align:center;font-size:20px;margin-bottom:6px}
+.acc-set{display:flex;gap:6px;align-items:center}
+.acc-set input{width:84px;padding:6px 8px}
+#login{max-width:360px;margin:10vh auto 0;box-shadow:0 14px 50px rgba(20,22,27,.07);border-radius:18px;text-align:center}
+#login .mark{display:block;font-size:21px;margin-bottom:16px}
+#login h2{justify-content:center}
+#login input{text-align:center}
 .hide{display:none}
 .err{color:var(--warn);font-size:12px;font-weight:600;margin-top:10px;min-height:14px}
-.foot{font-size:12px;color:var(--ink3);text-align:center;margin-top:8px}
-.foot a{color:var(--ink2);cursor:pointer}
-.status{font-size:12.5px;padding:10px 12px;border-radius:10px;background:#fafbfd;border:1px solid var(--line);margin-bottom:12px}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="brand"><span class="logo">I Z A C</span><span class="t">Console réception</span><span class="m">siège</span></div>
+  <div class="top"><div class="brand"><span class="mark">IZAC</span><span class="sep"></span><span class="sub">Réception · Console siège</span></div>
+    <div class="foot-log hide" id="footlog">Connecté · <a id="logout">se déconnecter</a></div></div>
 
   <div id="login" class="card">
-    <span class="logo">I Z A C</span>
-    <h2 style="justify-content:center">Connexion</h2>
-    <label>Email</label><input id="email" type="email" autocomplete="username">
-    <label>Mot de passe</label><input id="pwd" type="password" autocomplete="current-password">
+    <span class="mark">IZAC</span>
+    <h2>Connexion console</h2>
+    <div class="desc" style="text-align:center">Réservé au siège — accès par compte.</div>
+    <label style="text-align:left">Email</label><input id="email" type="email" autocomplete="username">
+    <label style="text-align:left">Mot de passe</label><input id="pwd" type="password" autocomplete="current-password">
     <div class="row" style="justify-content:center"><button class="btn" id="loginBtn">Se connecter</button></div>
-    <div class="err" id="loginErr" style="text-align:center"></div>
+    <div class="err" id="loginErr"></div>
   </div>
 
   <div id="main" class="hide">
-    <div class="card">
-      <h2>1 · Référentiel articles <span class="muted" style="font-weight:400">une seule fois</span></h2>
-      <div class="status" id="catStatus">Vérification…</div>
-      <label>Fichier référentiel Fastmag (.csv)</label>
-      <input id="catFile" type="file" accept=".csv">
-      <div class="row"><button class="btn sec" id="catBtn">Charger le référentiel</button></div>
-      <div id="catlog" class="log"></div>
+    <div class="grid2">
+      <div class="card">
+        <h2><span class="htxt"><span class="num">1</span>Référentiel articles</span><span class="muted" style="font-weight:400">1 ×</span></h2>
+        <div class="status" id="catStatus">Vérification…</div>
+        <label>Fichier Fastmag (.csv)</label>
+        <input id="catFile" type="file" accept=".csv">
+        <div class="row"><button class="btn sec sm" id="catBtn">Charger le référentiel</button></div>
+        <div id="catlog" class="log"></div>
+      </div>
+      <div class="card">
+        <h2><span class="htxt"><span class="num">2</span>Livraisons du jour</span></h2>
+        <p class="desc">Dépose les fichiers <b>.paq</b>. Ajoute les nouveaux colis, conserve les autres.</p>
+        <label>Fichiers transporteur (.paq)</label>
+        <input id="paqFiles" type="file" multiple accept=".paq,.txt">
+        <div class="row"><button class="btn sm" id="importBtn">Importer</button></div>
+        <div id="log" class="log"></div>
+      </div>
     </div>
 
     <div class="card">
-      <h2>2 · Import des livraisons du jour</h2>
-      <p class="desc">Dépose uniquement les fichiers <b>.paq</b>. Les noms viennent du référentiel. L'import <b>ajoute</b> les nouveaux colis et conserve les autres (et l'avancement des magasins).</p>
-      <label>Fichiers transporteur (.paq) — plusieurs possibles</label>
-      <input id="paqFiles" type="file" multiple accept=".paq,.txt">
-      <div class="row"><button class="btn" id="importBtn">Importer dans les magasins</button></div>
-      <div id="log" class="log"></div>
-    </div>
-
-    <div class="card">
-      <h2>3 · Suivi des magasins <button class="btn sec sm" id="refreshBtn">Rafraîchir</button></h2>
+      <h2><span class="htxt"><span class="num">3</span>Suivi des magasins</span><button class="btn sec sm" id="refreshBtn">Rafraîchir</button></h2>
+      <div class="toolbar"><div class="find"><input id="suiviFind" placeholder="Filtrer un magasin…"></div><span class="count" id="suiviCount"></span></div>
       <div id="suivi"><div class="muted">Chargement…</div></div>
-      <div class="row" style="border-top:1px solid var(--line2);padding-top:13px;margin-top:14px">
-        <span class="muted" style="flex:1;min-width:200px">Entretien : retirer les colis <b>reçus</b> de plus de
-        <input id="cleanDays" type="number" value="7" style="width:54px;display:inline-block;padding:5px 7px"> jours (jamais les colis en attente)</span>
+      <div class="row" style="border-top:1px solid var(--line2);padding-top:12px;margin-top:13px">
+        <span class="muted" style="flex:1;min-width:210px">Retirer les colis <b>reçus</b> de plus de
+        <input id="cleanDays" type="number" value="7" style="width:48px;display:inline-block;padding:4px 6px"> jours</span>
         <button class="btn sec sm" id="cleanBtn">Nettoyer</button>
       </div>
     </div>
 
     <div class="card">
-      <h2>4 · Accès des magasins <span class="muted" style="font-weight:400">identifiant + PIN</span></h2>
-      <p class="desc">Chaque magasin se connecte avec son <b>code</b> et un <b>PIN</b> que tu définis ici. Donne à chaque boutique son lien + son PIN. Le PIN n'est jamais stocké en clair.</p>
+      <h2><span class="htxt"><span class="num">4</span>Accès des magasins</span></h2>
+      <p class="desc">Chaque magasin se connecte avec son <b>code</b> + un <b>PIN</b> que tu définis. Donne à la boutique son lien + son PIN. Le PIN n'est jamais stocké en clair.</p>
+      <div class="toolbar"><div class="find"><input id="accFind" placeholder="Filtrer un magasin…"></div><span class="count" id="accCount"></span></div>
       <div id="acces"><div class="muted">Importe d'abord des livraisons.</div></div>
     </div>
-
-    <div class="foot">Connecté · <a id="logout">se déconnecter</a></div>
   </div>
 </div>
 <script>
 const SUPA_URL='https://imurxmsglmpgxdbavalk.supabase.co';
 const SUPA_KEY='sb_publishable_-FqQ5I6tx4rCUwUqmsf5DA_IFsfkUlQ';
 let sb=null; const CHUNK=800;
+let SUIVI=[], ACC=[]; // caches pour filtrage
 const storeBase=location.href.replace(/[^/]*$/,'reception.html').split('#')[0].split('?')[0];
 function log(m){const e=document.getElementById('log');e.style.display='block';e.textContent+=m+'\n';e.scrollTop=e.scrollHeight;}
 function clog(m){const e=document.getElementById('catlog');e.style.display='block';e.textContent+=m+'\n';e.scrollTop=e.scrollHeight;}
@@ -139,40 +156,39 @@ async function parsePaq(file){
 
 async function importCatalogue(){
   const f=document.getElementById('catFile').files[0];
-  if(!f){clog('⚠ Choisis le fichier référentiel .csv.');return;}
+  if(!f){clog('⚠ Choisis le fichier .csv.');return;}
   document.getElementById('catBtn').disabled=true;
-  try{
-    clog('Lecture du fichier…'); const rows=await parseCatalogue(f);
-    clog(rows.length+' articles. Envoi vers la base (un peu long, ne ferme pas l\'onglet)…');
+  try{clog('Lecture…'); const rows=await parseCatalogue(f);
+    clog(rows.length+' articles. Envoi (un peu long, ne ferme pas l\'onglet)…');
     let done=0; for(const ch of chunk(rows,1000)){await sb.from('articles').upsert(ch,{onConflict:'ean'});done+=ch.length;if(done%20000<1000)clog('  '+done+' / '+rows.length+'…');}
-    clog('✅ Référentiel chargé : '+rows.length+' articles. Tu n\'as plus à le redéposer.'); loadCatStatus();
-  }catch(e){clog('❌ Erreur : '+(e.message||e));}
+    clog('✅ Référentiel chargé : '+rows.length+' articles.'); loadCatStatus();
+  }catch(e){clog('❌ '+(e.message||e));}
   document.getElementById('catBtn').disabled=false;
 }
 async function loadCatStatus(){
   const el=document.getElementById('catStatus'); if(!el)return;
   try{const {count}=await sb.from('articles').select('ean',{count:'exact',head:true});
-    el.innerHTML=(count&&count>0)?('✅ Référentiel en base : <b>'+Number(count).toLocaleString('fr-FR')+'</b> articles. (À recharger seulement s\'il change.)')
-      :'⚠ Aucun référentiel — charge-le une fois ci-dessous, sinon les colis s\'afficheront sans nom.';
+    el.innerHTML=(count&&count>0)?('✅ <b>'+Number(count).toLocaleString('fr-FR')+'</b> articles en base. À recharger seulement si le catalogue change.')
+      :'⚠ Aucun référentiel — charge-le une fois, sinon les colis s\'afficheront sans nom.';
   }catch(e){el.textContent='Statut indisponible.';}
 }
 async function doImport(){
   const paqs=[...document.getElementById('paqFiles').files];
-  if(!paqs.length){log('⚠ Sélectionne au moins un fichier .paq.');return;}
+  if(!paqs.length){log('⚠ Sélectionne au moins un .paq.');return;}
   document.getElementById('importBtn').disabled=true;
   try{
-    let allColis=[],tot=0; const eans=new Set();
+    let all=[],tot=0; const eans=new Set();
     for(const f of paqs){const colis=await parsePaq(f);log(f.name+' : '+colis.length+' colis.');tot+=colis.length;
-      colis.forEach(c=>{allColis.push(Object.assign({},c,{batch:f.name}));c.art.forEach(a=>eans.add(a.ean));});}
-    log('Récupération des noms ('+eans.size+' articles)…'); const nameMap={};
-    for(const ch of chunk([...eans],300)){const {data}=await sb.from('articles').select('ean,lib,fam,taille,coul').in('ean',ch);(data||[]).forEach(a=>{nameMap[a.ean]={lib:a.lib,fam:a.fam,taille:a.taille,coul:a.coul};});}
-    let manq=0; eans.forEach(e=>{if(!nameMap[e])manq++;}); if(manq)log('ℹ '+manq+' article(s) sans nom (références récentes) — recharge le référentiel si tu en vois beaucoup.');
-    const rows=allColis.map(c=>({code:c.code,magasin:c.magasin,cde:c.cde,pieces:c.art.reduce((s,a)=>s+a.qte,0),contenu:enrich(c.art,nameMap),batch:c.batch}));
+      colis.forEach(c=>{all.push(Object.assign({},c,{batch:f.name}));c.art.forEach(a=>eans.add(a.ean));});}
+    log('Noms ('+eans.size+' articles)…'); const nm={};
+    for(const ch of chunk([...eans],300)){const {data}=await sb.from('articles').select('ean,lib,fam,taille,coul').in('ean',ch);(data||[]).forEach(a=>{nm[a.ean]={lib:a.lib,fam:a.fam,taille:a.taille,coul:a.coul};});}
+    let manq=0; eans.forEach(e=>{if(!nm[e])manq++;}); if(manq)log('ℹ '+manq+' article(s) sans nom — recharge le référentiel si nombreux.');
+    const rows=all.map(c=>({code:c.code,magasin:c.magasin,cde:c.cde,pieces:c.art.reduce((s,a)=>s+a.qte,0),contenu:enrich(c.art,nm),batch:c.batch}));
     log('Envoi de '+rows.length+' colis…');
     for(const ch of chunk(rows,CHUNK)) await sb.from('colis').upsert(ch,{onConflict:'code'});
-    log('✅ Import terminé : '+tot+' colis. Colis déjà présents (et avancement) conservés.');
+    log('✅ Import terminé : '+tot+' colis. Avancement conservé.');
     loadSuivi(); loadAcces();
-  }catch(e){log('❌ Erreur : '+(e.message||e));}
+  }catch(e){log('❌ '+(e.message||e));}
   document.getElementById('importBtn').disabled=false;
 }
 async function cleanupOld(){
@@ -180,46 +196,58 @@ async function cleanupOld(){
   const cutoff=new Date(Date.now()-days*864e5).toISOString();
   const {data}=await sb.from('reception').select('colis_code').eq('statut','recu').lt('updated_at',cutoff);
   const codes=(data||[]).map(r=>r.colis_code);
-  if(!codes.length){log('Aucun colis reçu de plus de '+days+' j à retirer.');return;}
+  if(!codes.length){log('Aucun colis reçu > '+days+' j.');return;}
   for(const ch of chunk(codes,200)){await sb.from('reception').delete().in('colis_code',ch);await sb.from('colis').delete().in('code',ch);}
-  log('🧹 '+codes.length+' colis reçus (> '+days+' j) retirés.'); loadSuivi();
+  log('🧹 '+codes.length+' colis retirés.'); loadSuivi();
 }
 async function loadSuivi(){
-  const el=document.getElementById('suivi');
   const {data:colis}=await sb.from('colis').select('magasin,cde');
   const {data:recs}=await sb.from('reception').select('magasin,statut');
-  if(!colis||!colis.length){el.innerHTML='<div class="muted">Aucune livraison importée.</div>';return;}
   const agg={};
-  colis.forEach(c=>{const a=agg[c.magasin]=agg[c.magasin]||{att:0,recu:0,ec:0,cmds:new Set()};a.att++;a.cmds.add(c.cde);});
+  (colis||[]).forEach(c=>{const a=agg[c.magasin]=agg[c.magasin]||{att:0,recu:0,ec:0,cmds:new Set()};a.att++;a.cmds.add(c.cde);});
   (recs||[]).forEach(r=>{const a=agg[r.magasin];if(!a)return;if(r.statut==='recu')a.recu++;else if(r.statut==='ecart')a.ec++;});
-  const mags=Object.keys(agg).sort();
+  SUIVI=Object.keys(agg).sort().map(m=>({m,...agg[m],cmd:agg[m].cmds.size}));
+  renderSuivi();
+}
+function renderSuivi(){
+  const el=document.getElementById('suivi'); const q=(document.getElementById('suiviFind').value||'').toLowerCase();
+  const rows=SUIVI.filter(r=>!q||r.m.toLowerCase().includes(q));
+  document.getElementById('suiviCount').textContent=rows.length+' magasin'+(rows.length>1?'s':'');
+  if(!SUIVI.length){el.innerHTML='<div class="muted">Aucune livraison importée.</div>';return;}
   let h='<div class="scroll"><table><thead><tr><th>Magasin</th><th class="n">Cmd</th><th class="n">Colis</th><th class="n">Reçus</th><th>Avancement</th><th class="n">Écarts</th></tr></thead><tbody>';
-  mags.forEach(m=>{const a=agg[m],pct=a.att?Math.round(100*a.recu/a.att):0;
-    h+='<tr><td class="code">'+m+'</td><td class="n">'+a.cmds.size+'</td><td class="n">'+a.att+'</td><td class="n">'+a.recu+'</td>'
-     +'<td><div style="display:flex;align-items:center;gap:8px"><div class="bar"><i style="width:'+pct+'%"></i></div><span class="muted">'+pct+'%</span></div></td>'
-     +'<td class="n">'+(a.ec?'<span class="pill w">'+a.ec+'</span>':'<span class="muted">0</span>')+'</td></tr>';});
-  h+='</tbody></table></div>'; el.innerHTML=h;
+  rows.forEach(r=>{const pct=r.att?Math.round(100*(r.recu+r.ec)/r.att):0;
+    h+='<tr><td class="code">'+r.m+'</td><td class="n">'+r.cmd+'</td><td class="n">'+r.att+'</td><td class="n">'+r.recu+'</td>'
+     +'<td><span class="bar"><i style="width:'+pct+'%"></i></span> <span class="muted">'+pct+'%</span></td>'
+     +'<td class="n">'+(r.ec?'<span class="pill w">'+r.ec+'</span>':'<span class="muted">0</span>')+'</td></tr>';});
+  el.innerHTML=h+'</tbody></table></div>';
 }
 async function loadAcces(){
-  const el=document.getElementById('acces');
   const {data:colis}=await sb.from('colis').select('magasin');
   const mags=[...new Set((colis||[]).map(r=>r.magasin))].sort();
-  if(!mags.length){el.innerHTML='<div class="muted">Importe d\'abord des livraisons.</div>';return;}
   const {data:mg}=await sb.from('magasins').select('code,pin_hash');
   const has={}; (mg||[]).forEach(m=>{if(m.pin_hash)has[m.code]=1;});
-  let h='<div class="scroll"><table><thead><tr><th>Magasin</th><th>État</th><th>Définir / changer le PIN</th><th>Lien</th></tr></thead><tbody>';
-  mags.forEach(m=>{
-    h+='<tr><td class="code">'+m+'</td>'
-     +'<td>'+(has[m]?'<span class="pill ok">PIN défini</span>':'<span class="pill g">à définir</span>')+'</td>'
-     +'<td><div class="acc-pin"><input id="pin-'+m+'" type="text" inputmode="numeric" placeholder="PIN"><button class="btn sm" onclick="setPin(\''+m+'\')">Enregistrer</button></div></td>'
-     +'<td><button class="btn sec sm" onclick="copyLink(\''+m+'\')">Copier le lien</button></td></tr>';});
-  h+='</tbody></table></div>'; el.innerHTML=h;
+  ACC=mags.map(m=>({m,has:!!has[m]}));
+  renderAcces();
+}
+function renderAcces(){
+  const el=document.getElementById('acces'); const q=(document.getElementById('accFind').value||'').toLowerCase();
+  if(!ACC.length){el.innerHTML='<div class="muted">Importe d\'abord des livraisons.</div>';document.getElementById('accCount').textContent='';return;}
+  const rows=ACC.filter(r=>!q||r.m.toLowerCase().includes(q));
+  const nset=ACC.filter(r=>r.has).length;
+  document.getElementById('accCount').textContent=nset+' / '+ACC.length+' PIN définis';
+  let h='<div class="scroll"><table><thead><tr><th>Magasin</th><th>État</th><th>PIN</th><th>Lien</th></tr></thead><tbody>';
+  rows.forEach(r=>{h+='<tr><td class="code">'+r.m+'</td>'
+    +'<td>'+(r.has?'<span class="pill ok">défini</span>':'<span class="pill g">à définir</span>')+'</td>'
+    +'<td><div class="acc-set"><input id="pin-'+r.m+'" type="text" inputmode="numeric" placeholder="PIN"><button class="btn sm" onclick="setPin(\''+r.m+'\')">OK</button></div></td>'
+    +'<td><button class="btn sec sm" onclick="copyLink(\''+r.m+'\')">Copier le lien</button></td></tr>';});
+  el.innerHTML=h+'</tbody></table></div>';
 }
 async function setPin(code){
   const inp=document.getElementById('pin-'+code); const pin=(inp.value||'').trim();
-  if(pin.length<4){alert('Choisis un PIN d\'au moins 4 chiffres.');return;}
+  if(pin.length<4){alert('PIN d\'au moins 4 chiffres.');return;}
   try{const hash=await sha256(pin); await sb.rpc('mag_set_pin',{p_code:code,p_nom:null,p_hash:hash});
-    inp.value=''; loadAcces(); }catch(e){alert('Erreur : '+(e.message||e));}
+    inp.value=''; const a=ACC.find(x=>x.m===code); if(a)a.has=true; renderAcces();
+  }catch(e){alert('Erreur : '+(e.message||e));}
 }
 function copyLink(code){const url=storeBase+'?mag='+code;
   try{navigator.clipboard.writeText(url);}catch(e){}
@@ -231,7 +259,7 @@ async function doLogin(){
   if(error){document.getElementById('loginErr').textContent='Identifiants incorrects.';return;}
   showMain();
 }
-function showMain(){document.getElementById('login').classList.add('hide');document.getElementById('main').classList.remove('hide');loadCatStatus();loadSuivi();loadAcces();}
+function showMain(){document.getElementById('login').classList.add('hide');document.getElementById('main').classList.remove('hide');document.getElementById('footlog').classList.remove('hide');loadCatStatus();loadSuivi();loadAcces();}
 async function init(){
   sb=supabase.createClient(SUPA_URL,SUPA_KEY);
   const {data}=await sb.auth.getSession(); if(data&&data.session)showMain();
@@ -240,8 +268,10 @@ async function init(){
   document.getElementById('refreshBtn').addEventListener('click',()=>{loadSuivi();loadAcces();});
   document.getElementById('cleanBtn').addEventListener('click',cleanupOld);
   document.getElementById('catBtn').addEventListener('click',importCatalogue);
+  document.getElementById('suiviFind').addEventListener('input',renderSuivi);
+  document.getElementById('accFind').addEventListener('input',renderAcces);
   document.getElementById('logout').addEventListener('click',async e=>{e.preventDefault();await sb.auth.signOut();location.reload();});
-  Object.assign(window,{parseCatalogueText,parsePaq,enrich,parseCSVLine,setPin,copyLink,doImport,loadSuivi,loadAcces});
+  Object.assign(window,{parseCatalogueText,parsePaq,enrich,parseCSVLine,setPin,copyLink,doImport,loadSuivi,loadAcces,renderSuivi,renderAcces});
 }
 window.addEventListener('DOMContentLoaded',init);
 window.__init=init;
