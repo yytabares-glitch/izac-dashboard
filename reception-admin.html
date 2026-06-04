@@ -8,61 +8,82 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--bg:#EDEFF3;--ink:#263145;--ink2:#5b647a;--ink3:#828a9c;--line:#E5E9F2;--line2:#EEF1F6;--card:#fff;
---blue:#263145;--accent:#263145;--ok:#263145;--okbg:#eef1f6;--warn:#263145;--warnbg:#eef1f6;--warnline:#d6dbe4}
+--blue:#263145;--accent:#263145;--ok:#263145;--okbg:#eef1f6;--warn:#263145;--warnbg:#eef1f6;--warnline:#d6dbe4;
+--green:#1f9d57;--greenbg:#e6f6ed;--greenline:#bfe6cf;--red:#D64545;--redbg:#FDECEC;--redline:#F3C9C9}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
-.wrap{max-width:1240px;margin:0 auto;padding:20px 26px 60px}
-.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;background:var(--ink);border-radius:16px;padding:15px 22px;box-shadow:0 4px 18px rgba(38,49,69,.16)}
+body{background:radial-gradient(1200px 600px at 50% -8%, #F6F8FC 0%, #EDEFF3 50%, #E6E9F1 100%) fixed;color:var(--ink);font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.32;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E")}
+.wrap{max-width:1240px;margin:0 auto;padding:20px 26px 60px;position:relative;z-index:1}
+@keyframes rise{from{opacity:0;transform:translateY(11px)}to{opacity:1;transform:none}}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;background:linear-gradient(135deg,#2b3752 0%,#222c41 55%,#1b2336 100%);border-radius:16px;padding:16px 22px;box-shadow:0 10px 30px rgba(18,26,44,.3),inset 0 1px 0 rgba(255,255,255,.07);animation:rise .5s cubic-bezier(.2,.75,.2,1) both}
 .brand{display:flex;align-items:center;gap:14px}
 .mark{font-weight:800;letter-spacing:.18em;font-size:20px;color:var(--ink)}
 .top .mark{color:#fff}
 .sep{width:1px;height:20px;background:rgba(255,255,255,.22)}
-.brand .sub{font-size:13px;color:rgba(255,255,255,.72);font-weight:600}
-.foot-log{font-size:12.5px;color:rgba(255,255,255,.72)} .foot-log a{color:#fff;cursor:pointer;font-weight:600;text-decoration:underline}
+.brand .sub{font-size:13px;color:rgba(255,255,255,.74);font-weight:600}
+.foot-log{font-size:12.5px;color:rgba(255,255,255,.74)} .foot-log a{color:#fff;cursor:pointer;font-weight:600;text-decoration:underline}
+/* vue réseau */
+.overview{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:14px;box-shadow:0 5px 18px rgba(38,49,69,.06);animation:rise .55s .05s cubic-bezier(.2,.75,.2,1) both}
+.ov-top{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.ov-ring{position:relative;width:74px;height:74px;border-radius:50%;flex-shrink:0;background:conic-gradient(var(--green) calc(var(--p,0)*3.6deg), #e7ebf2 0);transition:background .6s cubic-bezier(.2,.7,.2,1)}
+.ov-ring::after{content:"";position:absolute;inset:6px;background:#fff;border-radius:50%}
+.ov-ring span{position:absolute;inset:0;z-index:1;display:grid;place-items:center;font-weight:800;font-size:17px;letter-spacing:-.02em;color:var(--ink)}
+.ov-h{flex:1;min-width:170px}
+.ov-h .t{font-weight:800;font-size:15px;letter-spacing:-.01em}
+.ov-h .s{font-size:12.5px;color:var(--ink2);margin-top:2px;font-weight:600}
+.tiles{display:flex;gap:10px;flex-wrap:wrap}
+.tile{background:#fafbfd;border:1px solid var(--line);border-radius:12px;padding:9px 14px;min-width:82px;transition:transform .15s ease,box-shadow .15s ease}
+.tile:hover{transform:translateY(-2px);box-shadow:0 7px 18px rgba(38,49,69,.07)}
+.tile .tn{font-weight:800;font-size:20px;letter-spacing:-.02em;line-height:1}
+.tile .tl{font-size:10px;color:var(--ink3);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:4px}
+.tile.green .tn{color:var(--green)} .tile.red .tn{color:var(--red)} .tile.red{background:var(--redbg);border-color:var(--redline)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:14px 16px;margin-bottom:13px}
-.card h2{font-size:13px;font-weight:700;margin:0 0 3px;display:flex;align-items:center;gap:8px;justify-content:space-between}
-.card h2 .num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:6px;background:var(--blue);color:#fff;font-size:11px;font-weight:700;flex-shrink:0}
-.card h2 .htxt{display:flex;align-items:center;gap:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:15px 17px;margin-bottom:13px;box-shadow:0 3px 14px rgba(38,49,69,.05);animation:rise .55s .1s cubic-bezier(.2,.75,.2,1) both}
+.card h2{font-size:13px;font-weight:800;margin:0 0 3px;display:flex;align-items:center;gap:8px;justify-content:space-between}
+.card h2 .num{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;border-radius:7px;background:var(--blue);color:#fff;font-size:11px;font-weight:800;flex-shrink:0}
+.card h2 .htxt{display:flex;align-items:center;gap:9px}
 .card .desc{font-size:12px;color:var(--ink3);margin:2px 0 9px;line-height:1.5}
 label{font-size:11.5px;font-weight:700;color:var(--ink2);display:block;margin:8px 0 4px}
-input[type=email],input[type=password],input[type=file],input[type=text],input[type=number]{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-family:inherit;font-size:13px;outline:none;background:#fff}
-input:focus{border-color:var(--ink3)}
+input[type=email],input[type=password],input[type=file],input[type=text],input[type=number]{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-family:inherit;font-size:13px;outline:none;background:#fff;transition:border-color .12s}
+input:focus{border-color:var(--ink)}
 input[type=file]{padding:7px 9px;font-size:12px}
 .btn{border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:10px;padding:9px 15px;font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;transition:.12s}
-.btn:hover{opacity:.9}.btn:active{transform:translateY(1px)}
+.btn:hover{opacity:.92}.btn:active{transform:translateY(1px)}
 .btn.sec{background:#fff;color:var(--ink);border-color:var(--line)}.btn.sec:hover{border-color:var(--ink3)}
 .btn.sm{padding:6px 11px;font-size:11.5px;border-radius:8px}
+.btn.on{background:var(--red);border-color:var(--red);color:#fff}
 .btn:disabled{opacity:.45;cursor:default}
 .row{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:12px}
-.status{font-size:12.5px;padding:8px 11px;border-radius:10px;background:#f5f8fd;border:1px solid var(--line);margin-bottom:6px}
+.status{font-size:12.5px;padding:9px 12px;border-radius:10px;background:#f5f8fd;border:1px solid var(--line);margin-bottom:6px}
 .log{background:#fafaf8;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:11.5px;color:var(--ink2);margin-top:12px;white-space:pre-wrap;max-height:200px;overflow:auto;display:none;font-family:ui-monospace,Menlo,monospace}
 .toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:11px;flex-wrap:wrap}
-.find{position:relative;flex:1;min-width:160px}
+.find{position:relative;flex:1;min-width:150px}
 .find input{padding-left:11px}
 .count{font-size:11.5px;color:var(--ink3);font-weight:600;white-space:nowrap}
-.scroll{max-height:360px;overflow:auto;border:1px solid var(--line2);border-radius:11px}
+.scroll{max-height:380px;overflow:auto;border:1px solid var(--line2);border-radius:11px}
 table{width:100%;border-collapse:collapse;font-size:12.5px}
-th,td{text-align:left;padding:8px 11px;border-bottom:1px solid var(--line2);white-space:nowrap}
+th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line2);white-space:nowrap}
 thead th{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink3);position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);font-weight:700}
 td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
-tbody tr:hover{background:#fafaf8}
-.code{font-weight:700}
-.pill{font-size:10px;font-weight:700;padding:3px 9px;border-radius:30px}
-.pill.ok{background:var(--okbg);color:var(--ok)}.pill.w{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}.pill.g{background:#eef0f3;color:var(--ink3)}
-.bar{height:6px;border-radius:6px;background:#edeeea;overflow:hidden;width:84px;display:inline-block;vertical-align:middle}
-.bar i{display:block;height:100%;background:var(--ok)}
+tbody tr{transition:background .1s} tbody tr:hover{background:#f7f9fc}
+tbody tr.lateRow{background:#fdf3f3} tbody tr.lateRow:hover{background:#fbe9e9}
+.code{font-weight:800}
+.pill{font-size:10px;font-weight:700;padding:3px 9px;border-radius:30px;white-space:nowrap}
+.pill.ok{background:var(--greenbg);color:var(--green)}.pill.r{background:var(--redbg);color:var(--red)}.pill.w{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}.pill.g{background:#eef0f3;color:var(--ink3)}
+.bar{height:7px;border-radius:7px;background:#edeeea;overflow:hidden;width:88px;display:inline-block;vertical-align:middle}
+.bar i{display:block;height:100%;border-radius:7px;background:linear-gradient(90deg,#2b3752,var(--green));transition:width .5s cubic-bezier(.2,.7,.2,1)}
 .muted{font-size:12px;color:var(--ink3)}
 .acc-set{display:flex;gap:6px;align-items:center}
 .acc-set input{width:84px;padding:6px 8px}
-#login{max-width:360px;margin:10vh auto 0;box-shadow:0 14px 50px rgba(20,22,27,.07);border-radius:18px;text-align:center}
-#login .mark{display:block;font-size:21px;margin-bottom:16px}
-#login h2{justify-content:center}
+#login{max-width:370px;margin:11vh auto 0;box-shadow:0 16px 50px rgba(20,22,27,.08);border-radius:18px;text-align:center;padding:30px 26px}
+#login .mark{display:block;font-size:22px;margin-bottom:16px;letter-spacing:.2em}
+#login h2{justify-content:center;font-size:17px}
 #login input{text-align:center}
 .hide{display:none}
-.err{color:var(--warn);font-size:12px;font-weight:600;margin-top:10px;min-height:14px}
+.err{color:var(--red);font-size:12px;font-weight:600;margin-top:10px;min-height:14px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
 @media(max-width:760px){.grid2{grid-template-columns:1fr}}
 </style>
 </head>
@@ -82,6 +103,7 @@ tbody tr:hover{background:#fafaf8}
   </div>
 
   <div id="main" class="hide">
+    <div id="overview" class="overview"><div class="muted">Chargement de la vue réseau…</div></div>
     <div class="grid2">
       <div class="card">
         <h2><span class="htxt"><span class="num">1</span>Référentiel articles</span><span class="muted" style="font-weight:400">1 ×</span></h2>
@@ -103,7 +125,7 @@ tbody tr:hover{background:#fafaf8}
 
     <div class="card">
       <h2><span class="htxt"><span class="num">3</span>Suivi des magasins</span><button class="btn sec sm" id="refreshBtn">Rafraîchir</button></h2>
-      <div class="toolbar"><div class="find"><input id="suiviFind" placeholder="Filtrer un magasin…"></div><span class="count" id="suiviCount"></span></div>
+      <div class="toolbar"><div class="find"><input id="suiviFind" placeholder="Filtrer un magasin…"></div><button class="btn sec sm" id="suiviLateBtn">En retard</button><span class="count" id="suiviCount"></span></div>
       <div id="suivi"><div class="muted">Chargement…</div></div>
       <div class="row" style="border-top:1px solid var(--line2);padding-top:12px;margin-top:13px">
         <span class="muted" style="flex:1;min-width:210px">Retirer les colis <b>reçus</b> de plus de
@@ -123,8 +145,9 @@ tbody tr:hover{background:#fafaf8}
 <script>
 const SUPA_URL='https://imurxmsglmpgxdbavalk.supabase.co';
 const SUPA_KEY='sb_publishable_-FqQ5I6tx4rCUwUqmsf5DA_IFsfkUlQ';
+const MAG_NAMES={"1009": "Auber", "1010": "B. Epin", "1028": "Rue Ren", "1045": "Parinor", "1104": "Creteil", "1198": "Velizy", "1215": "Stquen", "1254": "Auberv.", "1332": "St Laz.", "1339": "Fontai.", "1352": "Levall.", "1353": "Claye", "1449": "Aerov.", "1489": "Quartz", "1498": "Goness.", "1552": "V Europ", "1568": "Carre", "1575": "La Def.", "1604": "Rosny2", "1655": "Parly", "1665": "Montpar", "1692": "Trading", "1696": "Forum", "1748": "Beaugrenelle", "1756": "Boulogne", "1779": "Arcueil", "1782": "Corbeil", "1109": "Stdenis", "1199": "Beziers", "1335": "Lille", "1350": "Perp.", "1354": "Nancy", "1355": "Nantes", "1377": "Ptstem", "1427": "Claira", "1451": "Clerm.", "1487": "Strasb.", "1543": "A13", "1563": "St Omer", "1566": "Beauv.", "1608": "Anglet", "1615": "N Creb", "1618": "Eurali.", "1648": "Roubaix", "1651": "Pau", "1659": "Reims", "1667": "G. Var", "1668": "Noyelle", "1670": "Brest", "1672": "St Eti.", "1683": "Arras", "1721": "Bethune", "1729": "Lillen.", "1735": "Villefontaine", "1740": "Romans", "1785": "Gap", "1011": "Herriot", "1057": "Siege", "1074": "Blagnac", "1330": "Conf.", "1331": "Montp.", "1334": "Rouen", "1426": "Begles", "1448": "Dijon", "1450": "R Alma", "1469": "Monta.", "1470": "Avignon", "1485": "Merig.", "1486": "Terra.", "1488": "Valent", "1505": "Talang", "1513": "Part D.", "1518": "Ecouf.", "1526": "Niort", "1544": "Epagny", "1545": "Lormont", "1567": "Bord.", "1592": "Colmar", "1597": "Auxer.", "1598": "Bastia", "1603": "Fenoui.", "1609": "Nimesc", "1621": "Aix", "1627": "Miram.", "1636": "Metz", "1637": "Ajacc.", "1654": "Prado", "1666": "Cap", "1669": "Voiron", "1671": "Andrezieux", "1694": "Mulhou.", "1704": "Blois", "1716": "Epinal", "1724": "Olonne", "1728": "Cannes", "1732": "Haguenau", "1737": "Bordeaux Lac", "1738": "Ecully", "1739": "Toulouse", "1742": "Thionville", "1743": "Mont De Marsan", "1749": "Aix En Provence", "1755": "Besancon", "1787": "La Rochelle", "1791": "Tours", "1792": "Grenoble", "1793": "Dijon Cv", "1801": "Rennes Cv", "1703": "Luxembourg", "1054": "T. D H. 72", "1055": "Tdh 61", "1070": "Côte Homme", "1204": "Marco Men", "1207": "Hopium", "1286": "Jasyl Sarl", "1289": "Manceau Eurl", "1305": "Aff D Homme", "1317": "Wilhelem Sa", "1349": "Bloom David", "142": "Brousseau", "1434": "Aumaclaire", "1461": "B. Engelyc", "1492": "Jack Mod", "1496": "Buxy", "1510": "Senso", "1511": "Boutik Homme", "1512": "Havane", "1581": "Vanni.O", "1643": "Rezland", "1645": "Show Room", "1661": "Langlais", "1678": "H. Dhomme", "1708": "Les Galeries Sas Du Grand Baza", "1710": "Boutique Mr", "1711": "Coupin", "1715": "Boutique Raphael", "1722": "O Masculin", "1758": "We Are Select / Was", "1760": "Les Secrets De Bea", "1769": "Boy And Girl", "1773": "Xavier Men'S Wear", "1780": "Boutique Monsieur", "1783": "G3M Diffusion / Printemps Le H", "1794": "Will'S", "1799": "Printemps Caen / Jel Diffusion", "1805": "Driver", "318": "Espace Griff", "380": "Gentlemen", "437": "Hors Ligne", "507": "Labau", "532": "Le Gendre Ideal", "566": "Matco Sarl", "576": "La Maison", "61": "Arvet Sarl", "717": "Penaud", "724": "Pinel", "835": "Cap Code / Sngd", "851": "Sporlux", "954": "Verso Sarl", "997": "Jld Diff.", "1224": "As St Etienne Att. Valerie Sem", "1318": "G. Lemoine", "1457": "Boz Couture", "1557": "Abv Service", "1623": "Cote Homm", "1641": "Mhb / Benjamin Terme", "1650": "E. Griffe", "1675": "Losc", "1699": "Place Aux Hommes", "1700": "We Are Select W.A.S.", "1718": "Escale", "1726": "Cloane Square", "1766": "Iconik Store Chez We Are Selec", "1775": "Oscar", "1776": "Ol Sasu / Att Florence Dams Et", "1781": "Rennes Alma", "1784": "Griffe Rouge", "1800": "Sas Racing Club De Lens / Arth", "1808": "Sas Racing Club De Strasbourg", "1812": "Affaire D'Homme", "216": "Cosmopolite", "626": "Mickelson", "647": "Morence", "1411": "Lol By L.", "1795": "Hotel Le Grand Mazarin / Att.", "1814": "My Comm", "206": "Mossis J. - Sarl Come Back", "268": "Donald Bout.", "479": "Js Trading", "559": "M.C.S. Sarl", "1527": "Fashion R.", "1546": "Rackstore M.", "1629": "Mkm -", "1646": "Basile Boutique", "1830": "Neyrpic", "1835": "Orleans", "1831": "Strasbourg Centre Ville", "1828": "Caen", "1818": "Sarl Roy", "1549": "Firex", "1578": "Pretty Women", "1701": "Mon Vestaire", "1768": "Abc", "1807": "Ste Mens", "1820": "Le 18 Sarl", "1823": "Dress Code", "1833": "Le 10 Coffy Distribution", "1834": "Tarantola", "1841": "Montal Sarl", "1815": "Sas Expentour", "1837": "Chabe", "1843": "Deauville", "1777": "Boutique Hom", "1839": "Clothing Distributions", "1845": "Showroom Formen", "952": "Vente Privee.Com", "1291": "Somajy", "1840": "Cabries", "1844": "Polygone", "1842": "Le Mans", "1851": "Sas Baron", "1850": "Sas Rc Strasbourg", "1852": "Bey First 2", "1865": "Giverny", "1862": "Chambery", "1861": "Jump Atelier"};
 let sb=null; const CHUNK=800;
-let SUIVI=[], ACC=[]; // caches pour filtrage
+let SUIVI=[], ACC=[]; let suiviLate=false; // caches + filtre
 const storeBase=location.href.replace(/[^/]*$/,'reception.html').split('#')[0].split('?')[0];
 function log(m){const e=document.getElementById('log');e.style.display='block';e.textContent+=m+'\n';e.scrollTop=e.scrollHeight;}
 function clog(m){const e=document.getElementById('catlog');e.style.display='block';e.textContent+=m+'\n';e.scrollTop=e.scrollHeight;}
@@ -209,24 +232,43 @@ async function cleanupOld(){
   log('🧹 '+codes.length+' colis retirés.'); loadSuivi();
 }
 async function loadSuivi(){
-  const {data:colis}=await sb.from('colis').select('magasin,cde');
-  const {data:recs}=await sb.from('reception').select('magasin,statut');
+  const today0=new Date(); today0.setHours(0,0,0,0);
+  const {data:colis}=await sb.from('colis').select('code,magasin,cde,created_at');
+  const {data:recs}=await sb.from('reception').select('colis_code,magasin,statut');
+  const done=new Set(); (recs||[]).forEach(r=>{if(r.statut==='recu'||r.statut==='ecart')done.add(r.colis_code);});
   const agg={};
-  (colis||[]).forEach(c=>{const a=agg[c.magasin]=agg[c.magasin]||{att:0,recu:0,ec:0,cmds:new Set()};a.att++;a.cmds.add(c.cde);});
+  (colis||[]).forEach(c=>{const a=agg[c.magasin]=agg[c.magasin]||{att:0,recu:0,ec:0,late:0,cmds:new Set()};
+    a.att++; a.cmds.add(c.cde);
+    if(c.created_at&&new Date(c.created_at)<today0&&!done.has(c.code))a.late++;});
   (recs||[]).forEach(r=>{const a=agg[r.magasin];if(!a)return;if(r.statut==='recu')a.recu++;else if(r.statut==='ecart')a.ec++;});
   SUIVI=Object.keys(agg).sort().map(m=>({m,...agg[m],cmd:agg[m].cmds.size}));
-  renderSuivi();
+  renderOverview(); renderSuivi();
 }
+function renderOverview(){
+  const el=document.getElementById('overview'); if(!el)return;
+  if(!SUIVI.length){el.innerHTML='<div class="muted">Aucune livraison importée pour l\'instant.</div>';return;}
+  let att=0,recu=0,ec=0,late=0;
+  SUIVI.forEach(s=>{att+=s.att;recu+=s.recu;ec+=s.ec;late+=s.late;});
+  const pct=att?Math.round(100*(recu+ec)/att):0, enCours=att-recu-ec;
+  const tile=(n,l,cls)=>'<div class="tile'+(cls?' '+cls:'')+'"><div class="tn">'+n+'</div><div class="tl">'+l+'</div></div>';
+  el.innerHTML='<div class="ov-top"><div class="ov-ring" style="--p:'+pct+'"><span>'+pct+'%</span></div>'
+    +'<div class="ov-h"><div class="t">Vue réseau — aujourd\'hui</div><div class="s">'+SUIVI.length+' magasin'+(SUIVI.length>1?'s':'')+' actif'+(SUIVI.length>1?'s':'')+' · '+(recu+ec)+' / '+att+' colis traités</div></div>'
+    +'<div class="tiles">'+tile(SUIVI.length,'Magasins')+tile(att,'Colis')+tile(enCours,'En cours')+tile(recu,'Reçus','green')+tile(ec,'Écarts',ec>0?'red':'')+tile(late,'En retard',late>0?'red':'')+'</div></div>';
+}
+function magName(c){const n=MAG_NAMES[c]||'';return n.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function renderSuivi(){
   const el=document.getElementById('suivi'); const q=(document.getElementById('suiviFind').value||'').toLowerCase();
-  const rows=SUIVI.filter(r=>!q||r.m.toLowerCase().includes(q));
-  document.getElementById('suiviCount').textContent=rows.length+' magasin'+(rows.length>1?'s':'');
+  let rows=SUIVI.filter(r=>!q||(r.m+' '+(MAG_NAMES[r.m]||'')).toLowerCase().includes(q));
+  if(suiviLate)rows=rows.filter(r=>r.late>0);
+  document.getElementById('suiviCount').textContent=rows.length+' magasin'+(rows.length>1?'s':'')+(suiviLate?' en retard':'');
   if(!SUIVI.length){el.innerHTML='<div class="muted">Aucune livraison importée.</div>';return;}
-  let h='<div class="scroll"><table><thead><tr><th>Magasin</th><th class="n">Cmd</th><th class="n">Colis</th><th class="n">Reçus</th><th>Avancement</th><th class="n">Écarts</th></tr></thead><tbody>';
+  if(!rows.length){el.innerHTML='<div class="muted">'+(suiviLate?'Aucun magasin en retard ✓':'Aucun résultat.')+'</div>';return;}
+  let h='<div class="scroll"><table><thead><tr><th>Magasin</th><th class="n">Cmd</th><th class="n">Colis</th><th class="n">Reçus</th><th>Avancement</th><th class="n">Écarts</th><th class="n">Retard</th></tr></thead><tbody>';
   rows.forEach(r=>{const pct=r.att?Math.round(100*(r.recu+r.ec)/r.att):0;
-    h+='<tr><td class="code">'+r.m+'</td><td class="n">'+r.cmd+'</td><td class="n">'+r.att+'</td><td class="n">'+r.recu+'</td>'
+    h+='<tr'+(r.late>0?' class="lateRow"':'')+'><td class="code">'+r.m+(MAG_NAMES[r.m]?' · <span style="font-weight:500;color:#6b7280">'+magName(r.m)+'</span>':'')+'</td><td class="n">'+r.cmd+'</td><td class="n">'+r.att+'</td><td class="n">'+r.recu+'</td>'
      +'<td><span class="bar"><i style="width:'+pct+'%"></i></span> <span class="muted">'+pct+'%</span></td>'
-     +'<td class="n">'+(r.ec?'<span class="pill w">'+r.ec+'</span>':'<span class="muted">0</span>')+'</td></tr>';});
+     +'<td class="n">'+(r.ec?'<span class="pill r">'+r.ec+'</span>':'<span class="muted">0</span>')+'</td>'
+     +'<td class="n">'+(r.late>0?'<span class="pill r">'+r.late+'</span>':'<span class="muted">—</span>')+'</td></tr>';});
   el.innerHTML=h+'</tbody></table></div>';
 }
 async function loadAcces(){
@@ -240,11 +282,11 @@ async function loadAcces(){
 function renderAcces(){
   const el=document.getElementById('acces'); const q=(document.getElementById('accFind').value||'').toLowerCase();
   if(!ACC.length){el.innerHTML='<div class="muted">Importe d\'abord des livraisons.</div>';document.getElementById('accCount').textContent='';return;}
-  const rows=ACC.filter(r=>!q||r.m.toLowerCase().includes(q));
+  const rows=ACC.filter(r=>!q||(r.m+' '+(MAG_NAMES[r.m]||'')).toLowerCase().includes(q));
   const nset=ACC.filter(r=>r.has).length;
   document.getElementById('accCount').textContent=nset+' / '+ACC.length+' PIN définis';
   let h='<div class="scroll"><table><thead><tr><th>Magasin</th><th>État</th><th>PIN</th><th>Lien</th></tr></thead><tbody>';
-  rows.forEach(r=>{h+='<tr><td class="code">'+r.m+'</td>'
+  rows.forEach(r=>{h+='<tr><td class="code">'+r.m+(MAG_NAMES[r.m]?' · <span style="font-weight:500;color:#6b7280">'+magName(r.m)+'</span>':'')+'</td>'
     +'<td>'+(r.has?'<span class="pill ok">défini</span>':'<span class="pill g">à définir</span>')+'</td>'
     +'<td><div class="acc-set"><input id="pin-'+r.m+'" type="text" inputmode="numeric" placeholder="PIN"><button class="btn sm" onclick="setPin(\''+r.m+'\')">OK</button></div></td>'
     +'<td><button class="btn sec sm" onclick="copyLink(\''+r.m+'\')">Copier le lien</button></td></tr>';});
@@ -277,6 +319,7 @@ async function init(){
   document.getElementById('cleanBtn').addEventListener('click',cleanupOld);
   document.getElementById('catBtn').addEventListener('click',importCatalogue);
   document.getElementById('suiviFind').addEventListener('input',renderSuivi);
+  document.getElementById('suiviLateBtn').addEventListener('click',()=>{suiviLate=!suiviLate;document.getElementById('suiviLateBtn').className=suiviLate?'btn sm on':'btn sec sm';renderSuivi();});
   document.getElementById('accFind').addEventListener('input',renderAcces);
   document.getElementById('logout').addEventListener('click',async e=>{e.preventDefault();await sb.auth.signOut();location.reload();});
   Object.assign(window,{parseCatalogueText,parsePaq,enrich,parseCSVLine,setPin,copyLink,doImport,loadSuivi,loadAcces,renderSuivi,renderAcces});
