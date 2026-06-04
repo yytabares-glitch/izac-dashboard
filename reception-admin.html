@@ -130,7 +130,7 @@ tbody tr.lateRow{background:#fdf3f3} tbody tr.lateRow:hover{background:#fbe9e9}
 
     <div class="card">
       <h2><span class="htxt"><span class="num">3</span>Suivi des magasins</span><button class="btn sec sm" id="refreshBtn">Rafraîchir</button></h2>
-      <div class="toolbar"><div class="find"><input id="suiviFind" placeholder="Filtrer un magasin…"></div><button class="btn sec sm" id="suiviLateBtn">En retard</button><span class="count" id="suiviCount"></span></div>
+      <div class="toolbar"><div class="find"><input id="suiviFind" placeholder="Filtrer un magasin…"></div><button class="btn sec sm" id="suiviLateBtn">En retard</button><button class="btn sec sm" id="relanceAllBtn">Relancer les retards</button><span class="count" id="suiviCount"></span></div>
       <div id="suivi"><div class="muted">Chargement…</div></div>
       <div class="row" style="border-top:1px solid var(--line2);padding-top:12px;margin-top:13px">
         <span class="muted" style="flex:1;min-width:210px">Retirer les colis <b>reçus</b> de plus de
@@ -152,7 +152,7 @@ const SUPA_URL='https://imurxmsglmpgxdbavalk.supabase.co';
 const SUPA_KEY='sb_publishable_-FqQ5I6tx4rCUwUqmsf5DA_IFsfkUlQ';
 const MAG_NAMES={"1009": "Auber", "1010": "B. Epin", "1028": "Rue De Rennes", "1045": "Parinor", "1104": "Creteil", "1198": "Velizy", "1215": "St Quentin", "1254": "Auber", "1332": "St Laz.", "1339": "Fontai.", "1352": "Levallois", "1353": "Claye Souilly", "1449": "Aeroville", "1489": "Quartz", "1498": "Gonesse", "1552": "Val D'europe", "1568": "Carre Senart", "1575": "La Defense", "1604": "Rosny 2", "1655": "Parly 2", "1665": "Montparnasse", "1692": "Trading", "1696": "Forum Des Halles", "1748": "Beaugrenelle", "1756": "Boulogne", "1779": "Arcueil", "1782": "Corbeil", "1109": "St Denis", "1199": "Beziers", "1335": "Lille", "1350": "Perpignan Claira", "1354": "Nancy", "1355": "Nantes Crebillons", "1377": "Ptstem", "1427": "Perpignan Claira", "1451": "Clermont", "1487": "Strasbourg Cv", "1543": "A13", "1563": "St Omer", "1566": "Beauv.", "1608": "Anglet", "1615": "N Creb", "1618": "Euralille", "1648": "Roubaix", "1651": "Pau", "1659": "Reims", "1667": "Grand Var", "1668": "Noyelles", "1670": "Brest", "1672": "St Eti.", "1683": "Arras", "1721": "Bethune", "1729": "Lillenium", "1735": "Villefontaine", "1740": "Romans", "1785": "Gap", "1011": "Herriot", "1057": "Siege", "1074": "Blagnac", "1330": "Confluence", "1331": "Montpellier", "1334": "Rouen", "1426": "Begles", "1448": "Dijon Cv", "1450": "Rennes Alma", "1469": "Monta.", "1470": "Avignon", "1485": "Merignac", "1486": "Terrasses Du Port", "1488": "La Valentine", "1505": "Talang", "1513": "Part Dieu", "1518": "Ecouf.", "1526": "Niort", "1544": "Epagny", "1545": "Lormont", "1567": "Bordeaux Lac", "1592": "Colmar", "1597": "Auxer.", "1598": "Bastia", "1603": "Fenouillet", "1609": "Nimes", "1621": "Aix En Provence", "1627": "Miramas", "1636": "Metz", "1637": "Ajacc.", "1654": "Prado", "1666": "Cap 3000", "1669": "Voiron", "1671": "Andrezieux", "1694": "Mulhou.", "1704": "Blois", "1716": "Epinal", "1724": "Olonne", "1728": "Cannes", "1732": "Haguenau", "1737": "Bordeaux Lac", "1738": "Ecully", "1739": "Toulouse", "1742": "Thionville", "1743": "Mont De Marsan", "1749": "Aix En Provence", "1755": "Besancon", "1787": "La Rochelle", "1791": "Tours", "1792": "Grenoble", "1793": "Dijon Cv", "1801": "Rue De Rennes", "1703": "Luxembourg", "1054": "T. D H. 72", "1055": "Tdh 61", "1070": "Côte Homme", "1204": "Marco Men", "1207": "Hopium", "1286": "Jasyl Sarl", "1289": "Manceau Eurl", "1305": "Aff D Homme", "1317": "Wilhelem Sa", "1349": "Bloom David", "142": "Brousseau", "1434": "Aumaclaire", "1461": "B. Engelyc", "1492": "Jack Mod", "1496": "Buxy", "1510": "Senso", "1511": "Boutik Homme", "1512": "Havane", "1581": "Vanni.O", "1643": "Rezland", "1645": "Show Room", "1661": "Langlais", "1678": "H. Dhomme", "1708": "Grand Var", "1710": "Boutique Mr", "1711": "Coupin", "1715": "Boutique Raphael", "1722": "O Masculin", "1758": "We Are Select / Was", "1760": "Les Sables", "1769": "Boy And Girl", "1773": "Xavier Men'S Wear", "1780": "Boutique Monsieur", "1783": "G3M Diffusion / Printemps Le H", "1794": "Will'S", "1799": "Caen", "1805": "Driver", "318": "Espace Griff", "380": "Gentlemen", "437": "Hors Ligne", "507": "Labau", "532": "Le Gendre Ideal", "566": "Matco Sarl", "576": "La Maison", "61": "Arvet Sarl", "717": "Penaud", "724": "Pinel", "835": "Cap 3000", "851": "Sporlux", "954": "Verso Sarl", "997": "Jld Diff.", "1224": "As St Etienne Att. Valerie Sem", "1318": "G. Lemoine", "1457": "Boz Couture", "1557": "Abv Service", "1623": "Cote Homm", "1641": "Mhb / Benjamin Terme", "1650": "E. Griffe", "1675": "Losc", "1699": "Place Aux Hommes", "1700": "We Are Select W.A.S.", "1718": "Escale", "1726": "Cloane Square", "1766": "Iconik Store Chez We Are Selec", "1775": "Oscar", "1776": "Ol Sasu / Att Florence Dams Et", "1781": "Rue De Rennes", "1784": "Griffe Rouge", "1800": "Sas Racing Club De Lens / Arth", "1808": "Strasbourg Cv", "1812": "Affaire D'Homme", "216": "Cosmopolite", "626": "Mickelson", "647": "Morence", "1411": "Lol By L.", "1795": "Grand Var", "1814": "My Comm", "206": "Mossis J. - Sarl Come Back", "268": "Donald Bout.", "479": "Js Trading", "559": "M.C.S. Sarl", "1527": "Fashion R.", "1546": "Rackstore M.", "1629": "Mkm -", "1646": "Basile Boutique", "1830": "Neyrpic", "1835": "Orleans", "1831": "Strasbourg Cv", "1828": "Caen", "1818": "Sarl Roy", "1549": "Firex", "1578": "Pretty Women", "1701": "Mon Vestaire", "1768": "Abc", "1807": "Pont Ste Marie", "1820": "Le 18 Sarl", "1823": "Dress Code", "1833": "Le 10 Coffy Distribution", "1834": "Tarantola", "1841": "Montal Sarl", "1815": "Sas Expentour", "1837": "Chabe", "1843": "Deauville", "1777": "Boutique Hom", "1839": "Clothing Distributions", "1845": "Showroom Formen", "952": "Vente Privee.Com", "1291": "Somajy", "1840": "Cabries", "1844": "Polygone", "1842": "Le Mans", "1851": "Sas Baron", "1850": "Strasbourg Cv", "1852": "Bey First 2", "1865": "Giverny", "1862": "Chambery", "1861": "Jump Atelier"};
 let sb=null; const CHUNK=800;
-let SUIVI=[], ACC=[], COLIS_ALL=[]; let suiviLate=false; // caches + filtre
+let SUIVI=[], ACC=[], COLIS_ALL=[]; let suiviLate=false, NET_CAT='all'; // caches + filtres
 function esc(s){return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 const storeBase=location.href.replace(/[^/]*$/,'reception.html').split('#')[0].split('?')[0];
 function log(m){const e=document.getElementById('log');e.style.display='block';e.textContent+=m+'\n';e.scrollTop=e.scrollHeight;}
@@ -270,13 +270,13 @@ function renderOverview(){
     +'<div class="tiles">'+tile(SUIVI.length,'Magasins')+tile(att,'Colis','','all')+tile(enCours,'En cours','','encours')+tile(recu,'Reçus','green','recu')+tile(ec,'Écarts',ec>0?'red':'','ecart')+tile(late,'En retard',late>0?'red':'','late')+'</div></div>';
 }
 function showNet(cat){
-  const el=document.getElementById('netdetail'); if(!el)return;
+  const el=document.getElementById('netdetail'); if(!el)return; NET_CAT=cat;
   const map={all:['Tous les colis',()=>true],encours:['Colis en cours',c=>c.statut==='attendu'],recu:['Colis reçus',c=>c.statut==='recu'],ecart:['Écarts signalés',c=>c.statut==='ecart'],late:['Colis en retard',c=>c.late]};
   const def=map[cat]||map.all, title=def[0], filt=def[1];
   const rows=COLIS_ALL.filter(filt).sort((a,b)=>(a.magasin+a.cde+a.code).localeCompare(b.magasin+b.cde+b.code));
   const isEc=cat==='ecart';
   const badge=s=>'<span class="pill '+(s==='recu'?'ok':(s==='ecart'?'r':'g'))+'">'+(s==='recu'?'Reçu':(s==='ecart'?'Écart':'En cours'))+'</span>';
-  let h='<div class="nd-head"><div class="nd-t">'+title+' · <span style="color:var(--ink2)">'+rows.length+'</span></div><button class="btn sec sm" onclick="hideNet()">Fermer ✕</button></div>';
+  let h='<div class="nd-head"><div class="nd-t">'+title+' · <span style="color:var(--ink2)">'+rows.length+'</span></div><div style="display:flex;gap:8px"><button class="btn sec sm" onclick="exportNet()">Exporter CSV</button><button class="btn sec sm" onclick="hideNet()">Fermer ✕</button></div></div>';
   if(!rows.length){h+='<div class="muted" style="padding:8px 2px">Aucun colis dans cette catégorie.</div>';}
   else{
     h+='<div class="scroll"><table><thead><tr><th>Magasin</th><th>Commande</th><th>Colis</th><th class="n">Pièces</th><th>Livré le</th><th>Statut</th>'+(isEc?'<th>Déclaré par</th><th>Note</th>':'')+'</tr></thead><tbody>';
@@ -288,6 +288,31 @@ function showNet(cat){
   el.innerHTML=h; el.classList.remove('hide'); try{el.scrollIntoView({behavior:'smooth',block:'nearest'});}catch(_){}
 }
 function hideNet(){const el=document.getElementById('netdetail');if(el)el.classList.add('hide');}
+function netCSV(cat){
+  const map={all:()=>true,encours:c=>c.statut==='attendu',recu:c=>c.statut==='recu',ecart:c=>c.statut==='ecart',late:c=>c.late};
+  const filt=map[cat]||map.all;
+  const rows=COLIS_ALL.filter(filt).sort((a,b)=>(a.magasin+a.cde+a.code).localeCompare(b.magasin+b.cde+b.code));
+  const st=s=>s==='recu'?'Reçu':(s==='ecart'?'Écart':'En cours');
+  const q=v=>{v=(v==null?'':String(v));return /[";\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  const lines=[['Code magasin','Nom magasin','Commande','Colis','Pièces','Livré le','Statut','Déclaré par','Note'].join(';')];
+  rows.forEach(c=>{const dt=c.created_at?new Date(c.created_at).toLocaleDateString('fr-FR'):'';
+    lines.push([c.magasin,MAG_NAMES[c.magasin]||'',c.cde,c.code,c.pieces,dt,st(c.statut),c.declarant||'',c.note||''].map(q).join(';'));});
+  return lines.join('\r\n');
+}
+function exportNet(){
+  const csv=netCSV(NET_CAT), name='izac_'+NET_CAT+'_'+new Date().toISOString().slice(0,10)+'.csv';
+  try{const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();
+    setTimeout(()=>{try{URL.revokeObjectURL(url);a.remove();}catch(_){}} ,500);
+  }catch(e){alert('Export impossible : '+(e.message||e));}
+}
+function relanceOne(code){const s=SUIVI.find(x=>x.m===code)||{late:0};const nom=MAG_NAMES[code]?(' · '+MAG_NAMES[code]):'';
+  return 'Bonjour, magasin '+code+nom+' : il reste '+s.late+' colis en retard à réceptionner. Merci de finaliser aujourd\'hui sur l\'outil : '+storeBase+'?mag='+code;}
+function relanceText(){const lates=SUIVI.filter(s=>s.late>0);if(!lates.length)return '';
+  return 'Colis en retard à réceptionner (relance) :\n'+lates.map(s=>'• '+s.m+(MAG_NAMES[s.m]?(' · '+MAG_NAMES[s.m]):'')+' : '+s.late+' colis — '+storeBase+'?mag='+s.m).join('\n');}
+function copyTxt(t){try{navigator.clipboard.writeText(t);}catch(_){}}
+function relanceStore(code){const t=relanceOne(code);copyTxt(t);alert('Relance copiée — colle-la au magasin :\n\n'+t);}
+function relanceAllLate(){const t=relanceText();if(!t){alert('Aucun magasin en retard.');return;}copyTxt(t);alert('Relance de tous les retards copiée :\n\n'+t);}
 function magName(c){const n=MAG_NAMES[c]||'';return n.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function renderSuivi(){
   const el=document.getElementById('suivi'); const q=(document.getElementById('suiviFind').value||'').toLowerCase();
@@ -301,7 +326,7 @@ function renderSuivi(){
     h+='<tr'+(r.late>0?' class="lateRow"':'')+'><td class="code">'+r.m+(MAG_NAMES[r.m]?' · <span style="font-weight:500;color:#6b7280">'+magName(r.m)+'</span>':'')+'</td><td class="n">'+r.cmd+'</td><td class="n">'+r.att+'</td><td class="n">'+r.recu+'</td>'
      +'<td><span class="bar"><i style="width:'+pct+'%"></i></span> <span class="muted">'+pct+'%</span></td>'
      +'<td class="n">'+(r.ec?'<span class="pill r">'+r.ec+'</span>':'<span class="muted">0</span>')+'</td>'
-     +'<td class="n">'+(r.late>0?'<span class="pill r">'+r.late+'</span>':'<span class="muted">—</span>')+'</td></tr>';});
+     +'<td class="n">'+(r.late>0?'<span class="pill r">'+r.late+'</span> <button class="btn sec sm" style="padding:3px 8px" onclick="relanceStore(\''+r.m+'\')">Relancer</button>':'<span class="muted">—</span>')+'</td></tr>';});
   el.innerHTML=h+'</tbody></table></div>';
 }
 async function loadAcces(){
@@ -353,9 +378,10 @@ async function init(){
   document.getElementById('catBtn').addEventListener('click',importCatalogue);
   document.getElementById('suiviFind').addEventListener('input',renderSuivi);
   document.getElementById('suiviLateBtn').addEventListener('click',()=>{suiviLate=!suiviLate;document.getElementById('suiviLateBtn').className=suiviLate?'btn sm on':'btn sec sm';renderSuivi();});
+  document.getElementById('relanceAllBtn').addEventListener('click',relanceAllLate);
   document.getElementById('accFind').addEventListener('input',renderAcces);
   document.getElementById('logout').addEventListener('click',async e=>{e.preventDefault();await sb.auth.signOut();location.reload();});
-  Object.assign(window,{parseCatalogueText,parsePaq,enrich,parseCSVLine,setPin,copyLink,doImport,loadSuivi,loadAcces,renderSuivi,renderAcces,showNet,hideNet});
+  Object.assign(window,{parseCatalogueText,parsePaq,enrich,parseCSVLine,setPin,copyLink,doImport,loadSuivi,loadAcces,renderSuivi,renderAcces,showNet,hideNet,exportNet,netCSV,relanceStore,relanceAllLate,relanceOne,relanceText});
 }
 window.addEventListener('DOMContentLoaded',init);
 window.__init=init;

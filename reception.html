@@ -112,6 +112,15 @@ body{background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',system-u
 .line.done .line-name{color:var(--ink3);text-decoration:line-through}
 .line-fam{font-size:11px;color:var(--ink3);margin-top:2px}
 .line-q{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink2)}
+.qstep{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.qbtn{width:28px;height:28px;border:1.5px solid #d2d6dd;background:#fff;border-radius:9px;font-size:17px;font-weight:800;color:var(--ink);cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;transition:.1s;-webkit-tap-highlight-color:transparent}
+.qbtn:hover{border-color:var(--ink2);background:#fafafa}
+.qbtn:active{transform:scale(.92)}
+.qn{font-size:14.5px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink2);min-width:42px;text-align:center}
+.qn .qsep{color:#c2c7d0;margin:0 1px;font-weight:600}
+.qn.part{color:var(--red)}
+.line.part .chk{border-color:var(--red);background:#fff}
+.chk .dash{display:block;width:11px;height:2.5px;background:var(--red);border-radius:2px}
 .acts{display:flex;gap:9px;margin-top:13px}
 .ecart-box{background:var(--warnbg);border:1px solid var(--warnline);border-radius:13px;padding:13px;margin-top:12px}
 .ecart-box .et{font-weight:700;color:var(--warn);font-size:13px;margin-bottom:9px;display:flex;align-items:center;gap:7px}
@@ -248,6 +257,16 @@ const MAG_NAMES={"1009": "Auber", "1010": "B. Epin", "1028": "Rue De Rennes", "1
 let sb=null, MAG=null, PINHASH=null;
 let DECLARANT=''; try{DECLARANT=localStorage.getItem('izac_decl')||'';}catch(_){}
 let pendingDecl=null;
+let SOUND=true; try{SOUND=(localStorage.getItem('izac_sound')!=='0');}catch(_){}
+let _ac=null;
+function audioCtx(){try{if(!_ac){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;_ac=new C();}if(_ac.state==='suspended')_ac.resume();return _ac;}catch(_){return null;}}
+function tone(freq,dur,type,when,gain){const ac=audioCtx();if(!ac)return;try{const o=ac.createOscillator(),g=ac.createGain();o.type=type||'sine';o.frequency.value=freq;const t=ac.currentTime+(when||0);g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(gain||0.16,t+0.012);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+dur+0.03);}catch(_){}}
+function vibrate(p){try{if(navigator&&navigator.vibrate)navigator.vibrate(p);}catch(_){}}
+function beepOk(){if(!SOUND)return;tone(880,0.09,'sine');vibrate(16);}
+function beepDone(){if(!SOUND)return;tone(660,0.10,'sine',0);tone(990,0.14,'sine',0.10);vibrate([22,32,22]);}
+function beepBad(){if(!SOUND)return;tone(200,0.18,'square',0,0.13);vibrate([70,50,70]);}
+function toggleSound(){SOUND=!SOUND;try{localStorage.setItem('izac_sound',SOUND?'1':'0');}catch(_){}updateSoundBtn();if(SOUND)beepOk();}
+function updateSoundBtn(){const b=document.getElementById('soundBtn');if(b)b.textContent=SOUND?'Son activé':'Son coupé';}
 let streak=0, streakTs=0;
 let COLIS=[], byCode={}, byCmd={}, cmds=[];
 const state={};
@@ -277,7 +296,7 @@ function magLabel(c){const n=MAG_NAMES[c];return n?(c+' · '+n):('Magasin '+c);}
 async function init(){
   sb=supabase.createClient(SUPA_URL,SUPA_KEY);
   MAG=qs('mag'); renderLogin();
-  Object.assign(window,{doLogin,loadData,onScan,openColis,conform,markConform,signalMiss,doEcart,openDeclModal,closeDecl,confirmDecl,setDeclarant,clearEcart,toggleLine,saveNote,fluxEmail,confirmEmail,closeModal,closeOk,buildFlux,setMode,setFilter,toggleCmd,artName,artFam,state});
+  Object.assign(window,{doLogin,loadData,onScan,openColis,conform,markConform,signalMiss,doEcart,openDeclModal,closeDecl,confirmDecl,setDeclarant,clearEcart,toggleLine,incLine,saveNote,fluxEmail,confirmEmail,closeModal,closeOk,buildFlux,setMode,setFilter,toggleCmd,artName,artFam,state});
 }
 function renderLogin(){
   document.getElementById('app').innerHTML=
@@ -313,17 +332,20 @@ function loadData(data){
     if(!byCmd[c.cde]){byCmd[c.cde]=[];cmds.push(c.cde);}
     byCmd[c.cde].push(c.code);
   });
-  (data.reception||[]).forEach(r=>{state[r.colis_code]={statut:r.statut,note:r.note||'',ok:new Set(r.lignes_ok||[])};});
+  (data.reception||[]).forEach(r=>{const q={}; const lo=r.lignes_ok; const C=byCode[r.colis_code];
+    if(Array.isArray(lo)){ lo.forEach(id=>{const a=C?C.art.find(x=>x.id===id):null; q[id]=a?(a.qte||1):1;}); }
+    else if(lo&&typeof lo==='object'){ for(const k in lo){ q[k]=+lo[k]||0; } }
+    state[r.colis_code]={statut:r.statut,note:r.note||'',declarant:r.declarant||'',q};});
   window.COLIS=COLIS;window.byCode=byCode;window.byCmd=byCmd;
   renderApp();
 }
 function renderApp(){
   document.getElementById('app').innerHTML=
    '<div class="top"><div class="brand"><span class="mark">IZAC</span><span class="sep"></span><span class="sub">Réception</span><span class="chip">'+esc(magLabel(MAG))+'</span></div>'
-   +'<div style="display:flex;gap:9px;align-items:center"><button class="btn warn" id="fluxBtn">Signaler les écarts au service Flux</button><button class="ghost" id="logoutBtn">Changer de magasin</button></div></div>'
+   +'<div style="display:flex;gap:9px;align-items:center"><button class="btn warn" id="fluxBtn">Signaler les écarts au service Flux</button><button class="ghost" id="soundBtn">Son activé</button><button class="ghost" id="logoutBtn">Changer de magasin</button></div></div>'
    +'<div id="prog" class="prog"></div>'
    +'<div class="kpis" id="kpis"></div>'
-   +'<div class="scan"><span class="ic">⤷</span><input id="scan" placeholder="Scannez un colis, puis ses articles…" autocomplete="off"><span class="tag">douchette ou clavier</span></div>'
+   +'<div class="scan"><span class="ic">⤷</span><input id="scan" placeholder="Scannez un colis OU directement un article…" autocomplete="off"><span class="tag">douchette ou clavier</span></div>'
    +'<div id="streak" class="streak hide"></div>'
    +'<div class="flash" id="flash"></div>'
    +'<div id="latebanner" class="latebanner hide"></div>'
@@ -341,6 +363,7 @@ function renderApp(){
   document.getElementById('latebanner').addEventListener('click',()=>{setMode('colis');setFilter('late');});
   const dok=document.getElementById('decl-ok'); if(dok)dok.addEventListener('click',confirmDecl);
   const din=document.getElementById('decl-in'); if(din)din.addEventListener('keydown',e=>{if(e.key==='Enter')confirmDecl();});
+  const sbn=document.getElementById('soundBtn'); if(sbn)sbn.addEventListener('click',toggleSound); updateSoundBtn();
   document.getElementById('scan').focus();
   renderKpis(); renderSeg(); renderList();
 }
@@ -406,9 +429,11 @@ function renderList(){
   }
 }
 function toggleCmd(cde){openCmd=openCmd===cde?null:cde;renderList();}
-function st_(code){return state[code]=state[code]||{statut:'',note:'',ok:new Set()};}
+function st_(code){return state[code]=state[code]||{statut:'',note:'',declarant:'',q:{}};}
+function qof(s,id){return (s&&s.q&&s.q[id])?+s.q[id]:0;}
+function artFull(s,a){return qof(s,a.id)>=(a.qte||1);}
 async function persist(code){const s=st_(code);
-  try{const {data,error}=await sb.rpc('mag_save',{p_code:MAG,p_hash:PINHASH,p_colis:code,p_statut:s.statut||'attendu',p_note:s.note||'',p_ok:[...s.ok],p_decl:DECLARANT||''});
+  try{const {data,error}=await sb.rpc('mag_save',{p_code:MAG,p_hash:PINHASH,p_colis:code,p_statut:s.statut||'attendu',p_note:s.note||'',p_ok:s.q||{},p_decl:DECLARANT||''});
     if(error||data===false)flash('Sauvegarde refusée — reconnecte-toi.',true);}
   catch(e){flash('Sauvegarde impossible (réseau).',true);}
 }
@@ -416,33 +441,40 @@ function openColis(code){
   current=code;const c=byCode[code];if(!c)return;
   if(byCmd[c.cde].indexOf(code)>=0)openCmd=c.cde;
   const codes=byCmd[c.cde],recuN=codes.filter(x=>statusOf(byCode[x])!=='attendu').length;
-  const s=st_(code),ok=s.ok,st=statusOf(c);
-  const okN=c.art.filter(a=>ok.has(a.id)).length,pct=c.art.length?Math.round(100*okN/c.art.length):0;
-  const lines=c.art.map(a=>{const on=ok.has(a.id),fam=artFam(a);
-    return '<div class="line'+(on?' done':'')+'" onclick="toggleLine(\''+code+'\','+a.id+')"><div class="chk">'+(on?'✓':'')+'</div><div class="line-main"><div class="line-name">'+esc(artName(a))+'</div>'+(fam?'<div class="line-fam">'+esc(fam)+'</div>':'')+'</div><div class="line-q">×'+a.qte+'</div></div>';}).join('');
+  const s=st_(code),st=statusOf(c);
+  const totU=c.art.reduce((t,a)=>t+(a.qte||1),0), gotU=c.art.reduce((t,a)=>t+Math.min(qof(s,a.id),(a.qte||1)),0), pct=totU?Math.round(100*gotU/totU):0;
+  const lines=c.art.map(a=>{const m=a.qte||1,n=Math.min(qof(s,a.id),m),isfull=n>=m,part=n>0&&n<m,fam=artFam(a);
+    return '<div class="line'+(isfull?' done':'')+(part?' part':'')+'" onclick="toggleLine(\''+code+'\','+a.id+')">'
+      +'<div class="chk">'+(isfull?'✓':(part?'<span class="dash"></span>':''))+'</div>'
+      +'<div class="line-main"><div class="line-name">'+esc(artName(a))+'</div>'+(fam?'<div class="line-fam">'+esc(fam)+'</div>':'')+'</div>'
+      +'<div class="qstep">'+(m>1?'<button class="qbtn" onclick="event.stopPropagation();incLine(\''+code+'\','+a.id+',-1)">−</button>':'')
+      +'<span class="qn'+(part?' part':'')+'">'+n+'<span class="qsep">/</span>'+m+'</span>'
+      +(m>1?'<button class="qbtn" onclick="event.stopPropagation();incLine(\''+code+'\','+a.id+',1)">+</button>':'')
+      +'</div></div>';}).join('');
   let h='<div class="d-pad"><div class="d-head"><div><div class="d-t">Colis '+esc(code)+'</div><div class="d-s">Commande '+esc(c.cde)+' · '+c.pieces+' pièces · '+c.art.length+' références</div></div><span class="badge '+BADGE[st][1]+'">'+BADGE[st][0]+'</span></div>';
   h+='<div class="callout">Commande '+esc(c.cde)+' : <b>'+recuN+' / '+codes.length+'</b> colis traités'+(recuN<codes.length?' · '+(codes.length-recuN)+' encore à traiter':' · complète ✓')+'</div>';
-  h+='<div class="ctrl-h"><span class="t">Contrôle des articles</span><span class="c">'+okN+' / '+c.art.length+' pointés</span></div>';
+  h+='<div class="ctrl-h"><span class="t">Contrôle des articles</span><span class="c">'+gotU+' / '+totU+' pièces pointées</span></div>';
   h+='<div class="bar" style="margin:0 2px 11px"><i style="width:'+pct+'%"></i></div>';
   h+='<div class="lines">'+lines+'</div>';
   h+='<div class="acts"><button class="btn primary big" onclick="conform(\''+code+'\')">✓ Colis conforme</button><button class="btn warn big" onclick="signalMiss(\''+code+'\')">⚠ Pièce(s) manquante(s)</button></div>';
-  if(st==='ecart'){const miss=c.art.filter(a=>!ok.has(a.id));
-    h+='<div class="ecart-box"><div class="et">⚠ Écart signalé — '+(miss.length?miss.length+' article(s) manquant(s)':'à préciser')+'</div>';
+  if(st==='ecart'){const miss=c.art.filter(a=>qof(s,a.id)<(a.qte||1));
+    h+='<div class="ecart-box"><div class="et">⚠ Écart signalé — '+(miss.length?miss.length+' article(s) manquant(s) ou incomplet(s)':'à préciser')+'</div>';
     h+='<div class="muted" style="margin:-3px 0 9px;font-size:12px">Signalé par : <b style="color:var(--ink)">'+esc(s.declarant||DECLARANT||'—')+'</b> · <a onclick="openDeclModal(\''+code+'\')" style="color:var(--red);cursor:pointer;font-weight:700">changer</a></div>';
-    if(miss.length){h+='<ul>'+miss.map(a=>'<li>'+esc(artName(a))+' · ×'+a.qte+(artFam(a)?' <span class="e-fam">'+esc(artFam(a))+'</span>':'')+'</li>').join('')+'</ul>';}
+    if(miss.length){h+='<ul>'+miss.map(a=>{const got=qof(s,a.id),exp=a.qte||1;return '<li>'+esc(artName(a))+' · reçu '+got+' / '+exp+' <b style="color:var(--red)">(manque '+(exp-got)+')</b>'+(artFam(a)?' <span class="e-fam">'+esc(artFam(a))+'</span>':'')+'</li>';}).join('')+'</ul>';}
     h+='<input class="note-in" id="note-in" placeholder="Précision (facultatif) : abîmé, colis ouvert…" value="'+esc(s.note||'')+'" onchange="saveNote(\''+code+'\')">';
     h+='<div class="ecart-acts"><button class="btn warn" onclick="fluxEmail(\''+code+'\')">✉ Email service Flux</button><button class="btn" onclick="clearEcart(\''+code+'\')">Annuler l\'écart</button></div></div>';
   }
   h+='</div>';
   document.getElementById('detail').innerHTML=h;renderList();
 }
-function toggleLine(code,id){const s=st_(code);if(s.ok.has(id))s.ok.delete(id);else s.ok.add(id);persist(code);openColis(code);}
+function toggleLine(code,id){const s=st_(code);const a=byCode[code].art.find(x=>x.id===id);const m=a.qte||1;s.q[id]=(qof(s,id)>=m)?0:m;persist(code);openColis(code);}
+function incLine(code,id,d){const s=st_(code);const a=byCode[code].art.find(x=>x.id===id);const m=a.qte||1;let n=qof(s,id)+d;if(n<0)n=0;if(n>m)n=m;s.q[id]=n;persist(code);openColis(code);}
 function focusScan(){const e=document.getElementById('scan');if(e)setTimeout(()=>{try{e.focus();}catch(_){}}, 30);}
 function scanFx(cls,ms){const e=document.getElementById('scan');if(!e)return;const w=e.parentElement;if(!(w&&w.classList.contains('scan')))return;
   w.classList.remove('ok','bad'); void w.offsetWidth; w.classList.add(cls);
   clearTimeout(scanFx._t); scanFx._t=setTimeout(()=>w.classList.remove(cls),ms);}
 function scanGreen(){scanFx('ok',1800);}
-function scanBad(){scanFx('bad',1600);}
+function scanBad(){scanFx('bad',1600); beepBad();}
 function flashBad(m){const e=document.getElementById('flash');if(!e)return;e.textContent=m;e.className='flash bad';clearTimeout(flash._t);flash._t=setTimeout(()=>{e.textContent='';e.className='flash';},4200);}
 function flashGood(m){const e=document.getElementById('flash');if(!e)return;e.textContent=m;e.className='flash good';clearTimeout(flash._t);flash._t=setTimeout(()=>{e.textContent='';e.className='flash';},3200);}
 function commandDone(cde){const m=document.getElementById('okmodal');if(!m)return;
@@ -450,6 +482,7 @@ function commandDone(cde){const m=document.getElementById('okmodal');if(!m)retur
   m.classList.remove('hide');
   const mk=m.querySelector('.okmark'); if(mk){mk.classList.remove('go'); void mk.offsetWidth; mk.classList.add('go');}
   confetti();
+  if(SOUND){tone(660,0.12,'sine',0);tone(880,0.12,'sine',0.12);tone(1175,0.2,'sine',0.24);vibrate([30,40,30,40,60]);}
 }
 function confetti(){
   let layer=document.getElementById('fx');
@@ -471,8 +504,8 @@ function closeOk(){const m=document.getElementById('okmodal');if(m)m.classList.a
 function markConform(code){
   const s=st_(code);
   if(s.statut==='recu'){openColis(code);focusScan();return;}
-  const c=byCode[code]; c.art.forEach(a=>s.ok.add(a.id)); s.statut='recu'; s.note=''; persist(code);
-  scanGreen(); bumpStreak(); flashGood('Colis '+code+' conforme ✓ — scannez le colis suivant');
+  const c=byCode[code]; c.art.forEach(a=>{s.q[a.id]=a.qte||1;}); s.statut='recu'; s.note=''; persist(code);
+  scanGreen(); bumpStreak(); beepDone(); flashGood('Colis '+code+' conforme ✓ — scannez le colis suivant');
   openColis(code); focusScan();
   const codes=byCmd[c.cde];
   if(codes.every(x=>statusOf(byCode[x])==='recu')) commandDone(c.cde);
@@ -480,8 +513,8 @@ function markConform(code){
 function conform(code){markConform(code);}
 function signalMiss(code){ if(!DECLARANT){ openDeclModal(code); return; } doEcart(code); }
 function doEcart(code){const s=st_(code);s.statut='ecart';s.declarant=DECLARANT;persist(code);openColis(code);resetStreak();
-  const miss=byCode[code].art.filter(a=>!s.ok.has(a.id));
-  flash(miss.length?miss.length+' article(s) signalé(s) manquant(s) par '+DECLARANT+'.':'Écart signalé — coche les articles présents pour préciser.',true);
+  const miss=byCode[code].art.filter(a=>qof(s,a.id)<(a.qte||1));
+  flash(miss.length?miss.length+' article(s) manquant(s) ou incomplet(s) — signalé par '+DECLARANT+'.':'Écart signalé — précise les quantités reçues.',true);
 }
 function setDeclarant(v){DECLARANT=(v||'').trim(); try{localStorage.setItem('izac_decl',DECLARANT);}catch(_){}}
 function openDeclModal(forCode){pendingDecl=forCode||null; const m=document.getElementById('declmodal'); if(!m)return;
@@ -503,10 +536,10 @@ function buildFlux(code){
   const d=new Date().toLocaleDateString('fr-FR');
   let body=magLabel(MAG)+' — Écarts réception du '+d+'\n';
   body+='Déclaré par : '+(DECLARANT||'—')+'\n\n';
-  list.forEach(c=>{const s=state[c.code]||{ok:new Set()};const miss=c.art.filter(a=>!s.ok.has(a.id));
+  list.forEach(c=>{const s=state[c.code]||{q:{}};const miss=c.art.filter(a=>qof(s,a.id)<(a.qte||1));
     body+='— Commande '+c.cde+' · Colis '+c.code+'\n';
     if(s.note)body+='  Note : '+s.note+'\n';
-    if(miss.length){body+='  Articles manquants :\n';miss.forEach(a=>{body+='    • '+artName(a)+' · x'+a.qte+'   (EAN '+a.ean+')\n';});}
+    if(miss.length){body+='  Articles manquants / incomplets :\n';miss.forEach(a=>{const got=qof(s,a.id),exp=a.qte||1;body+='    • '+artName(a)+' · reçu '+got+' / '+exp+' (manque '+(exp-got)+')   (EAN '+a.ean+')\n';});}
     body+='\n';});
   return {count:list.length, subject:'Écarts réception — '+magLabel(MAG)+' — '+d, body};
 }
@@ -526,17 +559,34 @@ function confirmEmail(){
 function closeModal(){document.getElementById('modal').classList.add('hide');pendingMail=null;}
 async function onScan(v){
   v=(v||'').trim(); if(!v)return;
-  if(byCode[v]){ openColis(v); flash('Colis '+v+' ouvert — scannez ses articles.'); focusScan(); return; }
-  if(current){
+  // 1) Code colis (carton) -> ouvrir. Toujours possible.
+  if(byCode[v]){ openColis(v); flash('Colis '+v+' ouvert — scannez ses articles.'); beepOk(); focusScan(); return; }
+  // Colis « en cours » = ouvert et pas encore traité (on le GARDE tant qu'il n'est pas fini)
+  const working = current && statusOf(byCode[current])==='attendu';
+  if(working){
     const a=byCode[current].art.find(x=>x.ean===v);
-    if(a){ const s=st_(current); s.ok.add(a.id); persist(current);
-      if(byCode[current].art.every(x=>s.ok.has(x.id))) markConform(current);
-      else { openColis(current); flashGood('Article pointé ✓'); focusScan(); }
-      return; }
+    if(a){ pointArticle(current,a); return; }
+    const other=COLIS.find(c=>c.code!==current && c.art.some(x=>x.ean===v));
+    if(other){ flash('Cet article est dans le colis '+other.code+'. Termine d\'abord ce colis, ou scanne le colis '+other.code+' pour y aller.'); focusScan(); return; }
+    await reportUnknownScan(v); return;
   }
-  const other=COLIS.find(c=>c.art.some(x=>x.ean===v));
-  if(other){ scanBad(); flashBad('Cet article est dans un autre colis : Colis '+other.code+(current?' — termine d\'abord le colis ouvert.':' — scanne d\'abord ce colis.')); focusScan(); return; }
+  // 2) Aucun colis en cours -> SCAN DIRECT : l'article ouvre tout seul son colis
+  const cands=COLIS.filter(c=>c.art.some(x=>x.ean===v));
+  if(cands.length){
+    let target=cands.find(c=>{const s=state[c.code];const a=c.art.find(x=>x.ean===v);return qof(s,a.id)<(a.qte||1);})||cands[0];
+    const a=target.art.find(x=>x.ean===v);
+    if(target.code!==current) openColis(target.code);
+    pointArticle(target.code,a);
+    return;
+  }
   await reportUnknownScan(v);
+}
+function pointArticle(code,a){
+  const s=st_(code); const m=a.qte||1, cur=qof(s,a.id);
+  if(cur>=m){ openColis(code); flash('Article déjà complet ('+m+'/'+m+') ✓'); beepOk(); focusScan(); return; }
+  s.q[a.id]=cur+1; persist(code);
+  if(byCode[code].art.every(x=>qof(s,x.id)>=(x.qte||1))) markConform(code);
+  else { openColis(code); const n=s.q[a.id]; flashGood('Article pointé ✓'+(m>1?' '+n+'/'+m:'')+' — colis '+code); beepOk(); focusScan(); }
 }
 async function reportUnknownScan(v){
   scanBad();
