@@ -54,8 +54,8 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
 .rc-meteo-region{text-align:right}
 .rc-temp-big{font-size:24px;font-weight:500;font-family:'DM Mono',monospace;line-height:1;letter-spacing:-1px}
 .rc-mlabel{font-size:11px;color:#6B7280;margin-top:2px}
-.rc-prevs{padding:10px 16px;display:flex;gap:5px;border-bottom:1px solid #F0F2F7}
-.prev{flex:1;background:#F8F9FC;border-radius:6px;padding:6px 4px;text-align:center;border:1px solid #EEF0F8}
+.rc-prevs{padding:10px 16px;display:flex;gap:5px;flex-wrap:wrap;border-bottom:1px solid #F0F2F7}
+.prev{flex:1 1 44px;min-width:44px;background:#F8F9FC;border-radius:6px;padding:6px 4px;text-align:center;border:1px solid #EEF0F8}
 .prev-j{font-size:10px;font-weight:600;color:#0D2750;font-family:'DM Mono',monospace}
 .prev-d{font-size:9px;color:#9CA3AF;margin:1px 0}
 .prev-i{font-size:14px;margin:2px 0}
@@ -208,14 +208,6 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
   <button class="tab-btn" onclick="setTab('previsionnel')">📈 Prévisionnel 10j</button>
 </div>
 <div class="view active" id="view-temps-reel">
-  <div class="legend">
-    <span>Actions :</span>
-    <div class="lpill l-up2">⬆⬆ Priorité max</div>
-    <div class="lpill l-up1">⬆ En avant</div>
-    <div class="lpill l-neu">→ Maintenir</div>
-    <div class="lpill l-dn1">⬇ Réduire</div>
-    <div class="lpill l-dn2">⬇⬇ Période défavorable</div>
-  </div>
   <div class="rgrid" id="rgrid-realtime"></div>
 </div>
 <div class="view" id="view-comparatif">
@@ -248,7 +240,7 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
   <div class="prev-layout">
     <div class="prev-header-bar">
       <span style="font-size:13px;font-weight:600;color:#0D2750">📈 Prévisionnel météo × implantation — 10 prochains jours</span>
-      <span style="font-size:11px;color:#6B7280">Par boutique · Conseils adaptés à la météo prévue chaque jour</span>
+      <span style="font-size:11px;color:#6B7280">Par boutique · météo prévue chaque jour</span>
       <span class="cb-info" id="prev-status" style="margin-left:auto"></span>
     </div>
     <div id="prev-body"><div class="prev-loading">Cliquez sur l'onglet pour charger les prévisions...</div></div>
@@ -501,7 +493,6 @@ function makeCard(reg,mode){
       <div class="rc-meteo-region" id="head-${mode}-${reg.id}"><div class="rc-temp-big" style="color:#9CA3AF">—</div><div class="rc-mlabel">Chargement...</div></div>
     </div>
     <div class="rc-prevs" id="prevs-${mode}-${reg.id}"><div class="loading-row" style="width:100%">...</div></div>
-    <div class="rc-familles" id="fam-${mode}-${reg.id}"><div class="loading-row">...</div></div>
     <div class="rc-bouts"><div class="rc-btitle">Boutiques · météo individuelle</div>
       <div class="bouts-list" id="bouts-${mode}-${reg.id}">
         ${reg.boutiques.map(b=>`<div class="bout-row" id="bout-${mode}-${reg.id}-${b.nom.replace(/[\s'\/]/g,'_')}">
@@ -521,11 +512,8 @@ async function loadRealtimeRegion(reg){
     if(!el||!m) continue;
     const t=m.today.temp,p=m.today.pluie;
     const tl=tLabel(t,p);temps.push(t);
-    const cond=tl.cond;
-    const up2=Object.entries(IMPL).filter(([,c])=>c[cond]==='UP2').map(([f])=>f).slice(0,1);
-    const aHtml=up2.length?`<span class="bout-action fp-up2">⬆⬆ ${up2[0]}</span>`:`<span class="bout-action" style="background:#F1EFE8;color:#444441;border-color:#D3D1C7">→</span>`;
-    el.querySelector('.bout-right').innerHTML=`<span class="bout-temp" style="color:${tColorText(t,p)}">${t}°</span><span class="bout-icon">${tl.icon}</span>${aHtml}`;
-    el.querySelector('.bout-icon').textContent=tl.icon;
+    el.querySelector('.bout-left').innerHTML=`<span class="bout-icon">${tl.icon}</span><span class="bout-name">${nom}</span>`;
+    el.querySelector('.bout-right').innerHTML=`<span class="bout-temp" style="color:${tColorText(t,p)}">${t}°</span>`;
   }
   if(!temps.length) return;
   const avg=Math.round(temps.reduce((a,b)=>a+b,0)/temps.length*10)/10;
@@ -538,13 +526,6 @@ async function loadRealtimeRegion(reg){
     const dd=String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');
     return`<div class="prev"><div class="prev-j">J+${i+1}</div><div class="prev-d">${dd}</div><div class="prev-i">${ptl.icon}</div><div class="prev-t" style="color:${tColorText(p.temp,p.pluie)}">${p.temp}°</div></div>`;
   }).join('');
-  const cond=tl.cond;
-  const up2=Object.entries(IMPL).filter(([,c])=>c[cond]==='UP2').map(([f])=>f);
-  const up1=Object.entries(IMPL).filter(([,c])=>c[cond]==='UP1').map(([f])=>f).slice(0,4);
-  const dn2=Object.entries(IMPL).filter(([,c])=>c[cond]==='DN2').map(([f])=>f);
-  document.getElementById(`fam-realtime-${reg.id}`).innerHTML=`
-    ${up2.length?`<div class="rc-ftitle">⬆⬆ A mettre en avant</div><div class="fpills">${up2.map(f=>`<span class="fpill fp-up2">${f}</span>`).join('')}${up1.map(f=>`<span class="fpill fp-up1">${f}</span>`).join('')}</div>`:''}
-    ${dn2.length?`<div class="rc-ftitle" style="margin-top:6px">⬇⬇ Période défavorable</div><div class="fpills">${dn2.map(f=>`<span class="fpill fp-dn2">${f}</span>`).join('')}</div>`:''}`;
 }
 function renderCmpVide(){
   document.getElementById('rgrid-cmp').innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9CA3AF;font-size:14px">Sélectionnez vos périodes et cliquez sur <strong>Comparer →</strong></div>`;
@@ -973,15 +954,10 @@ async function renderPrevisionnel() {
         const p = ji === 0 ? bData.today : bData.prevs[ji-1];
         if (!p) return '<td><div class="prev-cell"><span style="color:#9CA3AF;font-size:10px">—</span></div></td>';
         const tl = tLabel(p.temp, p.pluie);
-        const cond = tl.cond;
-        const topFam = TOP_FAMILLES_COND[cond][0];
-        const topCode = IMPL[topFam] ? IMPL[topFam][cond] : 'NEU';
-        const cons = CONSEIL[topCode];
         return `<td>
           <div class="prev-cell">
             <span class="prev-cell-icon">${tl.icon}</span>
             <span class="prev-cell-temp" style="color:${tColorText(p.temp,p.pluie)}">${p.temp}°</span>
-            <span class="prev-cell-conseil ${cons.cls}">${topFam}</span>
           </div>
         </td>`;
       }).join('');
