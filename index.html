@@ -442,29 +442,39 @@ async function fetchRealtime(lat,lon){
 async function fetchArchive(lat,lon,d1,d2){
   const key=`${lat.toFixed(3)},${lon.toFixed(3)}_${d1}_${d2}`;
   if(archiveCache[key]) return archiveCache[key];
-  try{
-    // Météo HORAIRE filtrée sur les heures d'ouverture (10h–20h, fuseau Paris)
-    const r=await fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${d1}&end_date=${d2}&hourly=temperature_2m,precipitation&timezone=Europe%2FParis`);
-    const d=await r.json();const h=d.hourly||{};
-    const times=h.time||[];const temps=h.temperature_2m||[];const precs=h.precipitation||[];
-    let tSum=0,tN=0,pSum=0;
-    for(let i=0;i<times.length;i++){
-      const hh=parseInt(String(times[i]).slice(11,13),10);   // heure locale
-      if(hh>=10 && hh<20){                                    // 10h → 20h
-        if(temps[i]!=null && !isNaN(temps[i])){tSum+=temps[i];tN++;}
-        if(precs[i]!=null && !isNaN(precs[i])){pSum+=precs[i];}
+  // L'archive ERA5 a ~5 j de retard et n'a PAS le jour même : pour les dates récentes
+  // (≤ 14 j ou futur) on prend l'API prévision (couvre le passé récent + aujourd'hui).
+  const end=new Date(d2+'T12:00:00');
+  const recent=((Date.now()-end.getTime())/86400000)<=14;
+  const base=recent?'https://api.open-meteo.com/v1/forecast':'https://archive-api.open-meteo.com/v1/archive';
+  const url=`${base}?latitude=${lat}&longitude=${lon}&start_date=${d1}&end_date=${d2}&hourly=temperature_2m,precipitation&timezone=Europe%2FParis`;
+  for(let attempt=0;attempt<3;attempt++){
+    try{
+      const r=await fetch(url);
+      if(!r.ok) throw 0;
+      const d=await r.json();const h=d.hourly||{};
+      const times=h.time||[],temps=h.temperature_2m||[],precs=h.precipitation||[];
+      if(!times.length) throw 0;
+      let tSum=0,tN=0,pSum=0;
+      for(let i=0;i<times.length;i++){
+        const hh=parseInt(String(times[i]).slice(11,13),10);   // 10h → 20h, fuseau Paris
+        if(hh>=10 && hh<20){
+          if(temps[i]!=null && !isNaN(temps[i])){tSum+=temps[i];tN++;}
+          if(precs[i]!=null && !isNaN(precs[i])){pSum+=precs[i];}
+        }
       }
-    }
-    const temp=tN?Math.round(tSum/tN*10)/10:null;
-    const pluie=Math.round(pSum*10)/10;
-    archiveCache[key]={temp,pluie,nb:tN};return archiveCache[key];
-  }catch(e){return null;}
+      if(!tN) throw 0;
+      const res={temp:Math.round(tSum/tN*10)/10,pluie:Math.round(pSum*10)/10,nb:tN};
+      archiveCache[key]=res;return res;                 // succès → mis en cache
+    }catch(e){ if(attempt<2) await new Promise(rs=>setTimeout(rs,500*(attempt+1))); }
+  }
+  return null;   // échec après 3 essais → NON caché (réessayé au prochain « Comparer »)
 }
 function setTab(tab){
   currentTab=tab;
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  try{localStorage.setItem('izac_meteo_tab',tab);}catch(e){}
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',(b.getAttribute('onclick')||'').indexOf("'"+tab+"'")>-1));
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  event.target.classList.add('active');
   document.getElementById('view-'+tab).classList.add('active');
   if(tab==='temps-reel') renderTempsReel();
   else if(tab==='previsionnel') renderPrevisionnel();
@@ -557,9 +567,10 @@ async function lancerComparatif(){
   const totalRequetes=uniqueCoords.length;
   let done=0;
   status.textContent='Préparation... ('+totalRequetes+' villes à interroger)';
-  const BATCH=15;
+  const BATCH=8;
   const coordEntries=uniqueCoords;
   for(let i=0;i<coordEntries.length;i+=BATCH){
+    if(i>0) await new Promise(r=>setTimeout(r,150));   // pause pour ménager l'API
     const batch=coordEntries.slice(i,i+BATCH);
     await Promise.all(batch.map(async entry=>{
       const [m1,m2]=await Promise.all([
@@ -576,8 +587,11 @@ async function lancerComparatif(){
     }));
   }
   cmpData={results,p1d,p1f,p2d,p2f};
+  try{localStorage.setItem('izac_meteo_cmp',JSON.stringify({p1d,p1f,p2d,p2f}));}catch(e){}
   btn.disabled=false;btn.textContent='Comparer →';
-  status.textContent='✓ '+allB.length+' boutiques chargées';
+  let koN=0;for(const rid in results){for(const bn in results[rid]){const dd=results[rid][bn];if(!(dd.m1&&dd.m2))koN++;}}
+  if(koN===0){ status.textContent='✓ '+allB.length+' boutiques chargées'; status.style.color='#27500A'; }
+  else { status.textContent='⚠ '+koN+' boutique(s) non chargée(s) — recliquez « Comparer » pour les récupérer'; status.style.color='#B45309'; }
   renderComparatif(cmpData);
 }
 function fmt(d){return d?d.split('-').reverse().join('/'):'—';}
@@ -1030,8 +1044,12 @@ function init(){
   document.getElementById('hdate').textContent=
     String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear()+' '+
     String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-  presetJour(false);   // défaut : aujourd'hui vs même jour l'an dernier
+  let cmp=null; try{cmp=JSON.parse(localStorage.getItem('izac_meteo_cmp')||'null');}catch(e){}
+  if(cmp&&cmp.p1d){ document.getElementById('date-p1').value=cmp.p1d;document.getElementById('date-p1-fin').value=cmp.p1f;document.getElementById('date-p2').value=cmp.p2d;document.getElementById('date-p2-fin').value=cmp.p2f; }
+  else { presetJour(false); }   // défaut : aujourd'hui vs même jour l'an dernier
   renderTempsReel();
+  let savedTab=null; try{savedTab=localStorage.getItem('izac_meteo_tab');}catch(e){}
+  if(savedTab&&savedTab!=='temps-reel'){ setTab(savedTab); if(savedTab==='comparatif'&&cmp&&cmp.p1d) lancerComparatif(); }
 }
 init();
 window.addEventListener('load', function() {
