@@ -89,6 +89,11 @@ tbody tr.lateRow{background:#fdf3f3} tbody tr.lateRow:hover{background:#fbe9e9}
 .err{color:var(--red);font-size:12px;font-weight:600;margin-top:10px;min-height:14px}
 @media(prefers-reduced-motion:reduce){*{animation:none!important}}
 @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+.refgrp{border:1px solid var(--line2);border-radius:12px;padding:12px 13px;margin-bottom:12px;background:#fafbfc}
+.refgrp-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.refgrp-t{font-weight:700;font-size:14px}
+.refgrp-sum{font-size:13px;margin-bottom:9px}
+.refgrp-sum .bar{margin:0 6px}
 </style>
 </head>
 <body>
@@ -140,6 +145,13 @@ tbody tr.lateRow{background:#fdf3f3} tbody tr.lateRow:hover{background:#fbe9e9}
     </div>
 
     <div class="card">
+      <h2><span class="htxt">🔎 Rechercher une référence</span></h2>
+      <p class="desc">Tape une référence (ou des mots : modèle, taille, couleur) pour voir, <b>magasin par magasin</b>, où en est sa réception — bien arrivée et scannée, ou pas encore.</p>
+      <div class="toolbar"><div class="find" style="flex:1;min-width:220px"><input id="refFind" placeholder="ex : PUBAPBRICE M BLEU CLAIR  ·  ou un EAN"></div><button class="btn sm" id="refBtn">Rechercher</button></div>
+      <div id="refRes"><div class="muted">Cherche un article pour voir son avancement par magasin.</div></div>
+    </div>
+
+    <div class="card">
       <h2><span class="htxt"><span class="num">4</span>Accès des magasins</span></h2>
       <p class="desc">Chaque magasin se connecte avec son <b>code</b> + un <b>PIN</b> que tu définis. Donne à la boutique son lien + son PIN. Le PIN n'est jamais stocké en clair.</p>
       <div class="toolbar"><div class="find"><input id="accFind" placeholder="Filtrer un magasin…"></div><span class="count" id="accCount"></span></div>
@@ -152,7 +164,7 @@ const SUPA_URL='https://imurxmsglmpgxdbavalk.supabase.co';
 const SUPA_KEY='sb_publishable_-FqQ5I6tx4rCUwUqmsf5DA_IFsfkUlQ';
 const MAG_NAMES={"1009": "Auber", "1010": "B. Epin", "1028": "Rue Ren", "1045": "Parinor", "1104": "Creteil", "1198": "Velizy", "1215": "St Quentin", "1254": "Auberv.", "1332": "St Laz.", "1339": "Fontai.", "1352": "Levallois", "1353": "Claye Souilly", "1449": "Aeroville", "1489": "Quartz", "1498": "Gonesse", "1552": "Val D'europe", "1568": "Carre Senart", "1575": "La Defense", "1604": "Rosny 2", "1655": "Parly 2", "1665": "Montparnasse", "1692": "Trading", "1696": "Forum Des Halles", "1748": "Beaugrenelle", "1756": "Boulogne", "1779": "Arcueil", "1782": "Corbeil", "1109": "St Denis", "1199": "Beziers", "1335": "Lille", "1350": "Perpignan Auchan", "1354": "Nancy", "1355": "Nantes Crebillons", "1377": "Ptstem", "1427": "Perpignan Claira", "1451": "Clermont", "1487": "Strasb.", "1543": "A13", "1563": "St Omer", "1566": "Beauv.", "1608": "Anglet", "1615": "N Creb", "1618": "Euralille", "1648": "Roubaix", "1651": "Pau", "1659": "Reims", "1667": "G. Var", "1668": "Noyelles", "1670": "Brest", "1672": "St Eti.", "1683": "Arras", "1721": "Bethune", "1729": "Lillenium", "1735": "Villefontaine", "1740": "Romans", "1785": "Gap", "1011": "Herriot", "1057": "Siege", "1074": "Blagnac", "1330": "Confluence", "1331": "Montpellier", "1334": "Rouen", "1426": "Begles", "1448": "Dijon", "1450": "R Alma", "1469": "Monta.", "1470": "Avignon", "1485": "Merignac", "1486": "Terrasses Du Port", "1488": "La Valentine", "1505": "Talang", "1513": "Part Dieu", "1518": "Ecouf.", "1526": "Niort", "1544": "Epagny", "1545": "Lormont", "1567": "Bord.", "1592": "Colmar", "1597": "Auxer.", "1598": "Bastia", "1603": "Fenouillet", "1609": "Nimes", "1621": "Aix", "1627": "Miramas", "1636": "Metz", "1637": "Ajacc.", "1654": "Prado", "1666": "Cap", "1669": "Voiron", "1671": "Andrezieux", "1694": "Mulhou.", "1704": "Blois", "1716": "Epinal", "1724": "Olonne", "1728": "Cannes", "1732": "Haguenau", "1737": "Bordeaux Lac", "1738": "Ecully", "1739": "Toulouse", "1742": "Thionville", "1743": "Mont De Marsan", "1749": "Aix En Provence", "1755": "Besancon", "1787": "La Rochelle", "1791": "Tours", "1792": "Grenoble", "1793": "Dijon Cv", "1801": "Rennes Cv", "1703": "Luxembourg", "1054": "T. D H. 72", "1055": "Tdh 61", "1070": "Côte Homme", "1204": "Marco Men", "1207": "Hopium", "1286": "Jasyl Sarl", "1289": "Manceau Eurl", "1305": "Aff D Homme", "1317": "Wilhelem Sa", "1349": "Bloom David", "142": "Brousseau", "1434": "Aumaclaire", "1461": "B. Engelyc", "1492": "Jack Mod", "1496": "Buxy", "1510": "Senso", "1511": "Boutik Homme", "1512": "Havane", "1581": "Vanni.O", "1643": "Rezland", "1645": "Show Room", "1661": "Langlais", "1678": "H. Dhomme", "1708": "Les Galeries Sas Du Grand Baza", "1710": "Boutique Mr", "1711": "Coupin", "1715": "Boutique Raphael", "1722": "O Masculin", "1758": "We Are Select / Was", "1760": "Les Sables", "1769": "Boy And Girl", "1773": "Xavier Men'S Wear", "1780": "Boutique Monsieur", "1783": "G3M Diffusion / Printemps Le H", "1794": "Will'S", "1799": "Printemps Caen / Jel Diffusion", "1805": "Driver", "318": "Espace Griff", "380": "Gentlemen", "437": "Hors Ligne", "507": "Labau", "532": "Le Gendre Ideal", "566": "Matco Sarl", "576": "La Maison", "61": "Arvet Sarl", "717": "Penaud", "724": "Pinel", "835": "Cap Code / Sngd", "851": "Sporlux", "954": "Verso Sarl", "997": "Jld Diff.", "1224": "As St Etienne Att. Valerie Sem", "1318": "G. Lemoine", "1457": "Boz Couture", "1557": "Abv Service", "1623": "Cote Homm", "1641": "Mhb / Benjamin Terme", "1650": "E. Griffe", "1675": "Losc", "1699": "Place Aux Hommes", "1700": "We Are Select W.A.S.", "1718": "Escale", "1726": "Cloane Square", "1766": "Iconik Store Chez We Are Selec", "1775": "Oscar", "1776": "Ol Sasu / Att Florence Dams Et", "1781": "Rennes Alma", "1784": "Griffe Rouge", "1800": "Sas Racing Club De Lens / Arth", "1808": "Sas Racing Club De Strasbourg", "1812": "Affaire D'Homme", "216": "Cosmopolite", "626": "Mickelson", "647": "Morence", "1411": "Lol By L.", "1795": "Hotel Le Grand Mazarin / Att.", "1814": "My Comm", "206": "Mossis J. - Sarl Come Back", "268": "Donald Bout.", "479": "Js Trading", "559": "M.C.S. Sarl", "1527": "Fashion R.", "1546": "Rackstore M.", "1629": "Mkm -", "1646": "Basile Boutique", "1830": "Neyrpic", "1835": "Orleans", "1831": "Strasbourg Centre Ville", "1828": "Caen", "1818": "Sarl Roy", "1549": "Firex", "1578": "Pretty Women", "1701": "Mon Vestaire", "1768": "Abc", "1807": "Pont Ste Marie", "1820": "Le 18 Sarl", "1823": "Dress Code", "1833": "Le 10 Coffy Distribution", "1834": "Tarantola", "1841": "Montal Sarl", "1815": "Sas Expentour", "1837": "Chabe", "1843": "Deauville", "1777": "Boutique Hom", "1839": "Clothing Distributions", "1845": "Showroom Formen", "952": "Vente Privee.Com", "1291": "Somajy", "1840": "Cabries", "1844": "Polygone", "1842": "Le Mans", "1851": "Sas Baron", "1850": "Sas Rc Strasbourg", "1852": "Bey First 2", "1865": "Giverny", "1862": "Chambery", "1861": "Jump Atelier"};
 let sb=null; const CHUNK=800;
-let SUIVI=[], ACC=[], COLIS_ALL=[]; let suiviLate=false, NET_CAT='all'; // caches + filtres
+let SUIVI=[], ACC=[], COLIS_ALL=[]; let suiviLate=false, NET_CAT='all'; let REF_CACHE=null; // caches + filtres
 function esc(s){return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 const storeBase=location.href.replace(/[^/]*$/,'reception.html').split('#')[0].split('?')[0];
 function log(m){const e=document.getElementById('log');e.style.display='block';e.textContent+=m+'\n';e.scrollTop=e.scrollHeight;}
@@ -243,6 +255,7 @@ async function fetchReception(){
   return data||[];
 }
 async function loadSuivi(){
+  REF_CACHE=null;   // les données de recherche seront rechargées au prochain « Rechercher »
   const today0=new Date(); today0.setHours(0,0,0,0);
   const {data:colis}=await sb.from('colis').select('code,magasin,cde,pieces,created_at');
   const recs=await fetchReception();
@@ -329,6 +342,85 @@ function renderSuivi(){
      +'<td class="n">'+(r.late>0?'<span class="pill r">'+r.late+'</span> <button class="btn sec sm" style="padding:3px 8px" onclick="relanceStore(\''+r.m+'\')">Relancer</button>':'<span class="muted">—</span>')+'</td></tr>';});
   el.innerHTML=h+'</tbody></table></div>';
 }
+
+// ===== Recherche d'une référence à travers tous les magasins =====
+async function ensureRefData(){
+  if(REF_CACHE) return REF_CACHE;
+  let colis=[]; for(let from=0;;from+=1000){
+    const {data,error}=await sb.from('colis').select('code,magasin,cde,contenu,created_at').range(from,from+999);
+    if(error) throw error; colis=colis.concat(data||[]); if(!data||data.length<1000) break;
+  }
+  let recs=[]; for(let from=0;;from+=1000){
+    const {data}=await sb.from('reception').select('colis_code,statut,lignes_ok,updated_at').range(from,from+999);
+    recs=recs.concat(data||[]); if(!data||data.length<1000) break;
+  }
+  const rec={}; recs.forEach(r=>{rec[r.colis_code]=r;});
+  REF_CACHE={colis,rec}; return REF_CACHE;
+}
+function recvCounts(recObj, art){
+  const q={}; const lo=recObj?recObj.lignes_ok:null;
+  if(Array.isArray(lo)){ lo.forEach(id=>{const a=art.find(x=>x.id===id); q[id]=a?(+a.qte||1):1;}); }
+  else if(lo&&typeof lo==='object'){ for(const k in lo){ q[k]=+lo[k]||0; } }
+  return q;
+}
+function statutBadge(statut,late,recu,att){
+  if(statut==='recu') return '<span class="pill ok">Reçu ✓</span>';
+  if(statut==='ecart') return '<span class="pill r">Écart</span> <span class="muted">'+recu+'/'+att+'</span>';
+  if(late) return '<span class="pill r">En retard</span>';
+  if(recu>0) return '<span class="pill g">En cours</span> <span class="muted">'+recu+'/'+att+'</span>';
+  return '<span class="pill g">Attendu</span>';
+}
+async function searchRef(){
+  const el=document.getElementById('refRes');
+  const raw=(document.getElementById('refFind').value||'').trim();
+  if(!raw){el.innerHTML='<div class="muted">Tape une référence (ou des mots : modèle, taille, couleur).</div>';return;}
+  const words=raw.toUpperCase().split(/\s+/).filter(Boolean);
+  el.innerHTML='<div class="muted">Recherche en cours…</div>';
+  let data; try{ data=await ensureRefData(); }catch(e){ el.innerHTML='<div class="muted">Erreur de chargement : '+esc(e.message||e)+'</div>'; return; }
+  const today0=new Date(); today0.setHours(0,0,0,0);
+  const groups={};
+  for(const c of data.colis){
+    let cont=c.contenu; if(typeof cont==='string'){try{cont=JSON.parse(cont||'[]');}catch(e){cont=[];}} if(!Array.isArray(cont))cont=[];
+    const art=cont.map((a,i)=>({ean:a.ean||'',qte:+a.qte||1,ref:a.ref||'',lib:a.lib||'',taille:a.taille||'',coul:a.coul||'',id:i}));
+    const recObj=data.rec[c.code]; const statut=recObj?(recObj.statut||'attendu'):'attendu';
+    const late=(statut==='attendu' && c.created_at && new Date(c.created_at)<today0);
+    let q=null;
+    for(const a of art){
+      const hay=(a.ref+' '+a.lib+' '+a.taille+' '+a.coul+' '+a.ean).toUpperCase();
+      if(!words.every(w=>hay.includes(w))) continue;
+      if(q===null) q=recvCounts(recObj,art);
+      const att=a.qte, recu=+q[a.id]||0;
+      const key=a.ean||(a.ref+'|'+a.taille+'|'+a.coul);
+      const g=groups[key]||(groups[key]={ref:a.ref,lib:a.lib,taille:a.taille,coul:a.coul,ean:a.ean,rows:[],att:0,recu:0});
+      g.rows.push({mag:c.magasin,cde:c.cde,colis:c.code,att,recu,statut,late});
+      g.att+=att; g.recu+=recu;
+    }
+  }
+  renderRefRes(groups, raw);
+}
+function renderRefRes(groups, term){
+  const el=document.getElementById('refRes');
+  const keys=Object.keys(groups);
+  if(!keys.length){ el.innerHTML='<div class="muted">Aucune référence trouvée pour « '+esc(term)+' » dans les colis importés. Essaie avec moins de mots (ex. juste le modèle), ou vérifie l\'orthographe.</div>'; return; }
+  keys.sort((a,b)=>groups[b].att-groups[a].att);
+  const MAXG=30, shown=keys.slice(0,MAXG); let h='';
+  shown.forEach(k=>{
+    const g=groups[k];
+    const nMag=new Set(g.rows.map(r=>r.mag)).size;
+    const nEc=g.rows.filter(r=>r.statut==='ecart').length;
+    const nLate=g.rows.filter(r=>r.late).length;
+    const pct=g.att?Math.min(100,Math.round(100*g.recu/g.att)):0;
+    const titre=[g.ref,g.taille,g.coul].filter(Boolean).join(' ')||g.lib||g.ean||'Article';
+    h+='<div class="refgrp"><div class="refgrp-h"><div class="refgrp-t">'+esc(titre)+(g.lib&&titre!==g.lib?' <span class="muted" style="font-weight:400">· '+esc(g.lib)+'</span>':'')+'</div><div class="muted">EAN '+esc(g.ean||'—')+'</div></div>';
+    h+='<div class="refgrp-sum"><b>'+g.recu+'</b> / '+g.att+' reçus<span class="bar"><i style="width:'+pct+'%"></i></span>'+pct+'% · '+nMag+' magasin'+(nMag>1?'s':'')+(nEc?' · <span class="pill r">'+nEc+' écart'+(nEc>1?'s':'')+'</span>':'')+(nLate?' · <span class="pill r">'+nLate+' en retard</span>':'')+'</div>';
+    const rows=g.rows.slice().sort((a,b)=>((MAG_NAMES[a.mag]||a.mag)+'').localeCompare((MAG_NAMES[b.mag]||b.mag)+''));
+    h+='<div class="scroll"><table><thead><tr><th>Magasin</th><th class="n">Cmd</th><th>Colis</th><th class="n">Att.</th><th class="n">Reçu</th><th>État</th></tr></thead><tbody>';
+    rows.forEach(r=>{ h+='<tr'+(r.late?' class="lateRow"':'')+'><td class="code">'+r.mag+(MAG_NAMES[r.mag]?' · <span style="font-weight:500;color:#6b7280">'+magName(r.mag)+'</span>':'')+'</td><td class="n">'+esc(r.cde||'')+'</td><td class="code" style="font-size:11px">'+esc(r.colis)+'</td><td class="n">'+r.att+'</td><td class="n">'+r.recu+'</td><td>'+statutBadge(r.statut,r.late,r.recu,r.att)+'</td></tr>'; });
+    h+='</tbody></table></div></div>';
+  });
+  if(keys.length>MAXG) h+='<div class="muted" style="margin-top:8px">… et '+(keys.length-MAXG)+' autre(s) référence(s). Affine la recherche (ajoute la taille / la couleur).</div>';
+  el.innerHTML=h;
+}
 async function loadAcces(){
   const {data:colis}=await sb.from('colis').select('magasin');
   const mags=[...new Set((colis||[]).map(r=>r.magasin))].sort();
@@ -380,6 +472,8 @@ async function init(){
   document.getElementById('suiviLateBtn').addEventListener('click',()=>{suiviLate=!suiviLate;document.getElementById('suiviLateBtn').className=suiviLate?'btn sm on':'btn sec sm';renderSuivi();});
   document.getElementById('relanceAllBtn').addEventListener('click',relanceAllLate);
   document.getElementById('accFind').addEventListener('input',renderAcces);
+  document.getElementById('refBtn').addEventListener('click',searchRef);
+  document.getElementById('refFind').addEventListener('keydown',e=>{if(e.key==='Enter')searchRef();});
   document.getElementById('logout').addEventListener('click',async e=>{e.preventDefault();await sb.auth.signOut();location.reload();});
   Object.assign(window,{parseCatalogueText,parsePaq,enrich,parseCSVLine,setPin,copyLink,doImport,loadSuivi,loadAcces,renderSuivi,renderAcces,showNet,hideNet,exportNet,netCSV,relanceStore,relanceAllLate,relanceOne,relanceText});
 }
