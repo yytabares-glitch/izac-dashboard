@@ -262,7 +262,7 @@ async function loadSuivi(){
   const rec={}; recs.forEach(r=>{rec[r.colis_code]=r;});
   COLIS_ALL=(colis||[]).map(c=>{const r=rec[c.code]||{}; const statut=r.statut||'attendu';
     const late=(statut==='attendu'&&c.created_at&&new Date(c.created_at)<today0);
-    return {code:c.code,magasin:c.magasin,cde:c.cde,pieces:c.pieces||0,created_at:c.created_at,statut,note:r.note||'',declarant:r.declarant||'',late};});
+    return {code:c.code,magasin:c.magasin,cde:c.cde,pieces:c.pieces||0,created_at:c.created_at,statut,note:r.note||'',declarant:r.declarant||'',recu_at:r.updated_at||'',late};});
   const agg={};
   COLIS_ALL.forEach(c=>{const a=agg[c.magasin]=agg[c.magasin]||{att:0,recu:0,ec:0,late:0,cmds:new Set()};
     a.att++; a.cmds.add(c.cde);
@@ -292,9 +292,10 @@ function showNet(cat){
   let h='<div class="nd-head"><div class="nd-t">'+title+' · <span style="color:var(--ink2)">'+rows.length+'</span></div><div style="display:flex;gap:8px"><button class="btn sec sm" onclick="exportNet()">Exporter CSV</button><button class="btn sec sm" onclick="hideNet()">Fermer ✕</button></div></div>';
   if(!rows.length){h+='<div class="muted" style="padding:8px 2px">Aucun colis dans cette catégorie.</div>';}
   else{
-    h+='<div class="scroll"><table><thead><tr><th>Magasin</th><th>Commande</th><th>Colis</th><th class="n">Pièces</th><th>Importé le</th><th>Statut</th>'+(isEc?'<th>Déclaré par</th><th>Note</th>':'')+'</tr></thead><tbody>';
+    h+='<div class="scroll"><table><thead><tr><th>Magasin</th><th>Commande</th><th>Colis</th><th class="n">Pièces</th><th>Importé le</th><th>Reçu le</th><th>Statut</th>'+(isEc?'<th>Déclaré par</th><th>Note</th>':'')+'</tr></thead><tbody>';
     rows.forEach(c=>{const dt=c.created_at?new Date(c.created_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}):'—';
-      h+='<tr'+(c.late?' class="lateRow"':'')+'><td class="code">'+c.magasin+(MAG_NAMES[c.magasin]?' · <span style="font-weight:500;color:#6b7280">'+magName(c.magasin)+'</span>':'')+'</td><td>'+esc(c.cde)+'</td><td>'+esc(c.code)+'</td><td class="n">'+c.pieces+'</td><td>'+dt+'</td><td>'+badge(c.statut)+'</td>'
+      const rdt=(c.statut!=='attendu'&&c.recu_at)?fmtDT(c.recu_at):'<span class="muted">—</span>';
+      h+='<tr'+(c.late?' class="lateRow"':'')+'><td class="code">'+c.magasin+(MAG_NAMES[c.magasin]?' · <span style="font-weight:500;color:#6b7280">'+magName(c.magasin)+'</span>':'')+'</td><td>'+esc(c.cde)+'</td><td>'+esc(c.code)+'</td><td class="n">'+c.pieces+'</td><td>'+dt+'</td><td>'+rdt+'</td><td>'+badge(c.statut)+'</td>'
         +(isEc?'<td>'+(c.declarant?esc(c.declarant):'<span class="muted">—</span>')+'</td><td>'+(c.note?esc(c.note):'<span class="muted">—</span>')+'</td>':'')+'</tr>';});
     h+='</tbody></table></div>';
   }
@@ -307,9 +308,10 @@ function netCSV(cat){
   const rows=COLIS_ALL.filter(filt).sort((a,b)=>(a.magasin+a.cde+a.code).localeCompare(b.magasin+b.cde+b.code));
   const st=s=>s==='recu'?'Reçu':(s==='ecart'?'Écart':'En cours');
   const q=v=>{v=(v==null?'':String(v));return /[";\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
-  const lines=[['Code magasin','Nom magasin','Commande','Colis','Pièces','Importé le','Statut','Déclaré par','Note'].join(';')];
+  const lines=[['Code magasin','Nom magasin','Commande','Colis','Pièces','Importé le','Reçu le','Statut','Déclaré par','Note'].join(';')];
   rows.forEach(c=>{const dt=c.created_at?new Date(c.created_at).toLocaleDateString('fr-FR'):'';
-    lines.push([c.magasin,MAG_NAMES[c.magasin]||'',c.cde,c.code,c.pieces,dt,st(c.statut),c.declarant||'',c.note||''].map(q).join(';'));});
+    const rdt=(c.statut!=='attendu'&&c.recu_at)?new Date(c.recu_at).toLocaleString('fr-FR'):'';
+    lines.push([c.magasin,MAG_NAMES[c.magasin]||'',c.cde,c.code,c.pieces,dt,rdt,st(c.statut),c.declarant||'',c.note||''].map(q).join(';'));});
   return lines.join('\r\n');
 }
 function exportNet(){
@@ -327,6 +329,7 @@ function copyTxt(t){try{navigator.clipboard.writeText(t);}catch(_){}}
 function relanceStore(code){const t=relanceOne(code);copyTxt(t);alert('Relance copiée — colle-la au magasin :\n\n'+t);}
 function relanceAllLate(){const t=relanceText();if(!t){alert('Aucun magasin en retard.');return;}copyTxt(t);alert('Relance de tous les retards copiée :\n\n'+t);}
 function magName(c){const n=MAG_NAMES[c]||'';return n.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmtDT(s){try{return new Date(s).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}catch(_){return '';}}
 function renderSuivi(){
   const el=document.getElementById('suivi'); const q=(document.getElementById('suiviFind').value||'').toLowerCase();
   let rows=SUIVI.filter(r=>!q||(r.m+' '+(MAG_NAMES[r.m]||'')).toLowerCase().includes(q));
@@ -392,7 +395,7 @@ async function searchRef(){
       const att=a.qte, recu=+q[a.id]||0;
       const key=a.ean||(a.ref+'|'+a.taille+'|'+a.coul);
       const g=groups[key]||(groups[key]={ref:a.ref,lib:a.lib,taille:a.taille,coul:a.coul,ean:a.ean,rows:[],att:0,recu:0});
-      g.rows.push({mag:c.magasin,cde:c.cde,colis:c.code,att,recu,statut,late});
+      g.rows.push({mag:c.magasin,cde:c.cde,colis:c.code,att,recu,statut,late,recu_at:recObj?recObj.updated_at:''});
       g.att+=att; g.recu+=recu;
     }
   }
@@ -414,8 +417,8 @@ function renderRefRes(groups, term){
     h+='<div class="refgrp"><div class="refgrp-h"><div class="refgrp-t">'+esc(titre)+(g.lib&&titre!==g.lib?' <span class="muted" style="font-weight:400">· '+esc(g.lib)+'</span>':'')+'</div><div class="muted">EAN '+esc(g.ean||'—')+'</div></div>';
     h+='<div class="refgrp-sum"><b>'+g.recu+'</b> / '+g.att+' reçus<span class="bar"><i style="width:'+pct+'%"></i></span>'+pct+'% · '+nMag+' magasin'+(nMag>1?'s':'')+(nEc?' · <span class="pill r">'+nEc+' écart'+(nEc>1?'s':'')+'</span>':'')+(nLate?' · <span class="pill r">'+nLate+' en retard</span>':'')+'</div>';
     const rows=g.rows.slice().sort((a,b)=>((MAG_NAMES[a.mag]||a.mag)+'').localeCompare((MAG_NAMES[b.mag]||b.mag)+''));
-    h+='<div class="scroll"><table><thead><tr><th>Magasin</th><th class="n">Cmd</th><th>Colis</th><th class="n">Att.</th><th class="n">Reçu</th><th>État</th></tr></thead><tbody>';
-    rows.forEach(r=>{ h+='<tr'+(r.late?' class="lateRow"':'')+'><td class="code">'+r.mag+(MAG_NAMES[r.mag]?' · <span style="font-weight:500;color:#6b7280">'+magName(r.mag)+'</span>':'')+'</td><td class="n">'+esc(r.cde||'')+'</td><td class="code" style="font-size:11px">'+esc(r.colis)+'</td><td class="n">'+r.att+'</td><td class="n">'+r.recu+'</td><td>'+statutBadge(r.statut,r.late,r.recu,r.att)+'</td></tr>'; });
+    h+='<div class="scroll"><table><thead><tr><th>Magasin</th><th class="n">Cmd</th><th>Colis</th><th class="n">Att.</th><th class="n">Reçu</th><th>État</th><th>Reçu le</th></tr></thead><tbody>';
+    rows.forEach(r=>{ h+='<tr'+(r.late?' class="lateRow"':'')+'><td class="code">'+r.mag+(MAG_NAMES[r.mag]?' · <span style="font-weight:500;color:#6b7280">'+magName(r.mag)+'</span>':'')+'</td><td class="n">'+esc(r.cde||'')+'</td><td class="code" style="font-size:11px">'+esc(r.colis)+'</td><td class="n">'+r.att+'</td><td class="n">'+r.recu+'</td><td>'+statutBadge(r.statut,r.late,r.recu,r.att)+'</td><td>'+((r.statut!=='attendu'&&r.recu_at)?fmtDT(r.recu_at):'<span class="muted">—</span>')+'</td></tr>'; });
     h+='</tbody></table></div></div>';
   });
   if(keys.length>MAXG) h+='<div class="muted" style="margin-top:8px">… et '+(keys.length-MAXG)+' autre(s) référence(s). Affine la recherche (ajoute la taille / la couleur).</div>';

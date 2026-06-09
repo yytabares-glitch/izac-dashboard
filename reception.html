@@ -88,6 +88,44 @@ body{background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',system-u
 .dot.attendu{background:#c8ccd4}.dot.recu{background:var(--ok)}.dot.ecart{background:#fff;box-shadow:inset 0 0 0 2px var(--ink)}
 .badge{font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:30px;white-space:nowrap}
 .b-attendu{background:#eef0f3;color:var(--ink2)}.b-recu{background:var(--ink);color:#fff}.b-ecart{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+/* tuiles cliquables */
+.kpi.clk{cursor:pointer;transition:.12s;-webkit-tap-highlight-color:transparent}
+.kpi.clk:hover{border-color:var(--ink3);transform:translateY(-1px)}
+.kpi.on{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink);background:var(--bluebg)}
+.kpi.good.on{border-color:var(--green);box-shadow:0 0 0 1px var(--green);background:var(--greenbg)}
+/* hiérarchie commande / colis plus lisible */
+.cmd{background:#fff}
+.cmd-h{gap:11px;background:#f3f5f9;border-left:3px solid var(--ink)}
+.cmd-h:hover{background:#e9edf4}
+.cmd.open .cmd-h{background:#e9edf4}
+.cmd-t{font-weight:800}
+.chev{color:var(--ink2);font-size:11px;font-weight:900;width:11px}
+.cmd-toggle{font-size:11px;color:var(--ink3);font-weight:700;white-space:nowrap;flex-shrink:0}
+.cmd.open .cmd-toggle{color:var(--ink)}
+.cmd-body{padding:7px 7px 7px 15px;position:relative}
+.cmd-body:before{content:"";position:absolute;left:7px;top:9px;bottom:9px;width:2px;background:var(--line);border-radius:2px}
+.cmd-body .row{background:#fff;border:1px solid var(--line);margin-bottom:7px}
+.cmd-body .row:last-child{margin-bottom:2px}
+.cmd-done .cmd-h{border-left-color:var(--green);background:var(--greenbg)}
+.cmd-done .cmd-h:hover{background:#dcf0e3}
+.cmd-empty{color:var(--green);font-size:12px;font-weight:700;padding:9px 6px 6px}
+/* colis conforme : flash vert puis disparaît */
+@keyframes jdpop{0%{background:#fff}30%{background:#dff5e7}100%{background:#e9faef}}
+.row.justdone{animation:jdpop .4s ease;border-color:var(--green)!important;background:#e9faef!important}
+.row.justdone .dot{background:var(--green)}
+/* choix du colis (article en double) */
+.pick-list{display:flex;flex-direction:column;gap:8px;margin:8px 0 2px}
+.pick-opt{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:11px;padding:12px 14px;cursor:pointer;background:#fff;font-family:inherit;text-align:left;width:100%}
+.pick-opt:hover{border-color:var(--ink);background:var(--bluebg)}
+.po-t{display:block;font-weight:700;font-size:13px}
+.po-s{display:block;font-size:11.5px;color:var(--ink2);margin-top:2px}
+/* idées : pastille écarts + rappel FASTMAG + marqueur Flux */
+.kpi{position:relative}
+.kdot{position:absolute;top:9px;right:10px;width:9px;height:9px;border-radius:50%;background:var(--red);box-shadow:0 0 0 3px var(--card);animation:kping 1.6s ease-in-out infinite}
+@keyframes kping{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.3);opacity:.6}}
+.fmnote{font-size:12px;color:var(--ink2);background:var(--bluebg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin:0 3px 9px;font-weight:600}
+.fluxok{color:var(--ink3);font-weight:600}
+.fluxno{color:var(--red);font-weight:700}
 .bar{height:6px;border-radius:6px;background:#edeeea;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--ok);transition:width .25s}
 /* detail */
@@ -271,6 +309,8 @@ let streak=0, streakTs=0;
 let COLIS=[], byCode={}, byCmd={}, cmds=[];
 const state={};
 let current=null, vmode='cmd', filter='todo', openCmd=null, fq='';
+let justDone=new Set(), pickPend=null, confirmCode=null;
+let fluxSent=new Set(), pendingFluxCodes=null; try{(JSON.parse(localStorage.getItem('izac_flux')||'[]')||[]).forEach(x=>fluxSent.add(x));}catch(_){}
 
 const esc=s=>(s||'').toString().replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 const qs=k=>new URLSearchParams(location.search).get(k);
@@ -319,7 +359,12 @@ async function doLogin(){
     const hash=await sha256(pin);
     const {data,error}=await sb.rpc('mag_data',{p_code:code,p_hash:hash});
     if(error){err.textContent='Erreur de connexion, réessaie.';document.getElementById('loginBtn').disabled=false;return;}
-    if(!data||!data.ok){err.textContent='Code magasin ou PIN incorrect.';document.getElementById('loginBtn').disabled=false;return;}
+    if(!data||!data.ok){
+      if(data&&data.locked){ err.textContent='Trop d\'essais. Magasin bloqué — réessaie dans '+(data.wait||10)+' min.'; }
+      else if(data&&typeof data.left==='number'){ err.textContent='Code ou PIN incorrect — '+data.left+' essai(s) restant(s) avant blocage.'; }
+      else { err.textContent='Code magasin ou PIN incorrect.'; }
+      document.getElementById('loginBtn').disabled=false; return;
+    }
     MAG=code; PINHASH=hash; loadData(data);
   }catch(e){err.textContent='Erreur : '+(e.message||e);document.getElementById('loginBtn').disabled=false;}
 }
@@ -354,7 +399,9 @@ function renderApp(){
    +'<div class="panel"><div id="detail"><div class="empty">Sélectionnez un colis à gauche,<br>ou scannez son code-barres.</div></div></div></div>'
    +'<div id="modal" class="modal hide"><div class="modal-card"><div class="modal-h">Vérifie avant d\'envoyer au service Flux</div><div class="modal-sub" id="modal-to"></div><div class="modal-warn">⚠ Un email envoyé = demande de traitement. Relis bien : si c\'est faux, corrige avant d\'envoyer.</div><pre class="modal-body" id="modal-body"></pre><div class="modal-acts"><button class="btn" onclick="closeModal()">Corriger</button><button class="btn primary" id="modal-send">✓ Confirmer et envoyer</button></div></div></div>'
    +'<div id="okmodal" class="modal hide"><div class="modal-card okcard"><div class="okmark"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="23"/><path d="M15 27 l7.5 7.5 L38 18"/></svg></div><div class="okh">Réception conforme</div><div class="oksub" id="ok-cmd"></div><div class="okmsg">Vous pouvez valider votre réception sur <b>FASTMAG</b>.</div><button class="btn primary" onclick="closeOk()">Continuer</button></div></div>'
-   +'<div id="declmodal" class="modal hide"><div class="modal-card" style="max-width:420px"><div class="modal-h">Qui signale l\'écart ?</div><div class="modal-sub">Ton nom et prénom seront joints au signalement (obligatoire).</div><input id="decl-in" placeholder="Prénom Nom" autocomplete="name" style="width:100%;border:1px solid var(--line);border-radius:11px;padding:12px 14px;font-size:15px;font-family:inherit;outline:none"><div class="err" id="decl-err" style="min-height:14px;margin-top:8px"></div><div class="modal-acts" style="margin-top:4px"><button class="btn" onclick="closeDecl()">Annuler</button><button class="btn primary" id="decl-ok">Valider</button></div></div></div>';
+   +'<div id="declmodal" class="modal hide"><div class="modal-card" style="max-width:420px"><div class="modal-h">Qui signale l\'écart ?</div><div class="modal-sub">Ton nom et prénom seront joints au signalement (obligatoire).</div><input id="decl-in" placeholder="Prénom Nom" autocomplete="name" style="width:100%;border:1px solid var(--line);border-radius:11px;padding:12px 14px;font-size:15px;font-family:inherit;outline:none"><div class="err" id="decl-err" style="min-height:14px;margin-top:8px"></div><div class="modal-acts" style="margin-top:4px"><button class="btn" onclick="closeDecl()">Annuler</button><button class="btn primary" id="decl-ok">Valider</button></div></div></div>'
+   +'<div id="pickmodal" class="modal hide"><div class="modal-card" style="max-width:460px"><div class="modal-h">Cet article est dans plusieurs colis</div><div class="modal-sub">Le même article (<b id="pick-ean"></b>) est attendu dans <b>plusieurs colis</b>. Lequel reçois-tu ?<br>Le plus sûr : scanne le <b>carton</b> du colis concerné.</div><div id="pick-list" class="pick-list"></div><div class="modal-acts"><button class="btn" onclick="closePick()">Annuler</button></div></div></div>'
+   +'<div id="confirmmodal" class="modal hide"><div class="modal-card" style="max-width:430px"><div class="modal-h">Colis conforme ?</div><div class="modal-sub" id="cf-sub"></div><div class="modal-acts" style="flex-wrap:wrap;gap:8px"><button class="btn" onclick="closeConfirm()">Annuler</button><button class="btn warn" onclick="confirmEcart()">Signaler l\'écart</button><button class="btn primary" onclick="confirmConform()">Oui, tout est là ✓</button></div></div></div>';
   document.getElementById('fluxBtn').addEventListener('click',()=>fluxEmail());
   document.getElementById('modal-send').addEventListener('click',confirmEmail);
   document.getElementById('logoutBtn').addEventListener('click',()=>{MAG=qs('mag');PINHASH=null;current=null;renderLogin();});
@@ -369,10 +416,13 @@ function renderApp(){
 }
 function renderKpis(){
   const recu=COLIS.filter(c=>statusOf(c)==='recu').length, ec=COLIS.filter(c=>statusOf(c)==='ecart').length, att=COLIS.length-recu-ec;
-  const k=(n,l,cls)=>'<div class="kpi'+(cls?' '+cls:'')+'"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>';
-  document.getElementById('kpis').innerHTML=k(cmds.length,'Commandes')+k(att,'Colis à recevoir')+k(recu,'Colis reçus',recu>0?'good':'')+k(ec,'Écarts',ec>0?'acc':'');
+  const ecToSend=COLIS.filter(c=>statusOf(c)==='ecart'&&!fluxSent.has(c.code)).length;
+  const on=w=>(w==='cmd'&&vmode==='cmd')||(w!=='cmd'&&vmode==='colis'&&filter===w);
+  const k=(n,l,w,cls,dot)=>'<div class="kpi clk'+(cls?' '+cls:'')+(on(w)?' on':'')+'" onclick="kpiGo(\''+w+'\')">'+(dot?'<span class="kdot"></span>':'')+'<div class="n">'+n+'</div><div class="l">'+l+'</div></div>';
+  document.getElementById('kpis').innerHTML=k(cmds.length,'Commandes','cmd')+k(att,'Colis à recevoir','todo')+k(recu,'Colis reçus','recu',recu>0?'good':'')+k(ec,'Écarts','ecart',ec>0?'acc':'',ecToSend>0);
   renderProg();
 }
+function kpiGo(w){ if(w==='cmd'){vmode='cmd';} else {vmode='colis'; filter=w;} renderSeg(); renderList(); }
 function renderProg(){
   const el=document.getElementById('prog'); if(!el)return;
   const total=COLIS.length, done=COLIS.filter(c=>statusOf(c)!=='attendu').length;
@@ -394,7 +444,8 @@ function cmdStats(cde){const codes=byCmd[cde];let recu=0,ec=0,pcs=0;codes.forEac
 function matchQ(c){const q=(fq||'').toLowerCase().trim();return !q||c.code.toLowerCase().includes(q)||(c.cde||'').toLowerCase().includes(q);}
 function rowColis(code,flat){const c=byCode[code],st=statusOf(c),b=BADGE[st];
   const late=(st==='attendu'&&isLate(c))?' · <span class="late">depuis le '+fmtJM(c.created_at)+'</span>':'';
-  return '<div class="row'+(flat?' flat':'')+(current===code?' sel':'')+'" onclick="openColis(\''+code+'\')"><span class="dot '+st+'"></span><div class="row-main"><div class="row-t">Colis '+esc(code)+'</div><div class="row-s">'+c.pieces+' pièces · '+c.art.length+' références'+late+'</div></div><span class="badge '+b[1]+'">'+b[0]+'</span></div>';}
+  const fluxTag=(st==='ecart')?(fluxSent.has(code)?' · <span class="fluxok">✉ envoyé au Flux</span>':' · <span class="fluxno">à signaler au Flux</span>'):'';
+  return '<div class="row'+(flat?' flat':'')+(justDone.has(code)?' justdone':'')+(current===code?' sel':'')+'" onclick="openColis(\''+code+'\')"><span class="dot '+st+'"></span><div class="row-main"><div class="row-t">Colis '+esc(code)+'</div><div class="row-s">'+c.pieces+' pièces · '+c.art.length+' références'+late+fluxTag+'</div></div><span class="badge '+b[1]+'">'+b[0]+'</span></div>';}
 function renderLate(){
   const el=document.getElementById('latebanner'); if(!el)return;
   const n=COLIS.filter(c=>statusOf(c)==='attendu'&&isLate(c)).length;
@@ -405,25 +456,29 @@ function renderList(){
   renderKpis(); renderLate();
   const list=document.getElementById('list');
   if(vmode==='cmd'){
-    const items=cmds.filter(cde=>byCmd[cde].some(cd=>matchQ(byCode[cd])));
-    list.innerHTML=items.map(cde=>{const s=cmdStats(cde),pct=s.n?Math.round(100*(s.recu+s.ec)/s.n):0,open=openCmd===cde;
-      const sub=byCmd[cde].filter(cd=>matchQ(byCode[cd])).map(cd=>rowColis(cd,false)).join('');
-      return '<div class="cmd'+(open?' open':'')+'"><div class="cmd-h" onclick="toggleCmd(\''+esc(cde)+'\')"><span class="chev">▶</span><div class="cmd-main"><div class="cmd-t">Commande '+esc(cde)+'</div><div class="cmd-s">'+s.n+' colis · '+s.recu+' reçu'+(s.recu>1?'s':'')+(s.ec?' · '+s.ec+' écart'+(s.ec>1?'s':''):'')+'</div></div><div class="minibar bar"><i style="width:'+pct+'%"></i></div></div><div class="cmd-body">'+sub+'</div></div>';
+    let items=cmds.filter(cde=>byCmd[cde].some(cd=>matchQ(byCode[cd])));
+    items.sort((a,b)=>{const A=cmdStats(a),B=cmdStats(b);return ((A.recu>=A.n&&A.ec===0)?1:0)-((B.recu>=B.n&&B.ec===0)?1:0);});
+    list.innerHTML=items.map(cde=>{const s=cmdStats(cde),open=openCmd===cde,allDone=s.recu>=s.n&&s.ec===0;
+      const subCodes=byCmd[cde].filter(cd=>matchQ(byCode[cd]) && (statusOf(byCode[cd])!=='recu'||justDone.has(cd)));
+      const sub=subCodes.map(cd=>rowColis(cd,false)).join('')||'<div class="cmd-empty">Tous les colis reçus ✓ — rangés.</div>';
+      return '<div class="cmd'+(open?' open':'')+(allDone?' cmd-done':'')+'"><div class="cmd-h" onclick="toggleCmd(\''+esc(cde)+'\')"><span class="chev">▶</span><div class="cmd-main"><div class="cmd-t">Commande '+esc(cde)+'</div><div class="cmd-s">'+s.n+' colis · '+s.recu+'/'+s.n+' reçus'+(s.ec?' · '+s.ec+' écart'+(s.ec>1?'s':''):'')+'</div></div><span class="cmd-toggle">'+(open?'Masquer ▴':(allDone?'Reçue ✓':'Voir les colis ▾'))+'</span></div><div class="cmd-body">'+sub+'</div></div>';
     }).join('')||'<div class="empty">Aucune commande.</div>';
     document.getElementById('count').textContent=items.length+' commande'+(items.length>1?'s':'');
   }else{
     const lateN=COLIS.filter(c=>statusOf(c)==='attendu'&&isLate(c)).length;
     if(filter==='late'&&lateN===0)filter='todo';
     let items;
-    if(filter==='done') items=COLIS.filter(c=>statusOf(c)!=='attendu');
+    if(filter==='recu') items=COLIS.filter(c=>statusOf(c)==='recu');
+    else if(filter==='ecart') items=COLIS.filter(c=>statusOf(c)==='ecart');
     else if(filter==='late') items=COLIS.filter(c=>statusOf(c)==='attendu'&&isLate(c));
-    else { filter='todo'; items=COLIS.filter(c=>statusOf(c)==='attendu'); }
+    else { filter='todo'; items=COLIS.filter(c=>statusOf(c)==='attendu'||justDone.has(c.code)); }
     items=items.filter(matchQ);
-    if(filter!=='done')items.sort((a,b)=>(a.created_at||'').localeCompare(b.created_at||''));
-    const todo=COLIS.filter(c=>statusOf(c)==='attendu').length, done=COLIS.length-todo;
-    const lateBtn=lateN>0?'<button class="lt '+(filter==='late'?'on':'')+'" onclick="setFilter(\'late\')">En retard ('+lateN+')</button>':'';
-    const emptyMsg=filter==='done'?'Aucun colis traité.':(filter==='late'?'Aucun colis en retard ✓':'Tout est traité ✓');
-    list.innerHTML='<div class="seg" style="margin:0 3px 9px"><button class="'+(filter==='todo'?'on':'')+'" onclick="setFilter(\'todo\')">À traiter ('+todo+')</button>'+lateBtn+'<button class="'+(filter==='done'?'on':'')+'" onclick="setFilter(\'done\')">Traités ('+done+')</button></div>'
+    if(filter==='todo'||filter==='late')items.sort((a,b)=>(a.created_at||'').localeCompare(b.created_at||''));
+    const att=COLIS.filter(c=>statusOf(c)==='attendu').length, recuN=COLIS.filter(c=>statusOf(c)==='recu').length, ecN=COLIS.filter(c=>statusOf(c)==='ecart').length;
+    const lateBtn=lateN>0?'<button class="'+(filter==='late'?'on':'')+'" onclick="setFilter(\'late\')">En retard ('+lateN+')</button>':'';
+    const emptyMsg=filter==='recu'?'Aucun colis reçu pour l\'instant.':(filter==='ecart'?'Aucun écart ✓':(filter==='late'?'Aucun colis en retard ✓':'Tout est reçu ✓'));
+    const fmnote=(filter==='recu'&&recuN>0)?'<div class="fmnote">✓ Reçus du jour — pense à <b>valider ces réceptions sur FASTMAG</b>.</div>':'';
+    list.innerHTML='<div class="seg" style="margin:0 3px 9px;flex-wrap:wrap"><button class="'+(filter==='todo'?'on':'')+'" onclick="setFilter(\'todo\')">À recevoir ('+att+')</button>'+lateBtn+'<button class="'+(filter==='recu'?'on':'')+'" onclick="setFilter(\'recu\')">Reçus ('+recuN+')</button><button class="'+(filter==='ecart'?'on':'')+'" onclick="setFilter(\'ecart\')">Écarts ('+ecN+')</button></div>'+fmnote
       +(items.map(c=>rowColis(c.code,true)).join('')||'<div class="empty">'+emptyMsg+'</div>');
     document.getElementById('count').textContent=items.length+' colis';
   }
@@ -505,12 +560,27 @@ function markConform(code){
   const s=st_(code);
   if(s.statut==='recu'){openColis(code);focusScan();return;}
   const c=byCode[code]; c.art.forEach(a=>{s.q[a.id]=a.qte||1;}); s.statut='recu'; s.note=''; persist(code);
-  scanGreen(); bumpStreak(); beepDone(); flashGood('Colis '+code+' conforme ✓ — scannez le colis suivant');
+  justDone.add(code); setTimeout(()=>{ justDone.delete(code); renderList(); }, 1500);
+  scanGreen(); bumpStreak(); beepDone(); flashGood('Colis '+code+' conforme ✓ — il passe au vert et se range. Scannez le suivant.');
   openColis(code); focusScan();
   const codes=byCmd[c.cde];
   if(codes.every(x=>statusOf(byCode[x])==='recu')) commandDone(c.cde);
 }
-function conform(code){markConform(code);}
+function conform(code){
+  const s=st_(code), c=byCode[code];
+  const miss=c.art.filter(a=>qof(s,a.id)<(a.qte||1));
+  if(miss.length){
+    const pcs=miss.reduce((t,a)=>t+((a.qte||1)-qof(s,a.id)),0);
+    confirmCode=code;
+    document.getElementById('cf-sub').innerHTML='Il reste <b>'+pcs+' pièce'+(pcs>1?'s':'')+'</b> non pointée'+(pcs>1?'s':'')+' ('+miss.length+' article'+(miss.length>1?'s':'')+'). Tu confirmes que <b>tout est bien là</b> ? Sinon, signale l\'écart.';
+    document.getElementById('confirmmodal').classList.remove('hide');
+    return;
+  }
+  markConform(code);
+}
+function closeConfirm(){const m=document.getElementById('confirmmodal');if(m)m.classList.add('hide');confirmCode=null;focusScan();}
+function confirmConform(){const code=confirmCode;closeConfirm();if(code)markConform(code);}
+function confirmEcart(){const code=confirmCode;closeConfirm();if(code)signalMiss(code);}
 function signalMiss(code){ if(!DECLARANT){ openDeclModal(code); return; } doEcart(code); }
 function doEcart(code){const s=st_(code);s.statut='ecart';s.declarant=DECLARANT;persist(code);openColis(code);resetStreak();
   const miss=byCode[code].art.filter(a=>qof(s,a.id)<(a.qte||1));
@@ -528,7 +598,7 @@ function confirmDecl(){const i=document.getElementById('decl-in'); const v=(i?i.
   const code=pendingDecl; pendingDecl=null;
   if(code) doEcart(code); else if(current) openColis(current);
 }
-function clearEcart(code){const s=st_(code);s.statut='attendu';s.note='';persist(code);openColis(code);flash('Écart annulé.');}
+function clearEcart(code){const s=st_(code);s.statut='attendu';s.note='';persist(code);fluxSent.delete(code);try{localStorage.setItem('izac_flux',JSON.stringify([...fluxSent].filter(c=>byCode[c])));}catch(_){}openColis(code);flash('Écart annulé.');}
 function saveNote(code){const s=st_(code);const el=document.getElementById('note-in');if(el){s.note=el.value.trim();persist(code);}}
 function flash(m,w){const e=document.getElementById('flash');if(!e)return;e.textContent=m;e.className='flash '+(w?'warn':'ok');clearTimeout(flash._t);flash._t=setTimeout(()=>{e.textContent='';e.className='flash';},2800);}
 function buildFlux(code){
@@ -541,12 +611,13 @@ function buildFlux(code){
     if(s.note)body+='  Note : '+s.note+'\n';
     if(miss.length){body+='  Articles manquants / incomplets :\n';miss.forEach(a=>{const got=qof(s,a.id),exp=a.qte||1;body+='    • '+artName(a)+' · reçu '+got+' / '+exp+' (manque '+(exp-got)+')   (EAN '+a.ean+')\n';});}
     body+='\n';});
-  return {count:list.length, subject:'Écarts réception — '+magLabel(MAG)+' — '+d, body};
+  return {count:list.length, codes:list.map(c=>c.code), subject:'Écarts réception — '+magLabel(MAG)+' — '+d, body};
 }
 let pendingMail=null;
 function fluxEmail(code){
   const f=buildFlux(code);
   if(!f.count){flash('Aucun écart à signaler.');return;}
+  pendingFluxCodes=f.codes;
   pendingMail='mailto:'+FLUX_EMAIL+'?subject='+encodeURIComponent(f.subject)+'&body='+encodeURIComponent(f.body);
   document.getElementById('modal-to').textContent='À : '+FLUX_EMAIL+'   ·   Objet : '+f.subject;
   document.getElementById('modal-body').textContent=f.body;
@@ -554,9 +625,10 @@ function fluxEmail(code){
 }
 function confirmEmail(){
   if(pendingMail){try{window.location.href=pendingMail;}catch(e){}}
+  if(pendingFluxCodes&&pendingFluxCodes.length){pendingFluxCodes.forEach(c=>fluxSent.add(c));try{localStorage.setItem('izac_flux',JSON.stringify([...fluxSent].filter(c=>byCode[c])));}catch(_){}renderList();}
   closeModal(); flash('Email service Flux ouvert — envoie-le depuis ta messagerie.');
 }
-function closeModal(){document.getElementById('modal').classList.add('hide');pendingMail=null;}
+function closeModal(){document.getElementById('modal').classList.add('hide');pendingMail=null;pendingFluxCodes=null;}
 async function onScan(v){
   v=(v||'').trim(); if(!v)return;
   // 1) Code colis (carton) -> ouvrir. Toujours possible.
@@ -573,7 +645,10 @@ async function onScan(v){
   // 2) Aucun colis en cours -> SCAN DIRECT : l'article ouvre tout seul son colis
   const cands=COLIS.filter(c=>c.art.some(x=>x.ean===v));
   if(cands.length){
-    let target=cands.find(c=>{const s=state[c.code];const a=c.art.find(x=>x.ean===v);return qof(s,a.id)<(a.qte||1);})||cands[0];
+    // colis qui ont ENCORE besoin de cet article (pas reçus + ligne incomplète)
+    const pend=cands.filter(c=>{const s=state[c.code];const a=c.art.find(x=>x.ean===v);return statusOf(c)!=='recu' && qof(s,a.id)<(a.qte||1);});
+    if(pend.length>1){ beepOk(); chooseColis(v,pend); return; }   // AMBIGU : même article dans plusieurs colis -> on demande, on ne devine pas
+    const target=pend[0]||cands.find(c=>statusOf(c)!=='recu')||cands[0];
     const a=target.art.find(x=>x.ean===v);
     if(target.code!==current) openColis(target.code);
     pointArticle(target.code,a);
@@ -600,6 +675,21 @@ async function reportUnknownScan(v){
     }
   }catch(e){ flashBad('Code inconnu : '+v+'.'); }
   focusScan();
+}
+function chooseColis(ean,list){
+  pickPend={ean,list};
+  const pe=document.getElementById('pick-ean'); if(pe)pe.textContent=ean;
+  const pl=document.getElementById('pick-list'); if(pl)pl.innerHTML=list.map(c=>{
+    const a=c.art.find(x=>x.ean===ean), s=state[c.code], got=qof(s,a.id), exp=a.qte||1;
+    return '<button class="pick-opt" onclick="pickColis(\''+esc(c.code)+'\',\''+esc(ean)+'\')"><span><span class="po-t">Colis '+esc(c.code)+'</span><span class="po-s">Commande '+esc(c.cde)+' · cet article : '+got+' / '+exp+' reçu</span></span><span class="badge b-attendu">Choisir →</span></button>';
+  }).join('');
+  const m=document.getElementById('pickmodal'); if(m)m.classList.remove('hide');
+}
+function closePick(){const m=document.getElementById('pickmodal'); if(m)m.classList.add('hide'); pickPend=null; focusScan();}
+function pickColis(code,ean){
+  closePick(); const c=byCode[code]; if(!c)return; const a=c.art.find(x=>x.ean===ean); if(!a)return;
+  if(code!==current) openColis(code);
+  pointArticle(code,a);
 }
 window.addEventListener('DOMContentLoaded',init);
 window.__init=init;
