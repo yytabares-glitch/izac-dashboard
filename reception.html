@@ -394,8 +394,8 @@ function renderApp(){
    +'<div id="streak" class="streak hide"></div>'
    +'<div class="flash" id="flash"></div>'
    +'<div id="latebanner" class="latebanner hide"></div>'
-   +'<div class="cols"><div class="panel"><div class="phead"><div class="seg"><button id="m-cmd" onclick="setMode(\'cmd\')">Par commande</button><button id="m-colis" onclick="setMode(\'colis\')">Par colis</button></div><span class="count" id="count"></span></div>'
-   +'<div class="search"><input id="filter" placeholder="Rechercher une commande ou un colis…" autocomplete="off"></div><div id="list" class="list"></div></div>'
+   +'<div class="cols"><div class="panel"><div class="phead"><div class="seg"><button id="m-cmd" onclick="setMode(\'cmd\')">Par ID</button><button id="m-colis" onclick="setMode(\'colis\')">Par colis</button></div><span class="count" id="count"></span></div>'
+   +'<div class="search"><input id="filter" placeholder="Rechercher un ID ou un colis…" autocomplete="off"></div><div id="list" class="list"></div></div>'
    +'<div class="panel"><div id="detail"><div class="empty">Sélectionnez un colis à gauche,<br>ou scannez son code-barres.</div></div></div></div>'
    +'<div id="modal" class="modal hide"><div class="modal-card"><div class="modal-h">Vérifie avant d\'envoyer au service Flux</div><div class="modal-sub" id="modal-to"></div><div class="modal-warn">⚠ Un email envoyé = demande de traitement. Relis bien : si c\'est faux, corrige avant d\'envoyer.</div><pre class="modal-body" id="modal-body"></pre><div class="modal-acts"><button class="btn" onclick="closeModal()">Corriger</button><button class="btn primary" id="modal-send">✓ Confirmer et envoyer</button></div></div></div>'
    +'<div id="okmodal" class="modal hide"><div class="modal-card okcard"><div class="okmark"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="23"/><path d="M15 27 l7.5 7.5 L38 18"/></svg></div><div class="okh">Réception conforme</div><div class="oksub" id="ok-cmd"></div><div class="okmsg">Vous pouvez valider votre réception sur <b>FASTMAG</b>.</div><button class="btn primary" onclick="closeOk()">Continuer</button></div></div>'
@@ -419,7 +419,7 @@ function renderKpis(){
   const ecToSend=COLIS.filter(c=>statusOf(c)==='ecart'&&!fluxSent.has(c.code)).length;
   const on=w=>(w==='cmd'&&vmode==='cmd')||(w!=='cmd'&&vmode==='colis'&&filter===w);
   const k=(n,l,w,cls,dot)=>'<div class="kpi clk'+(cls?' '+cls:'')+(on(w)?' on':'')+'" onclick="kpiGo(\''+w+'\')">'+(dot?'<span class="kdot"></span>':'')+'<div class="n">'+n+'</div><div class="l">'+l+'</div></div>';
-  document.getElementById('kpis').innerHTML=k(cmds.length,'Commandes','cmd')+k(att,'Colis à recevoir','todo')+k(recu,'Colis reçus','recu',recu>0?'good':'')+k(ec,'Écarts','ecart',ec>0?'acc':'',ecToSend>0);
+  document.getElementById('kpis').innerHTML=k(cmds.length,'IDs','cmd')+k(att,'Colis à recevoir','todo')+k(recu,'Colis reçus','recu',recu>0?'good':'')+k(ec,'Écarts','ecart',ec>0?'acc':'',ecToSend>0);
   renderProg();
 }
 function kpiGo(w){ if(w==='cmd'){vmode='cmd';} else {vmode='colis'; filter=w;} renderSeg(); renderList(); }
@@ -456,14 +456,27 @@ function renderList(){
   renderKpis(); renderLate();
   const list=document.getElementById('list');
   if(vmode==='cmd'){
-    let items=cmds.filter(cde=>byCmd[cde].some(cd=>matchQ(byCode[cd])));
-    items.sort((a,b)=>{const A=cmdStats(a),B=cmdStats(b);return ((A.recu>=A.n&&A.ec===0)?1:0)-((B.recu>=B.n&&B.ec===0)?1:0);});
-    list.innerHTML=items.map(cde=>{const s=cmdStats(cde),open=openCmd===cde,allDone=s.recu>=s.n&&s.ec===0;
-      const subCodes=byCmd[cde].filter(cd=>matchQ(byCode[cd]) && (statusOf(byCode[cd])!=='recu'||justDone.has(cd)));
-      const sub=subCodes.map(cd=>rowColis(cd,false)).join('')||'<div class="cmd-empty">Tous les colis reçus ✓ — rangés.</div>';
-      return '<div class="cmd'+(open?' open':'')+(allDone?' cmd-done':'')+'"><div class="cmd-h" onclick="toggleCmd(\''+esc(cde)+'\')"><span class="chev">▶</span><div class="cmd-main"><div class="cmd-t">Commande '+esc(cde)+'</div><div class="cmd-s">'+s.n+' colis · '+s.recu+'/'+s.n+' reçus'+(s.ec?' · '+s.ec+' écart'+(s.ec>1?'s':''):'')+'</div></div><span class="cmd-toggle">'+(open?'Masquer ▴':(allDone?'Reçue ✓':'Voir les colis ▾'))+'</span></div><div class="cmd-body">'+sub+'</div></div>';
-    }).join('')||'<div class="empty">Aucune commande.</div>';
-    document.getElementById('count').textContent=items.length+' commande'+(items.length>1?'s':'');
+    const lateN=COLIS.filter(c=>statusOf(c)==='attendu'&&isLate(c)).length;
+    if(filter==='late'&&lateN===0)filter='todo';
+    const cstate=cde=>{const codes=byCmd[cde];let att=0,ec=0,recu=0,late=0;codes.forEach(cd=>{const s=statusOf(byCode[cd]);if(s==='ecart')ec++;else if(s==='recu')recu++;else{att++;if(isLate(byCode[cd]))late++;}});return {n:codes.length,att,ec,recu,late};};
+    const inFilter=cde=>{const cs=cstate(cde);return filter==='recu'?(cs.att===0&&cs.ec===0):filter==='ecart'?cs.ec>0:filter==='late'?cs.late>0:cs.att>0;};
+    let items=cmds.filter(cde=>byCmd[cde].some(cd=>matchQ(byCode[cd]))&&inFilter(cde));
+    items.sort((a,b)=>(cstate(b).late>0?1:0)-(cstate(a).late>0?1:0));
+    const cTodo=cmds.filter(cde=>cstate(cde).att>0).length, cRecu=cmds.filter(cde=>{const x=cstate(cde);return x.att===0&&x.ec===0;}).length, cEc=cmds.filter(cde=>cstate(cde).ec>0).length, cLate=cmds.filter(cde=>cstate(cde).late>0).length;
+    const lateBtn=lateN>0?'<button class="'+(filter==='late'?'on':'')+'" onclick="setFilter(\'late\')">En retard ('+cLate+')</button>':'';
+    const seg='<div class="seg" style="margin:0 3px 9px;flex-wrap:wrap"><button class="'+(filter==='todo'?'on':'')+'" onclick="setFilter(\'todo\')">À recevoir ('+cTodo+')</button>'+lateBtn+'<button class="'+(filter==='recu'?'on':'')+'" onclick="setFilter(\'recu\')">Reçues ('+cRecu+')</button><button class="'+(filter==='ecart'?'on':'')+'" onclick="setFilter(\'ecart\')">Écarts ('+cEc+')</button></div>';
+    const emptyMsg=filter==='recu'?'Aucun ID entièrement reçu.':(filter==='ecart'?'Aucun ID avec écart ✓':(filter==='late'?'Aucun ID en retard ✓':'Tout est reçu ✓'));
+    const body=items.map(cde=>{const cs=cstate(cde),open=openCmd===cde,allDone=cs.att===0&&cs.ec===0;
+      let subCodes=byCmd[cde].filter(cd=>matchQ(byCode[cd]));
+      if(filter==='recu')subCodes=subCodes.filter(cd=>statusOf(byCode[cd])==='recu');
+      else if(filter==='ecart')subCodes=subCodes.filter(cd=>statusOf(byCode[cd])==='ecart');
+      else if(filter==='late')subCodes=subCodes.filter(cd=>statusOf(byCode[cd])==='attendu'&&isLate(byCode[cd]));
+      else subCodes=subCodes.filter(cd=>statusOf(byCode[cd])!=='recu'||justDone.has(cd));
+      const sub=subCodes.map(cd=>rowColis(cd,false)).join('')||'<div class="cmd-empty">— rien à afficher ici —</div>';
+      return '<div class="cmd'+(open?' open':'')+(allDone?' cmd-done':'')+'"><div class="cmd-h" onclick="toggleCmd(\''+esc(cde)+'\')"><span class="chev">▶</span><div class="cmd-main"><div class="cmd-t">ID '+esc(cde)+'</div><div class="cmd-s">'+cs.n+' colis · '+cs.recu+'/'+cs.n+' reçus'+(cs.ec?' · '+cs.ec+' écart'+(cs.ec>1?'s':''):'')+'</div></div><span class="cmd-toggle">'+(open?'Masquer ▴':(allDone?'Reçu ✓':'Voir les colis ▾'))+'</span></div><div class="cmd-body">'+sub+'</div></div>';
+    }).join('')||'<div class="empty">'+emptyMsg+'</div>';
+    list.innerHTML=seg+body;
+    document.getElementById('count').textContent=items.length+' ID'+(items.length>1?'s':'');
   }else{
     const lateN=COLIS.filter(c=>statusOf(c)==='attendu'&&isLate(c)).length;
     if(filter==='late'&&lateN===0)filter='todo';
@@ -506,8 +519,8 @@ function openColis(code){
       +'<span class="qn'+(part?' part':'')+'">'+n+'<span class="qsep">/</span>'+m+'</span>'
       +(m>1?'<button class="qbtn" onclick="event.stopPropagation();incLine(\''+code+'\','+a.id+',1)">+</button>':'')
       +'</div></div>';}).join('');
-  let h='<div class="d-pad"><div class="d-head"><div><div class="d-t">Colis '+esc(code)+'</div><div class="d-s">Commande '+esc(c.cde)+' · '+c.pieces+' pièces · '+c.art.length+' références</div></div><span class="badge '+BADGE[st][1]+'">'+BADGE[st][0]+'</span></div>';
-  h+='<div class="callout">Commande '+esc(c.cde)+' : <b>'+recuN+' / '+codes.length+'</b> colis traités'+(recuN<codes.length?' · '+(codes.length-recuN)+' encore à traiter':' · complète ✓')+'</div>';
+  let h='<div class="d-pad"><div class="d-head"><div><div class="d-t">Colis '+esc(code)+'</div><div class="d-s">ID '+esc(c.cde)+' · '+c.pieces+' pièces · '+c.art.length+' références</div></div><span class="badge '+BADGE[st][1]+'">'+BADGE[st][0]+'</span></div>';
+  h+='<div class="callout">ID '+esc(c.cde)+' : <b>'+recuN+' / '+codes.length+'</b> colis traités'+(recuN<codes.length?' · '+(codes.length-recuN)+' encore à traiter':' · complète ✓')+'</div>';
   h+='<div class="ctrl-h"><span class="t">Contrôle des articles</span><span class="c">'+gotU+' / '+totU+' pièces pointées</span></div>';
   h+='<div class="bar" style="margin:0 2px 11px"><i style="width:'+pct+'%"></i></div>';
   h+='<div class="lines">'+lines+'</div>';
@@ -533,7 +546,7 @@ function scanBad(){scanFx('bad',1600); beepBad();}
 function flashBad(m){const e=document.getElementById('flash');if(!e)return;e.textContent=m;e.className='flash bad';clearTimeout(flash._t);flash._t=setTimeout(()=>{e.textContent='';e.className='flash';},4200);}
 function flashGood(m){const e=document.getElementById('flash');if(!e)return;e.textContent=m;e.className='flash good';clearTimeout(flash._t);flash._t=setTimeout(()=>{e.textContent='';e.className='flash';},3200);}
 function commandDone(cde){const m=document.getElementById('okmodal');if(!m)return;
-  document.getElementById('ok-cmd').textContent='Commande '+cde+' — tous les colis sont conformes';
+  document.getElementById('ok-cmd').textContent='ID '+cde+' — tous les colis sont conformes';
   m.classList.remove('hide');
   const mk=m.querySelector('.okmark'); if(mk){mk.classList.remove('go'); void mk.offsetWidth; mk.classList.add('go');}
   confetti();
@@ -607,7 +620,7 @@ function buildFlux(code){
   let body=magLabel(MAG)+' — Écarts réception du '+d+'\n';
   body+='Déclaré par : '+(DECLARANT||'—')+'\n\n';
   list.forEach(c=>{const s=state[c.code]||{q:{}};const miss=c.art.filter(a=>qof(s,a.id)<(a.qte||1));
-    body+='— Commande '+c.cde+' · Colis '+c.code+'\n';
+    body+='— ID '+c.cde+' · Colis '+c.code+'\n';
     if(s.note)body+='  Note : '+s.note+'\n';
     if(miss.length){body+='  Articles manquants / incomplets :\n';miss.forEach(a=>{const got=qof(s,a.id),exp=a.qte||1;body+='    • '+artName(a)+' · reçu '+got+' / '+exp+' (manque '+(exp-got)+')   (EAN '+a.ean+')\n';});}
     body+='\n';});
@@ -681,7 +694,7 @@ function chooseColis(ean,list){
   const pe=document.getElementById('pick-ean'); if(pe)pe.textContent=ean;
   const pl=document.getElementById('pick-list'); if(pl)pl.innerHTML=list.map(c=>{
     const a=c.art.find(x=>x.ean===ean), s=state[c.code], got=qof(s,a.id), exp=a.qte||1;
-    return '<button class="pick-opt" onclick="pickColis(\''+esc(c.code)+'\',\''+esc(ean)+'\')"><span><span class="po-t">Colis '+esc(c.code)+'</span><span class="po-s">Commande '+esc(c.cde)+' · cet article : '+got+' / '+exp+' reçu</span></span><span class="badge b-attendu">Choisir →</span></button>';
+    return '<button class="pick-opt" onclick="pickColis(\''+esc(c.code)+'\',\''+esc(ean)+'\')"><span><span class="po-t">Colis '+esc(c.code)+'</span><span class="po-s">ID '+esc(c.cde)+' · cet article : '+got+' / '+exp+' reçu</span></span><span class="badge b-attendu">Choisir →</span></button>';
   }).join('');
   const m=document.getElementById('pickmodal'); if(m)m.classList.remove('hide');
 }
