@@ -3,55 +3,65 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IZAC — Transport (analyse)</title>
+<title>Transport — IZAC</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   :root{
-    --ink:#15161a; --paper:#f6f4ef; --card:#fffefb; --line:#e2ddd2;
-    --muted:#7d7869; --accent:#d4512e; --accent-soft:#f3d9cf;
-    --good:#2f7d4f; --warn:#b8860b; --bad:#b3402c;
+    --navy:#0D2750; --navy2:#0C447C; --blue:#0C5AB8;
+    --bg:#EDEFF3; --card:#fff; --line:#E5E9F2; --line2:#EEF1F6;
+    --ink:#263145; --ink2:#5b647a; --ink3:#828a9c;
+    --green:#1f9d57; --greenbg:#e6f6ed; --greenline:#bfe6cf;
+    --warn:#b8860b; --warnbg:#f7efd6;
+    --red:#D64545; --redbg:#FDECEC; --redline:#F3C9C9;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;background:var(--paper);color:var(--ink);
+  body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);
     -webkit-font-smoothing:antialiased;line-height:1.4}
-  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px}
+  .wrap{max-width:1180px;margin:0 auto;padding:18px 18px 80px}
 
-  header{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;
-    border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:6px}
-  .brand{font-weight:800;font-size:13px;letter-spacing:.22em;text-transform:uppercase}
-  .brand .x{color:var(--accent)}
-  h1{font-size:26px;font-weight:800;letter-spacing:-.01em;line-height:1.05}
-  .period{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
-  .period a{color:var(--accent);text-decoration:none;font-weight:600;display:block;margin-top:4px}
-  .period a:hover{text-decoration:underline}
+  .hdr{background:var(--navy);border-radius:10px;padding:16px 22px;display:flex;align-items:center;
+    justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:16px}
+  .brand{display:flex;align-items:center;gap:14px}
+  .hdr-logo{width:38px;height:38px;background:#1E4D9B;border-radius:8px;display:flex;align-items:center;
+    justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:.02em}
+  .brand h1{font-size:19px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1.1}
+  .brand .sub{font-size:12px;color:rgba(255,255,255,.7);font-weight:600;margin-top:1px}
+  .hdr-right{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .hdr-period{font-size:12px;color:rgba(255,255,255,.78);font-variant-numeric:tabular-nums;text-align:right}
+  .btn-import{background:#fff;color:var(--navy);border:none;border-radius:8px;padding:9px 16px;
+    font-size:13px;font-weight:700;cursor:pointer;transition:.12s;white-space:nowrap}
+  .btn-import:hover{background:#eaf0fa}
 
-  .loading{margin-top:60px;text-align:center;color:var(--muted)}
-  .loading .sp{width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--accent);
+  .loading{margin-top:60px;text-align:center;color:var(--ink2)}
+  .loading .sp{width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--navy);
     border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
   @keyframes spin{to{transform:rotate(360deg)}}
-  .err{margin-top:40px;background:#fbe9e4;border:1px solid var(--bad);border-radius:10px;padding:18px 20px;color:var(--bad);font-size:14px}
-
+  .err{margin-top:30px;background:var(--redbg);border:1px solid var(--redline);border-radius:10px;
+    padding:18px 20px;color:var(--red);font-size:14px}
+  .err a{color:inherit;font-weight:700}
   .hidden{display:none!important}
 
-  .filterbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:20px}
-  .filterbar .fl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:2px}
-  .chip{font-size:12px;font-weight:600;padding:6px 14px;border-radius:99px;border:1px solid var(--line);
-    background:var(--card);color:var(--muted);cursor:pointer;transition:.12s}
-  .chip:hover{border-color:var(--accent);color:var(--ink)}
-  .chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
-  .chip .c{font-weight:400;opacity:.65;margin-left:4px}
+  .filterbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .filterbar .fl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-right:2px}
+  .chip{font-size:12px;font-weight:700;padding:6px 14px;border-radius:99px;border:1.5px solid var(--line);
+    background:var(--card);color:var(--ink2);cursor:pointer;transition:.12s}
+  .chip:hover{border-color:var(--navy);color:var(--navy)}
+  .chip.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .chip .c{font-weight:400;opacity:.7;margin-left:4px}
 
-  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:8px}
   .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden}
-  .kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
-  .kpi .lab{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
-  .kpi .val{font-size:30px;font-weight:800;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums}
-  .kpi .sub{font-size:12px;color:var(--muted);margin-top:2px}
+  .kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--navy)}
+  .kpi.k-ok::before{background:var(--green)}
+  .kpi .lab{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
+  .kpi .val{font-size:29px;font-weight:800;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums;color:var(--navy)}
+  .kpi.k-ok .val{color:var(--green)}
+  .kpi .sub{font-size:12px;color:var(--ink2);margin-top:2px}
 
-  .grid{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;margin-top:22px}
+  .grid{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-top:16px}
   .panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
-  .panel h3{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  .panel h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);
     border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:14px;display:flex;justify-content:space-between}
   .panel h3 .n{color:var(--ink);font-weight:700}
   .chartbox{position:relative;height:240px}
@@ -59,36 +69,65 @@
 
   table{width:100%;border-collapse:collapse;font-size:13px}
   th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
-  th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;cursor:pointer;user-select:none}
+  th{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);font-weight:700;cursor:pointer;user-select:none}
   th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
-  tbody tr:hover{background:#faf7f1}
-  .barcell{height:6px;border-radius:3px;background:var(--accent);display:inline-block;vertical-align:middle;margin-left:8px}
-  .tag{font-size:11px;padding:2px 7px;border-radius:99px;font-weight:600}
-  .tag.g{background:#e3f0e8;color:var(--good)} .tag.w{background:#f5ecd4;color:var(--warn)} .tag.b{background:#f3ddd6;color:var(--bad)}
+  tbody tr:hover{background:var(--line2)}
+  .barcell{height:6px;border-radius:3px;background:var(--navy);display:inline-block;vertical-align:middle;margin-left:8px}
+  .tag{font-size:11px;padding:2px 7px;border-radius:99px;font-weight:700}
+  .tag.g{background:var(--greenbg);color:var(--green)} .tag.w{background:var(--warnbg);color:var(--warn)} .tag.b{background:var(--redbg);color:var(--red)}
 
   .full{grid-column:1/-1}
   .toolbar{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
-  .toolbar input{flex:1;min-width:160px;padding:8px 11px;border:1px solid var(--line);border-radius:7px;font-size:13px;background:#fff}
-  .toolbar input:focus{outline:none;border-color:var(--accent)}
+  .toolbar input{flex:1;min-width:160px;padding:8px 11px;border:1px solid var(--line);border-radius:7px;font-size:13px;background:#fff;color:var(--ink)}
+  .toolbar input:focus{outline:none;border-color:var(--navy)}
   .scroll{max-height:420px;overflow:auto}
-  .reset{font-size:12px;color:var(--accent);cursor:pointer;border:none;background:none;text-decoration:underline}
-  .muted{color:var(--muted)}
-  footer{margin-top:40px;font-size:11px;color:var(--muted);text-align:center}
+  .reset{font-size:12px;color:var(--navy2);cursor:pointer;border:none;background:none;text-decoration:underline}
+  .muted{color:var(--ink3)}
+  footer{margin-top:36px;font-size:11px;color:var(--ink3);text-align:center}
+
+  .overlay{position:fixed;inset:0;background:rgba(13,39,80,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+  .overlay.show{display:flex}
+  .modal{background:#fff;border-radius:12px;max-width:520px;width:100%;padding:24px 26px;box-shadow:0 20px 60px rgba(13,39,80,.3)}
+  .modal h2{font-size:18px;font-weight:800;color:var(--navy);margin-bottom:6px}
+  .modal p{font-size:13px;color:var(--ink2);margin-bottom:16px}
+  .modal p code{background:var(--line2);padding:1px 6px;border-radius:4px;font-size:12px}
+  .mdrop{border:1.5px dashed var(--line);border-radius:10px;background:var(--line2);padding:36px 20px;text-align:center;transition:.15s;cursor:pointer}
+  .mdrop:hover,.mdrop.over{border-color:var(--navy);background:#eaf0fa}
+  .mdrop .t{font-size:15px;font-weight:700;color:var(--ink)}
+  .mdrop .s{font-size:12px;color:var(--ink3);margin-top:4px}
+  input[type=file]{display:none}
+  .mlog{margin-top:16px;font-size:13px;display:none}
+  .mlog.show{display:block}
+  .mrow{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line2)}
+  .mrow:last-child{border-bottom:none}
+  .mrow .v{font-weight:700;font-variant-numeric:tabular-nums}
+  .mbar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:12px}
+  .mbar i{display:block;height:100%;background:var(--navy);width:0;transition:width .2s}
+  .mstatus{margin-top:12px;font-size:13px;color:var(--ink2)}
+  .mstatus.ok{color:var(--green);font-weight:700} .mstatus.err{color:var(--red);font-weight:700}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+  .modal-actions button{padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none}
+  .btn-close{background:var(--line2);color:var(--ink2)}
+  .btn-close:hover{background:var(--line)}
+
   @media(max-width:780px){.kpis{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div>
-      <div class="brand">IZA<span class="x">C</span> · LOGISTIQUE</div>
-      <h1>Transport — analyse cumulée</h1>
+  <div class="hdr">
+    <div class="brand">
+      <div class="hdr-logo">IZ</div>
+      <div>
+        <h1>Transport</h1>
+        <div class="sub">Analyse cumulée des expéditions</div>
+      </div>
     </div>
-    <div class="period">
-      <span id="period">—</span>
-      <a href="transport-admin.html">Importer un fichier →</a>
+    <div class="hdr-right">
+      <div class="hdr-period" id="period">—</div>
+      <button class="btn-import" id="openImport">Importer un fichier</button>
     </div>
-  </header>
+  </div>
 
   <div id="loading" class="loading">
     <div class="sp"></div>
@@ -103,7 +142,7 @@
     <div class="kpis">
       <div class="kpi"><div class="lab">Expéditions</div><div class="val" id="k-exp">—</div><div class="sub" id="k-exp-sub"></div></div>
       <div class="kpi"><div class="lab">Colis</div><div class="val" id="k-colis">—</div><div class="sub" id="k-colis-sub"></div></div>
-      <div class="kpi"><div class="lab">Taux de prépa</div><div class="val" id="k-taux">—</div><div class="sub" id="k-taux-sub"></div></div>
+      <div class="kpi k-ok"><div class="lab">Taux de prépa</div><div class="val" id="k-taux">—</div><div class="sub" id="k-taux-sub"></div></div>
       <div class="kpi"><div class="lab">Délai prépa moyen</div><div class="val" id="k-delai">—</div><div class="sub" id="k-delai-sub"></div></div>
     </div>
 
@@ -140,7 +179,7 @@
       </div>
     </div>
 
-    <div class="panel full" style="margin-top:18px">
+    <div class="panel full" style="margin-top:16px">
       <h3>Détail par destinataire <span class="n" id="cli-n"></span></h3>
       <div class="toolbar">
         <input id="search" placeholder="Rechercher un magasin / client…">
@@ -165,9 +204,30 @@
       </div>
     </div>
 
-    <footer>
-      <span id="loadinfo"></span> · <span class="reset" id="refresh">recharger depuis la base</span>
-    </footer>
+    <footer><span id="loadinfo"></span></footer>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2>Importer un export</h2>
+    <p>Glisse l'export FastMag <code>Export_ls.csv</code>. Les expéditions s'ajoutent à l'historique.
+       Celles déjà présentes (même <code>ID_LS</code>) sont ignorées — aucun doublon.</p>
+    <div class="mdrop" id="mdrop">
+      <div class="t">Glisse le fichier ici</div>
+      <div class="s">ou clique pour le choisir · CSV séparateur ;</div>
+      <input type="file" id="file" accept=".csv,text/csv">
+    </div>
+    <div class="mlog" id="mlog">
+      <div class="mrow"><span>Lignes lues</span><span class="v" id="r-read">—</span></div>
+      <div class="mrow"><span>Envoyées</span><span class="v" id="r-sent">—</span></div>
+      <div class="mrow"><span>Nouvelles / déjà présentes</span><span class="v" id="r-new">—</span></div>
+      <div class="mbar"><i id="prog"></i></div>
+      <div class="mstatus" id="mstatus"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-close" id="closeImport">Fermer</button>
+    </div>
   </div>
 </div>
 
@@ -179,18 +239,14 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 const MAG_NAMES = {"1009": "Auber", "1010": "B. Epin", "1028": "Rue Ren", "1045": "Parinor", "1104": "Creteil", "1198": "Velizy", "1215": "St Quentin", "1254": "Auberv.", "1332": "St Laz.", "1339": "Fontai.", "1352": "Levallois", "1353": "Claye Souilly", "1449": "Aeroville", "1489": "Quartz", "1498": "Gonesse", "1552": "Val D'europe", "1568": "Carre Senart", "1575": "La Defense", "1604": "Rosny 2", "1655": "Parly 2", "1665": "Montparnasse", "1692": "Trading", "1696": "Forum Des Halles", "1748": "Beaugrenelle", "1756": "Boulogne", "1779": "Arcueil", "1782": "Corbeil", "1109": "St Denis", "1199": "Beziers", "1335": "Lille", "1350": "Perpignan Auchan", "1354": "Nancy", "1355": "Nantes Crebillons", "1377": "Ptstem", "1427": "Perpignan Claira", "1451": "Clermont", "1487": "Strasb.", "1543": "A13", "1563": "St Omer", "1566": "Beauv.", "1608": "Anglet", "1615": "N Creb", "1618": "Euralille", "1648": "Roubaix", "1651": "Pau", "1659": "Reims", "1667": "G. Var", "1668": "Noyelles", "1670": "Brest", "1672": "St Eti.", "1683": "Arras", "1721": "Bethune", "1729": "Lillenium", "1735": "Villefontaine", "1740": "Romans", "1785": "Gap", "1011": "Herriot", "1057": "Siege", "1074": "Blagnac", "1330": "Confluence", "1331": "Montpellier", "1334": "Rouen", "1426": "Begles", "1448": "Dijon", "1450": "R Alma", "1469": "Monta.", "1470": "Avignon", "1485": "Merignac", "1486": "Terrasses Du Port", "1488": "La Valentine", "1505": "Talang", "1513": "Part Dieu", "1518": "Ecouf.", "1526": "Niort", "1544": "Epagny", "1545": "Lormont", "1567": "Bord.", "1592": "Colmar", "1597": "Auxer.", "1598": "Bastia", "1603": "Fenouillet", "1609": "Nimes", "1621": "Aix", "1627": "Miramas", "1636": "Metz", "1637": "Ajacc.", "1654": "Prado", "1666": "Cap", "1669": "Voiron", "1671": "Andrezieux", "1694": "Mulhou.", "1704": "Blois", "1716": "Epinal", "1724": "Olonne", "1728": "Cannes", "1732": "Haguenau", "1737": "Bordeaux Lac", "1738": "Ecully", "1739": "Toulouse", "1742": "Thionville", "1743": "Mont De Marsan", "1749": "Aix En Provence", "1755": "Besancon", "1787": "La Rochelle", "1791": "Tours", "1792": "Grenoble", "1793": "Dijon Cv", "1801": "Rennes Cv", "1703": "Luxembourg", "1054": "T. D H. 72", "1055": "Tdh 61", "1070": "Côte Homme", "1204": "Marco Men", "1207": "Hopium", "1286": "Jasyl Sarl", "1289": "Manceau Eurl", "1305": "Aff D Homme", "1317": "Wilhelem Sa", "1349": "Bloom David", "142": "Brousseau", "1434": "Aumaclaire", "1461": "B. Engelyc", "1492": "Jack Mod", "1496": "Buxy", "1510": "Senso", "1511": "Boutik Homme", "1512": "Havane", "1581": "Vanni.O", "1643": "Rezland", "1645": "Show Room", "1661": "Langlais", "1678": "H. Dhomme", "1708": "Les Galeries Sas Du Grand Baza", "1710": "Boutique Mr", "1711": "Coupin", "1715": "Boutique Raphael", "1722": "O Masculin", "1758": "We Are Select / Was", "1760": "Les Sables", "1769": "Boy And Girl", "1773": "Xavier Men'S Wear", "1780": "Boutique Monsieur", "1783": "G3M Diffusion / Printemps Le H", "1794": "Will'S", "1799": "Printemps Caen / Jel Diffusion", "1805": "Driver", "318": "Espace Griff", "380": "Gentlemen", "437": "Hors Ligne", "507": "Labau", "532": "Le Gendre Ideal", "566": "Matco Sarl", "576": "La Maison", "61": "Arvet Sarl", "717": "Penaud", "724": "Pinel", "835": "Cap Code / Sngd", "851": "Sporlux", "954": "Verso Sarl", "997": "Jld Diff.", "1224": "As St Etienne Att. Valerie Sem", "1318": "G. Lemoine", "1457": "Boz Couture", "1557": "Abv Service", "1623": "Cote Homm", "1641": "Mhb / Benjamin Terme", "1650": "E. Griffe", "1675": "Losc", "1699": "Place Aux Hommes", "1700": "We Are Select W.A.S.", "1718": "Escale", "1726": "Cloane Square", "1766": "Iconik Store Chez We Are Selec", "1775": "Oscar", "1776": "Ol Sasu / Att Florence Dams Et", "1781": "Rennes Alma", "1784": "Griffe Rouge", "1800": "Sas Racing Club De Lens / Arth", "1808": "Sas Racing Club De Strasbourg", "1812": "Affaire D'Homme", "216": "Cosmopolite", "626": "Mickelson", "647": "Morence", "1411": "Lol By L.", "1795": "Hotel Le Grand Mazarin / Att.", "1814": "My Comm", "206": "Mossis J. - Sarl Come Back", "268": "Donald Bout.", "479": "Js Trading", "559": "M.C.S. Sarl", "1527": "Fashion R.", "1546": "Rackstore M.", "1629": "Mkm -", "1646": "Basile Boutique", "1830": "Neyrpic", "1835": "Orleans", "1831": "Strasbourg Centre Ville", "1828": "Caen", "1818": "Sarl Roy", "1549": "Firex", "1578": "Pretty Women", "1701": "Mon Vestaire", "1768": "Abc", "1807": "Pont Ste Marie", "1820": "Le 18 Sarl", "1823": "Dress Code", "1833": "Le 10 Coffy Distribution", "1834": "Tarantola", "1841": "Montal Sarl", "1815": "Sas Expentour", "1837": "Chabe", "1843": "Deauville", "1777": "Boutique Hom", "1839": "Clothing Distributions", "1845": "Showroom Formen", "952": "Vente Privee.Com", "1291": "Somajy", "1840": "Cabries", "1844": "Polygone", "1842": "Le Mans", "1851": "Sas Baron", "1850": "Sas Rc Strasbourg", "1852": "Bey First 2", "1865": "Giverny", "1862": "Chambery", "1861": "Jump Atelier"};
 
-const COLORS = ['#d4512e','#2f5d8a','#6b8f3d','#b8860b','#8a4b8a','#3c8c8c','#a85a3c','#5a6270'];
+const COLORS = ['#0D2750','#0C5AB8','#1f9d57','#b8860b','#6a5acd','#3c8c8c','#0C447C','#828a9c'];
 const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const WEEKDAYS_SHORT = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 
 let charts = {};
-let ALL_ROWS = [];
-let ROWS = [];
-let CLISTATS = [];
-let sortKey = 'exp', sortDir = -1;
-let activeType = 'ALL';
+let ALL_ROWS = [], ROWS = [], CLISTATS = [];
+let sortKey = 'exp', sortDir = -1, activeType = 'ALL';
 
-// ---------- helpers ----------
 function cliLabel(id){
   if(!id) return '—';
   if(id === 'WEBIZ') return 'E-commerce (WEBIZ)';
@@ -204,19 +260,19 @@ function pct(a,b){ return b ? (a/b*100) : 0; }
 function fmtDay(iso){ const d=new Date(iso); return d.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'2-digit'}); }
 function fmtMonth(iso){ const d=new Date(iso+'-01'); return d.toLocaleDateString('fr-FR',{month:'long',year:'2-digit'}); }
 
-// ---------- chargement Supabase (paginé) ----------
+function frToISODate(s){ if(!s) return null; const m=s.trim().match(/(\d{2})\/(\d{2})\/(\d{4})/); return m?`${m[3]}-${m[2]}-${m[1]}`:null; }
+function frToISOTimestamp(s){ if(!s) return null; const m=s.trim().match(/(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}):(\d{2}))?/); if(!m)return null; const t=m[4]?`T${m[4]}:${m[5]}:${m[6]}`:'T00:00:00'; return `${m[3]}-${m[2]}-${m[1]}${t}`; }
+function toInt(x){ const n=parseInt(x,10); return Number.isFinite(n)?n:null; }
+
 async function loadFromDB(){
   showLoading('Chargement de l\'historique…');
-  const PAGE = 1000;
-  let from = 0, all = [];
+  const PAGE=1000; let from=0, all=[];
   try{
-    // total pour la barre
     const { count } = await sb.from(TABLE).select('id_ls',{count:'exact',head:true});
     while(true){
       const { data, error } = await sb.from(TABLE)
         .select('id_ls,id_cli,type_cmd,trps,nb_colis,qte_a_prep,qte_prep,nb_jour_prep,dt_exp')
-        .order('id_ls',{ascending:true})
-        .range(from, from+PAGE-1);
+        .order('id_ls',{ascending:true}).range(from, from+PAGE-1);
       if(error) throw error;
       if(!data || !data.length) break;
       all = all.concat(data);
@@ -225,19 +281,14 @@ async function loadFromDB(){
       from += PAGE;
     }
     if(!all.length){ showEmpty(); return; }
-    // normaliser
     ALL_ROWS = all.map(r=>{
       const dexp = r.dt_exp ? new Date(r.dt_exp+'T00:00:00') : null;
-      return {
-        cli: r.id_cli, type: r.type_cmd || '—', trps: r.trps || '—',
-        colis: r.nb_colis||0, qa: r.qte_a_prep||0, qp: r.qte_prep||0, delai: r.nb_jour_prep||0,
-        dexp, wd: dexp ? weekdayIdx(dexp) : null
-      };
+      return { cli:r.id_cli, type:r.type_cmd||'—', trps:r.trps||'—',
+        colis:r.nb_colis||0, qa:r.qte_a_prep||0, qp:r.qte_prep||0, delai:r.nb_jour_prep||0,
+        dexp, wd: dexp?weekdayIdx(dexp):null };
     });
     initDash();
-  }catch(e){
-    showError('Erreur de lecture de la base : ' + e.message);
-  }
+  }catch(e){ showError('Erreur de lecture de la base : ' + e.message); }
 }
 function showLoading(msg){
   document.getElementById('loading').classList.remove('hidden');
@@ -247,55 +298,47 @@ function showLoading(msg){
 }
 function showError(msg){
   document.getElementById('loading').classList.add('hidden');
-  const e = document.getElementById('error'); e.classList.remove('hidden'); e.textContent = msg;
+  const e=document.getElementById('error'); e.classList.remove('hidden'); e.textContent=msg;
 }
 function showEmpty(){
   document.getElementById('loading').classList.add('hidden');
-  const e = document.getElementById('error'); e.classList.remove('hidden');
-  e.innerHTML = 'Aucune donnée en base pour le moment. <a href="transport-admin.html" style="color:inherit;font-weight:700">Importe un premier fichier →</a>';
+  const e=document.getElementById('error'); e.classList.remove('hidden');
+  e.innerHTML='Aucune donnée en base pour le moment. Clique sur <b>« Importer un fichier »</b> en haut à droite pour commencer.';
 }
 
-// ---------- aggregation ----------
 function aggregate(rows){
-  const exp = rows.length;
-  const colis = rows.reduce((s,r)=>s+r.colis,0);
-  const qa = rows.reduce((s,r)=>s+r.qa,0);
-  const qp = rows.reduce((s,r)=>s+r.qp,0);
-  const delaiAvg = exp ? rows.reduce((s,r)=>s+r.delai,0)/exp : 0;
+  const exp=rows.length;
+  const colis=rows.reduce((s,r)=>s+r.colis,0);
+  const qa=rows.reduce((s,r)=>s+r.qa,0);
+  const qp=rows.reduce((s,r)=>s+r.qp,0);
+  const delaiAvg=exp?rows.reduce((s,r)=>s+r.delai,0)/exp:0;
 
-  const dayMap = {};
-  rows.forEach(r=>{ if(r.dexp){ const k=r.dexp.toISOString().slice(0,10); dayMap[k]=(dayMap[k]||0)+1; }});
-  const dayKeys = Object.keys(dayMap).sort();
-  let days, dayMode;
-  if(dayKeys.length > 35){
-    const mMap={}; rows.forEach(r=>{ if(r.dexp){const k=r.dexp.toISOString().slice(0,7); mMap[k]=(mMap[k]||0)+1;}});
-    days = Object.keys(mMap).sort().map(k=>({k,label:fmtMonth(k),v:mMap[k]})); dayMode='mois';
-  } else {
-    days = dayKeys.map(k=>({k,label:fmtDay(k),v:dayMap[k]})); dayMode='jour';
-  }
+  const dayMap={}; rows.forEach(r=>{ if(r.dexp){const k=r.dexp.toISOString().slice(0,10);dayMap[k]=(dayMap[k]||0)+1;}});
+  const dayKeys=Object.keys(dayMap).sort(); let days, dayMode;
+  if(dayKeys.length>35){
+    const mMap={}; rows.forEach(r=>{ if(r.dexp){const k=r.dexp.toISOString().slice(0,7);mMap[k]=(mMap[k]||0)+1;}});
+    days=Object.keys(mMap).sort().map(k=>({k,label:fmtMonth(k),v:mMap[k]})); dayMode='mois';
+  } else { days=dayKeys.map(k=>({k,label:fmtDay(k),v:dayMap[k]})); dayMode='jour'; }
 
   const trpsMap={}; rows.forEach(r=>trpsMap[r.trps]=(trpsMap[r.trps]||0)+1);
-  const trps = Object.entries(trpsMap).sort((a,b)=>b[1]-a[1]);
-
+  const trps=Object.entries(trpsMap).sort((a,b)=>b[1]-a[1]);
   const typeMap={}; rows.forEach(r=>typeMap[r.type]=(typeMap[r.type]||0)+1);
-  const types = Object.entries(typeMap).sort((a,b)=>b[1]-a[1]);
-
+  const types=Object.entries(typeMap).sort((a,b)=>b[1]-a[1]);
   const delMap={}; rows.forEach(r=>delMap[r.delai]=(delMap[r.delai]||0)+1);
-  const delKeys = Object.keys(delMap).map(Number).sort((a,b)=>a-b);
-
+  const delKeys=Object.keys(delMap).map(Number).sort((a,b)=>a-b);
   const wdMap=[0,0,0,0,0,0,0]; rows.forEach(r=>{ if(r.wd!=null) wdMap[r.wd]++; });
 
   const cliMap={};
   rows.forEach(r=>{
-    const m = cliMap[r.cli] || (cliMap[r.cli]={exp:0,colis:0,qa:0,qp:0,delaiSum:0,wd:[0,0,0,0,0,0,0]});
+    const m=cliMap[r.cli]||(cliMap[r.cli]={exp:0,colis:0,qa:0,qp:0,delaiSum:0,wd:[0,0,0,0,0,0,0]});
     m.exp++; m.colis+=r.colis; m.qa+=r.qa; m.qp+=r.qp; m.delaiSum+=r.delai;
     if(r.wd!=null) m.wd[r.wd]++;
   });
-  const cli = Object.entries(cliMap).map(([id,m])=>{
-    const ti = m.wd.indexOf(Math.max(...m.wd));
+  const cli=Object.entries(cliMap).map(([id,m])=>{
+    const ti=m.wd.indexOf(Math.max(...m.wd));
     return {id,name:cliLabel(id),exp:m.exp,colis:m.colis,qa:m.qa,qp:m.qp,
       taux:pct(m.qp,m.qa),delai:m.exp?m.delaiSum/m.exp:0,
-      jour: Math.max(...m.wd)>0?WEEKDAYS_SHORT[ti]:'—'};
+      jour:Math.max(...m.wd)>0?WEEKDAYS_SHORT[ti]:'—'};
   });
 
   return {exp,colis,qa,qp,delaiAvg,days,dayMode,trps,types,delMap,delKeys,wdMap,cli,
@@ -303,7 +346,6 @@ function aggregate(rows){
             max:rows.filter(r=>r.dexp).reduce((a,r)=>!a||r.dexp>a?r.dexp:a,null)}};
 }
 
-// ---------- init / render ----------
 function initDash(){
   activeType='ALL';
   const typeMap={}; ALL_ROWS.forEach(r=>typeMap[r.type]=(typeMap[r.type]||0)+1);
@@ -322,13 +364,9 @@ function initDash(){
   document.getElementById('dash').classList.remove('hidden');
   render();
 }
-
 function render(){
   const rows = activeType==='ALL' ? ALL_ROWS : ALL_ROWS.filter(r=>r.type===activeType);
-  ROWS = rows;
-  const a = aggregate(rows);
-  CLISTATS = a.cli;
-
+  ROWS=rows; const a=aggregate(rows); CLISTATS=a.cli;
   if(a.period.min && a.period.max){
     document.getElementById('period').textContent =
       a.period.min.toLocaleDateString('fr-FR')+' → '+a.period.max.toLocaleDateString('fr-FR');
@@ -336,21 +374,20 @@ function render(){
   document.getElementById('loadinfo').textContent =
     fmt(ALL_ROWS.length)+' expéditions en base'+(activeType!=='ALL'?' · filtre '+activeType:'');
 
-  document.getElementById('k-exp').textContent = fmt(a.exp);
-  document.getElementById('k-exp-sub').textContent = a.dayMode==='mois'
-    ? a.days.length+' mois d\'activité' : a.days.length+' jour(s) d\'expédition';
-  document.getElementById('vol-unit').textContent = a.dayMode;
-  document.getElementById('k-colis').textContent = fmt(a.colis);
-  document.getElementById('k-colis-sub').textContent = (a.exp?(a.colis/a.exp).toFixed(1):'0')+' colis/expé en moy.';
-  const taux = pct(a.qp,a.qa);
-  document.getElementById('k-taux').textContent = taux.toFixed(1)+'%';
-  document.getElementById('k-taux-sub').textContent = fmt(a.qp)+' / '+fmt(a.qa)+' pièces';
-  document.getElementById('k-delai').textContent = (a.exp?a.delaiAvg.toFixed(1):'0')+' j';
-  document.getElementById('k-delai-sub').textContent = 'commande → expédition';
+  document.getElementById('k-exp').textContent=fmt(a.exp);
+  document.getElementById('k-exp-sub').textContent=a.dayMode==='mois'?a.days.length+' mois d\'activité':a.days.length+' jour(s) d\'expédition';
+  document.getElementById('vol-unit').textContent=a.dayMode;
+  document.getElementById('k-colis').textContent=fmt(a.colis);
+  document.getElementById('k-colis-sub').textContent=(a.exp?(a.colis/a.exp).toFixed(1):'0')+' colis/expé en moy.';
+  const taux=pct(a.qp,a.qa);
+  document.getElementById('k-taux').textContent=taux.toFixed(1)+'%';
+  document.getElementById('k-taux-sub').textContent=fmt(a.qp)+' / '+fmt(a.qa)+' pièces';
+  document.getElementById('k-delai').textContent=(a.exp?a.delaiAvg.toFixed(1):'0')+' j';
+  document.getElementById('k-delai-sub').textContent='commande → expédition';
 
-  document.getElementById('trps-n').textContent = a.trps.length+' transporteurs';
-  document.getElementById('days-n').textContent = fmt(a.exp)+' expés';
-  document.getElementById('cli-n').textContent = a.cli.length+' destinataires';
+  document.getElementById('trps-n').textContent=a.trps.length+' transporteurs';
+  document.getElementById('days-n').textContent=fmt(a.exp)+' expés';
+  document.getElementById('cli-n').textContent=a.cli.length+' destinataires';
 
   drawDays(a.days); drawTrps(a.trps,a.exp); drawType(a.types);
   drawDelai(a.delKeys,a.delMap); drawWeekday(a.wdMap); drawTop(a.cli);
@@ -364,88 +401,140 @@ function destroy(id){ if(charts[id]){charts[id].destroy(); delete charts[id];} }
 function baseOpts(){
   return {responsive:true,maintainAspectRatio:false,
     plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmt(c.parsed.y ?? c.parsed)}}},
-    scales:{x:{grid:{display:false},ticks:{font:{size:11},color:cssv('--muted')}},
-      y:{beginAtZero:true,grid:{color:cssv('--line')},ticks:{font:{size:11},color:cssv('--muted'),precision:0}}}};
+    scales:{x:{grid:{display:false},ticks:{font:{size:11},color:cssv('--ink3')}},
+      y:{beginAtZero:true,grid:{color:cssv('--line')},ticks:{font:{size:11},color:cssv('--ink3'),precision:0}}}};
 }
-function drawDays(days){
-  destroy('d');
+function drawDays(days){ destroy('d');
   charts.d=new Chart(document.getElementById('chDays'),{type:'bar',
     data:{labels:days.map(d=>d.label),datasets:[{data:days.map(d=>d.v),backgroundColor:COLORS[0],borderRadius:4,maxBarThickness:54}]},
-    options:baseOpts()});
-}
-function drawTrps(trps,total){
-  destroy('t');
+    options:baseOpts()}); }
+function drawTrps(trps,total){ destroy('t');
   charts.t=new Chart(document.getElementById('chTrps'),{type:'doughnut',
-    data:{labels:trps.map(t=>t[0]),datasets:[{data:trps.map(t=>t[1]),backgroundColor:COLORS,borderColor:cssv('--card'),borderWidth:2}]},
+    data:{labels:trps.map(t=>t[0]),datasets:[{data:trps.map(t=>t[1]),backgroundColor:COLORS,borderColor:'#fff',borderWidth:2}]},
     options:{responsive:true,maintainAspectRatio:false,cutout:'58%',
       plugins:{legend:{position:'right',labels:{boxWidth:12,font:{size:11},padding:8}},
-      tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.parsed)} (${total?(c.parsed/total*100).toFixed(0):0}%)`}}}}});
-}
-function drawType(types){
-  destroy('ty');
+      tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.parsed)} (${total?(c.parsed/total*100).toFixed(0):0}%)`}}}}}); }
+function drawType(types){ destroy('ty');
   charts.ty=new Chart(document.getElementById('chType'),{type:'bar',
     data:{labels:types.map(t=>t[0]),datasets:[{data:types.map(t=>t[1]),
       backgroundColor:[COLORS[1],COLORS[2],COLORS[3],COLORS[4],COLORS[5]],borderRadius:4,maxBarThickness:40}]},
-    options:baseOpts()});
-}
-function drawDelai(keys,map){
-  destroy('de');
+    options:baseOpts()}); }
+function drawDelai(keys,map){ destroy('de');
   charts.de=new Chart(document.getElementById('chDelai'),{type:'bar',
     data:{labels:keys.map(k=>k+' j'),datasets:[{data:keys.map(k=>map[k]),
       backgroundColor:keys.map(k=>k<=2?COLORS[2]:(k<=4?COLORS[3]:COLORS[0])),borderRadius:4,maxBarThickness:34}]},
-    options:baseOpts()});
-}
-function drawWeekday(wdMap){
-  destroy('wd');
+    options:baseOpts()}); }
+function drawWeekday(wdMap){ destroy('wd');
   charts.wd=new Chart(document.getElementById('chWeekday'),{type:'bar',
     data:{labels:WEEKDAYS_SHORT,datasets:[{data:wdMap,backgroundColor:wdMap.map((v,i)=>i>=5?COLORS[7]:COLORS[1]),borderRadius:4,maxBarThickness:46}]},
-    options:baseOpts()});
-}
-function drawTop(cli){
-  destroy('tp');
+    options:baseOpts()}); }
+function drawTop(cli){ destroy('tp');
   const top=cli.slice().sort((a,b)=>b.exp-a.exp).slice(0,15).reverse();
   charts.tp=new Chart(document.getElementById('chTop'),{type:'bar',
     data:{labels:top.map(c=>c.name.length>22?c.name.slice(0,22)+'…':c.name),
       datasets:[{data:top.map(c=>c.exp),backgroundColor:COLORS[0],borderRadius:3,maxBarThickness:18}]},
     options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmt(c.parsed.x)+' expés'}}},
-      scales:{x:{beginAtZero:true,grid:{color:cssv('--line')},ticks:{font:{size:11},color:cssv('--muted'),precision:0}},
-        y:{grid:{display:false},ticks:{font:{size:11},color:cssv('--ink')}}}}});
-}
+      scales:{x:{beginAtZero:true,grid:{color:cssv('--line')},ticks:{font:{size:11},color:cssv('--ink3'),precision:0}},
+        y:{grid:{display:false},ticks:{font:{size:11},color:cssv('--ink')}}}}}); }
 
-// ---------- table ----------
 function renderTable(filter){
-  const tb=document.getElementById('tbody');
-  let rows=CLISTATS.slice();
+  const tb=document.getElementById('tbody'); let rows=CLISTATS.slice();
   if(filter){ const f=filter.toLowerCase(); rows=rows.filter(r=>r.name.toLowerCase().includes(f)||(r.id||'').toLowerCase().includes(f)); }
   rows.sort((a,b)=>{ let va=a[sortKey],vb=b[sortKey]; if(typeof va==='string')return sortDir*va.localeCompare(vb); return sortDir*(va-vb); });
   const maxExp=Math.max(...CLISTATS.map(r=>r.exp),1);
   tb.innerHTML=rows.map(r=>{
-    const tcls=r.taux>=99?'g':(r.taux>=90?'w':'b');
-    const barW=Math.round(r.exp/maxExp*60);
-    return `<tr>
-      <td>${r.name}</td>
+    const tcls=r.taux>=99?'g':(r.taux>=90?'w':'b'); const barW=Math.round(r.exp/maxExp*60);
+    return `<tr><td>${r.name}</td>
       <td class="num">${fmt(r.exp)}<span class="barcell" style="width:${barW}px"></span></td>
-      <td class="num">${fmt(r.colis)}</td>
-      <td class="num">${fmt(r.qa)}</td>
-      <td class="num">${fmt(r.qp)}</td>
+      <td class="num">${fmt(r.colis)}</td><td class="num">${fmt(r.qa)}</td><td class="num">${fmt(r.qp)}</td>
       <td class="num"><span class="tag ${tcls}">${r.taux.toFixed(0)}%</span></td>
-      <td class="num">${r.delai.toFixed(1)} j</td>
-      <td>${r.jour}</td>
-    </tr>`;
+      <td class="num">${r.delai.toFixed(1)} j</td><td>${r.jour}</td></tr>`;
   }).join('');
   if(!rows.length) tb.innerHTML=`<tr><td colspan="8" class="muted" style="padding:24px;text-align:center">Aucun destinataire ne correspond.</td></tr>`;
 }
 
-// ---------- events ----------
+function parseCSVimport(text){
+  const lines=text.replace(/\r/g,'').split('\n').filter(l=>l.length);
+  const header=lines[0].split(';').map(h=>h.trim()); const idx={}; header.forEach((h,i)=>idx[h]=i);
+  const get=(c,name)=>idx[name]!=null?c[idx[name]]:null; const rows=[];
+  for(let r=1;r<lines.length;r++){
+    const c=lines[r].split(';'); if(c.length<header.length) continue;
+    const id_ls=get(c,'ID_LS'); if(!id_ls) continue;
+    rows.push({ id_ls,
+      date_maj:frToISOTimestamp(get(c,'DATE_MAJ')), id_cli:get(c,'ID_CLI'),
+      type_cli:get(c,'TYPE_CLI'), type_cde:get(c,'TYPE_CDE'), type_cmd:get(c,'TYPE_CMD'),
+      trps:get(c,'TRPS'), id_soc:get(c,'ID_SOC'), etat_ls:toInt(get(c,'ETAT_LS')),
+      dt_last_etat:frToISOTimestamp(get(c,'DT_LAST_ETAT')), dt_exp:frToISODate(get(c,'DT_EXP')),
+      nb_colis:toInt(get(c,'NB_COLIS')), qte_a_prep:toInt(get(c,'QTE_A_PREP')),
+      qte_prep:toInt(get(c,'QTE_PREP')), nb_jour_prep:toInt(get(c,'NB_JOUR_PREP')) });
+  }
+  return rows;
+}
+async function doImport(rows){
+  const mlog=document.getElementById('mlog'); mlog.classList.add('show');
+  document.getElementById('r-read').textContent=fmt(rows.length);
+  const status=document.getElementById('mstatus'); status.className='mstatus'; status.textContent='Comparaison avec la base…';
+  const before=(await sb.from(TABLE).select('id_ls',{count:'exact',head:true})).count||0;
+  const CHUNK=500; let sent=0, errMsg=null;
+  for(let i=0;i<rows.length;i+=CHUNK){
+    const batch=rows.slice(i,i+CHUNK);
+    const { error }=await sb.from(TABLE).upsert(batch,{onConflict:'id_ls',ignoreDuplicates:true});
+    if(error){ errMsg=error.message; break; }
+    sent+=batch.length;
+    document.getElementById('r-sent').textContent=fmt(sent);
+    document.getElementById('prog').style.width=Math.round(sent/rows.length*100)+'%';
+    await new Promise(r=>setTimeout(r,8));
+  }
+  if(errMsg){ status.className='mstatus err'; status.textContent='Erreur : '+errMsg; return; }
+  const after=(await sb.from(TABLE).select('id_ls',{count:'exact',head:true})).count||0;
+  const added=after-before, dupes=rows.length-added;
+  document.getElementById('r-new').innerHTML=`${fmt(added)} nouv. / ${fmt(dupes)} déjà là`;
+  document.getElementById('prog').style.width='100%';
+  status.className='mstatus ok';
+  status.textContent=added>0?`${fmt(added)} expéditions ajoutées. Actualisation…`:'Aucune nouvelle expédition (déjà toutes en base).';
+  setTimeout(()=>{ closeImport(); loadFromDB(); }, added>0?1200:1800);
+}
+function handleFile(f){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const rows=parseCSVimport(e.target.result);
+      if(!rows.length){ alert('Aucune ligne lisible. Vérifie que c\'est bien l\'export FastMag (séparateur ;).'); return; }
+      doImport(rows);
+    }catch(err){ alert('Erreur de lecture : '+err.message); }
+  };
+  reader.readAsText(f,'utf-8');
+}
+
+const overlay=document.getElementById('overlay');
+const mdrop=document.getElementById('mdrop');
+const fileInput=document.getElementById('file');
+function openImport(){
+  document.getElementById('mlog').classList.remove('show');
+  document.getElementById('prog').style.width='0';
+  document.getElementById('r-read').textContent='—';
+  document.getElementById('r-sent').textContent='—';
+  document.getElementById('r-new').textContent='—';
+  document.getElementById('mstatus').textContent='';
+  overlay.classList.add('show');
+}
+function closeImport(){ overlay.classList.remove('show'); fileInput.value=''; }
+document.getElementById('openImport').addEventListener('click',openImport);
+document.getElementById('closeImport').addEventListener('click',closeImport);
+overlay.addEventListener('click',e=>{ if(e.target===overlay) closeImport(); });
+mdrop.addEventListener('click',()=>fileInput.click());
+['dragenter','dragover'].forEach(e=>mdrop.addEventListener(e,ev=>{ev.preventDefault();mdrop.classList.add('over')}));
+['dragleave','drop'].forEach(e=>mdrop.addEventListener(e,ev=>{ev.preventDefault();mdrop.classList.remove('over')}));
+mdrop.addEventListener('drop',ev=>{ const f=ev.dataTransfer.files[0]; if(f) handleFile(f); });
+fileInput.addEventListener('change',ev=>{ const f=ev.target.files[0]; if(f) handleFile(f); });
+
 document.getElementById('search').addEventListener('input',e=>renderTable(e.target.value));
 document.getElementById('reset').addEventListener('click',()=>{document.getElementById('search').value='';renderTable('');});
 document.querySelectorAll('#tbl th').forEach(th=>th.addEventListener('click',()=>{
-  const k=th.dataset.k;
-  if(sortKey===k)sortDir*=-1; else {sortKey=k; sortDir=k==='name'||k==='jour'?1:-1;}
+  const k=th.dataset.k; if(sortKey===k)sortDir*=-1; else {sortKey=k; sortDir=k==='name'||k==='jour'?1:-1;}
   renderTable(document.getElementById('search').value);
 }));
-document.getElementById('refresh').addEventListener('click',loadFromDB);
 
 loadFromDB();
 </script>
