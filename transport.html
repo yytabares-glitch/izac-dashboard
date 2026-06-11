@@ -42,13 +42,41 @@
   .err a{color:inherit;font-weight:700}
   .hidden{display:none!important}
 
-  .filterbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .filterbar{margin-bottom:16px}
+  .frow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .frow-main{margin-bottom:8px}
+  .frow-sub{padding-left:2px}
   .filterbar .fl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-right:2px}
-  .chip{font-size:12px;font-weight:700;padding:6px 14px;border-radius:99px;border:1.5px solid var(--line);
-    background:var(--card);color:var(--ink2);cursor:pointer;transition:.12s}
+  .chip{font-weight:700;border:1.5px solid var(--line);background:var(--card);color:var(--ink2);cursor:pointer;transition:.12s;border-radius:99px}
+  .chip-lg{font-size:13px;padding:8px 20px}
+  .chip-sm{font-size:11.5px;padding:5px 12px}
   .chip:hover{border-color:var(--navy);color:var(--navy)}
   .chip.active{background:var(--navy);color:#fff;border-color:var(--navy)}
   .chip .c{font-weight:400;opacity:.7;margin-left:4px}
+
+  .searchbox{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:16px}
+  .sb-head{display:flex;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .sb-title{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--navy);font-weight:800}
+  .sb-hint{font-size:12px;color:var(--ink3)}
+  .sb-inputs{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .sb-inputs input{padding:8px 11px;border:1px solid var(--line);border-radius:7px;font-size:13px;background:#fff;color:var(--ink)}
+  .sb-inputs input[type=date]{min-width:150px}
+  .sb-inputs input[type=text]{flex:1;min-width:200px}
+  .sb-inputs input:focus{outline:none;border-color:var(--navy)}
+  .sb-btn{background:var(--navy);color:#fff;border:none;border-radius:7px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer}
+  .sb-btn:hover{background:var(--navy2)}
+  .sb-clear{background:var(--line2);color:var(--ink2);border:none;border-radius:7px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer}
+  .sb-clear:hover{background:var(--line)}
+  .sb-results{margin-top:14px;display:none}
+  .sb-results.show{display:block}
+  .sb-count{font-size:12px;color:var(--ink2);margin-bottom:8px;font-weight:600}
+  .sb-scroll{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+  .sb-scroll table{width:100%;border-collapse:collapse;font-size:12.5px}
+  .sb-scroll th,.sb-scroll td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line2);white-space:nowrap}
+  .sb-scroll th{position:sticky;top:0;background:var(--line2);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3);font-weight:700}
+  .sb-scroll td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .sb-scroll tbody tr:hover{background:var(--line2)}
+  .sb-empty{padding:18px;text-align:center;color:var(--ink3);font-size:13px}
 
   .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:8px}
   .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden}
@@ -138,6 +166,21 @@
 
   <div id="dash" class="hidden">
     <div class="filterbar" id="filterbar"></div>
+
+    <div class="searchbox">
+      <div class="sb-head">
+        <span class="sb-title">Recherche de lignes</span>
+        <span class="sb-hint">par jour d'expédition, magasin ou n° de BL (ID_LS)</span>
+      </div>
+      <div class="sb-inputs">
+        <input type="date" id="qDate" title="Jour d'expédition">
+        <input type="text" id="qMag" placeholder="Magasin — ex. Romans, IZ1740…">
+        <input type="text" id="qBL" placeholder="N° de BL — ex. IZ455063">
+        <button class="sb-btn" id="qRun">Rechercher</button>
+        <button class="sb-clear" id="qClear">Effacer</button>
+      </div>
+      <div class="sb-results" id="qResults"></div>
+    </div>
 
     <div class="kpis">
       <div class="kpi"><div class="lab">Expéditions</div><div class="val" id="k-exp">—</div><div class="sub" id="k-exp-sub"></div></div>
@@ -247,6 +290,15 @@ let charts = {};
 let ALL_ROWS = [], ROWS = [], CLISTATS = [];
 let sortKey = 'exp', sortDir = -1, activeType = 'ALL';
 
+const B2B_TYPES = ['RETAIL','OUTLET','NEGOCE'];
+const B2C_TYPES = ['WEB'];
+function rowMatchesFilter(r){
+  if(activeType==='ALL') return true;
+  if(activeType==='B2C') return B2C_TYPES.includes(r.type);
+  if(activeType==='B2B') return B2B_TYPES.includes(r.type);
+  return r.type===activeType;
+}
+
 function cliLabel(id){
   if(!id) return '—';
   if(id === 'WEBIZ') return 'E-commerce (WEBIZ)';
@@ -271,7 +323,7 @@ async function loadFromDB(){
     const { count } = await sb.from(TABLE).select('id_ls',{count:'exact',head:true});
     while(true){
       const { data, error } = await sb.from(TABLE)
-        .select('id_ls,id_cli,type_cmd,trps,nb_colis,qte_a_prep,qte_prep,nb_jour_prep,dt_exp')
+        .select('id_ls,id_cli,type_cmd,type_cli,trps,nb_colis,qte_a_prep,qte_prep,nb_jour_prep,dt_exp')
         .order('id_ls',{ascending:true}).range(from, from+PAGE-1);
       if(error) throw error;
       if(!data || !data.length) break;
@@ -283,9 +335,9 @@ async function loadFromDB(){
     if(!all.length){ showEmpty(); return; }
     ALL_ROWS = all.map(r=>{
       const dexp = r.dt_exp ? new Date(r.dt_exp+'T00:00:00') : null;
-      return { cli:r.id_cli, type:r.type_cmd||'—', trps:r.trps||'—',
+      return { id_ls:r.id_ls, cli:r.id_cli, type:r.type_cmd||'—', typeCli:r.type_cli||'', trps:r.trps||'—',
         colis:r.nb_colis||0, qa:r.qte_a_prep||0, qp:r.qte_prep||0, delai:r.nb_jour_prep||0,
-        dexp, wd: dexp?weekdayIdx(dexp):null };
+        dexp, dexpISO:r.dt_exp||'', wd: dexp?weekdayIdx(dexp):null };
     });
     initDash();
   }catch(e){ showError('Erreur de lecture de la base : ' + e.message); }
@@ -349,15 +401,29 @@ function aggregate(rows){
 function initDash(){
   activeType='ALL';
   const typeMap={}; ALL_ROWS.forEach(r=>typeMap[r.type]=(typeMap[r.type]||0)+1);
-  const types=Object.entries(typeMap).sort((a,b)=>b[1]-a[1]);
+  const cntFor = t => (t==='ALL')?ALL_ROWS.length
+      :(t==='B2C')?ALL_ROWS.filter(r=>B2C_TYPES.includes(r.type)).length
+      :(t==='B2B')?ALL_ROWS.filter(r=>B2B_TYPES.includes(r.type)).length
+      :(typeMap[t]||0);
+  // ordre des sous-types : les plus présents d'abord, mais WEB/RETAIL/OUTLET/NEGOCE prioritaires
+  const subOrder = ['WEB','RETAIL','OUTLET','NEGOCE'].filter(t=>typeMap[t]!=null)
+      .concat(Object.keys(typeMap).filter(t=>!['WEB','RETAIL','OUTLET','NEGOCE'].includes(t)));
   const bar=document.getElementById('filterbar');
-  bar.innerHTML='<span class="fl">Filtrer&nbsp;:</span>'+
-    `<button class="chip active" data-type="ALL">Tout <span class="c">${fmt(ALL_ROWS.length)}</span></button>`+
-    types.map(([t,n])=>`<button class="chip" data-type="${t}">${t} <span class="c">${fmt(n)}</span></button>`).join('');
+  bar.innerHTML =
+    '<div class="frow frow-main">'+
+      `<button class="chip chip-lg active" data-type="ALL">Tout <span class="c">${fmt(cntFor('ALL'))}</span></button>`+
+      `<button class="chip chip-lg" data-type="B2C">B2C <span class="c">${fmt(cntFor('B2C'))}</span></button>`+
+      `<button class="chip chip-lg" data-type="B2B">B2B <span class="c">${fmt(cntFor('B2B'))}</span></button>`+
+    '</div>'+
+    '<div class="frow frow-sub">'+
+      '<span class="fl">dont</span>'+
+      subOrder.map(t=>`<button class="chip chip-sm" data-type="${t}">${t} <span class="c">${fmt(typeMap[t])}</span></button>`).join('')+
+    '</div>';
   bar.querySelectorAll('.chip').forEach(ch=>ch.addEventListener('click',()=>{
     activeType=ch.dataset.type;
-    bar.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c===ch));
+    bar.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.dataset.type===activeType));
     render();
+    if(document.getElementById('qResults').classList.contains('show')) runLineSearch();
   }));
   document.getElementById('loading').classList.add('hidden');
   document.getElementById('error').classList.add('hidden');
@@ -365,7 +431,7 @@ function initDash(){
   render();
 }
 function render(){
-  const rows = activeType==='ALL' ? ALL_ROWS : ALL_ROWS.filter(r=>r.type===activeType);
+  const rows = ALL_ROWS.filter(rowMatchesFilter);
   ROWS=rows; const a=aggregate(rows); CLISTATS=a.cli;
   if(a.period.min && a.period.max){
     document.getElementById('period').textContent =
@@ -373,7 +439,6 @@ function render(){
   }
   document.getElementById('loadinfo').textContent =
     fmt(ALL_ROWS.length)+' expéditions en base'+(activeType!=='ALL'?' · filtre '+activeType:'');
-
   document.getElementById('k-exp').textContent=fmt(a.exp);
   document.getElementById('k-exp-sub').textContent=a.dayMode==='mois'?a.days.length+' mois d\'activité':a.days.length+' jour(s) d\'expédition';
   document.getElementById('vol-unit').textContent=a.dayMode;
@@ -535,6 +600,49 @@ document.querySelectorAll('#tbl th').forEach(th=>th.addEventListener('click',()=
   const k=th.dataset.k; if(sortKey===k)sortDir*=-1; else {sortKey=k; sortDir=k==='name'||k==='jour'?1:-1;}
   renderTable(document.getElementById('search').value);
 }));
+
+// ===== recherche de lignes =====
+function runLineSearch(){
+  const date = document.getElementById('qDate').value;
+  const mag = document.getElementById('qMag').value.trim().toLowerCase();
+  const bl = document.getElementById('qBL').value.trim().toUpperCase();
+  const res = document.getElementById('qResults');
+  if(!date && !mag && !bl){ res.classList.remove('show'); res.innerHTML=''; return; }
+  let rows = ALL_ROWS.filter(rowMatchesFilter);
+  if(date) rows = rows.filter(r=>r.dexpISO===date);
+  if(bl)   rows = rows.filter(r=>(r.id_ls||'').toUpperCase().includes(bl));
+  if(mag)  rows = rows.filter(r=>cliLabel(r.cli).toLowerCase().includes(mag) || (r.cli||'').toLowerCase().includes(mag));
+  rows = rows.slice().sort((a,b)=>{
+    if(a.dexpISO!==b.dexpISO) return (b.dexpISO||'').localeCompare(a.dexpISO||'');
+    return (a.id_ls||'').localeCompare(b.id_ls||'');
+  });
+  res.classList.add('show');
+  const crit=[date?('jour '+new Date(date+'T00:00:00').toLocaleDateString('fr-FR')):null,
+              mag?('magasin « '+document.getElementById('qMag').value.trim()+' »'):null,
+              bl?('BL « '+bl+' »'):null].filter(Boolean).join(' · ');
+  if(!rows.length){ res.innerHTML=`<div class="sb-count">Aucune ligne pour ${crit}.</div>`; return; }
+  const MAX=500; const shown=rows.slice(0,MAX);
+  const head=`<div class="sb-count">${fmt(rows.length)} ligne(s) — ${crit}${rows.length>MAX?` · ${MAX} premières affichées`:''}</div>`;
+  const body=`<div class="sb-scroll"><table>
+    <thead><tr><th>Jour exp.</th><th>BL</th><th>Destinataire</th><th>Type</th><th>Transporteur</th>
+      <th class="num">Colis</th><th class="num">Qté dem.</th><th class="num">Qté prép.</th><th class="num">Délai</th></tr></thead><tbody>`+
+    shown.map(r=>`<tr>
+      <td>${r.dexp?r.dexp.toLocaleDateString('fr-FR'):'—'}</td>
+      <td>${r.id_ls||'—'}</td><td>${cliLabel(r.cli)}</td><td>${r.type}</td><td>${r.trps}</td>
+      <td class="num">${fmt(r.colis)}</td><td class="num">${fmt(r.qa)}</td><td class="num">${fmt(r.qp)}</td>
+      <td class="num">${r.delai} j</td></tr>`).join('')+
+    `</tbody></table></div>`;
+  res.innerHTML=head+body;
+}
+function clearLineSearch(){
+  document.getElementById('qDate').value=''; document.getElementById('qMag').value=''; document.getElementById('qBL').value='';
+  const res=document.getElementById('qResults'); res.classList.remove('show'); res.innerHTML='';
+}
+document.getElementById('qRun').addEventListener('click',runLineSearch);
+document.getElementById('qClear').addEventListener('click',clearLineSearch);
+document.getElementById('qBL').addEventListener('keydown',e=>{ if(e.key==='Enter') runLineSearch(); });
+document.getElementById('qMag').addEventListener('keydown',e=>{ if(e.key==='Enter') runLineSearch(); });
+document.getElementById('qDate').addEventListener('change',runLineSearch);
 
 loadFromDB();
 </script>
