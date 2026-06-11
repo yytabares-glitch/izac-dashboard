@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IZAC — Import transport</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --ink:#15161a; --paper:#f6f4ef; --card:#fffefb; --line:#e2ddd2;
+    --muted:#7d7869; --accent:#d4512e; --accent-soft:#f3d9cf;
+    --good:#2f7d4f; --bad:#b3402c;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;background:var(--paper);color:var(--ink);
+    -webkit-font-smoothing:antialiased;line-height:1.45}
+  .wrap{max-width:760px;margin:0 auto;padding:32px 20px 80px}
+  header{border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:8px}
+  .brand{font-weight:800;font-size:13px;letter-spacing:.22em;text-transform:uppercase}
+  .brand .x{color:var(--accent)}
+  h1{font-size:25px;font-weight:800;letter-spacing:-.01em;margin-top:4px}
+  .lead{color:var(--muted);font-size:14px;margin-top:6px}
+  a.back{font-size:13px;color:var(--accent);text-decoration:none;font-weight:600}
+  a.back:hover{text-decoration:underline}
+
+  .drop{margin-top:26px;border:1.5px dashed var(--line);border-radius:10px;background:var(--card);
+    padding:48px 24px;text-align:center;transition:.15s;cursor:pointer}
+  .drop:hover,.drop.over{border-color:var(--accent);background:#fffaf7}
+  .drop h2{font-size:17px;font-weight:700;margin-bottom:6px}
+  .drop p{color:var(--muted);font-size:13px}
+  .drop .pill{display:inline-block;margin-top:14px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--accent);border:1px solid var(--accent-soft);border-radius:99px;padding:5px 12px}
+  input[type=file]{display:none}
+
+  .log{margin-top:24px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;
+    font-size:13px;display:none}
+  .log.show{display:block}
+  .log h3{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+    border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:12px}
+  .row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0ece3}
+  .row:last-child{border-bottom:none}
+  .row .v{font-weight:700;font-variant-numeric:tabular-nums}
+  .v.good{color:var(--good)} .v.bad{color:var(--bad)}
+  .bar{height:8px;background:#eee6d8;border-radius:4px;overflow:hidden;margin-top:14px}
+  .bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
+  .status{margin-top:12px;font-size:13px;color:var(--muted)}
+  .status.err{color:var(--bad)} .status.ok{color:var(--good);font-weight:600}
+  .stat{margin-top:24px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 20px;font-size:13px}
+  .stat b{font-variant-numeric:tabular-nums}
+  code{background:#efeadf;padding:1px 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">IZA<span class="x">C</span> · IMPORT TRANSPORT</div>
+    <h1>Import hebdomadaire</h1>
+    <p class="lead">Glisse l'export FastMag <code>Export_ls.csv</code>. Les lignes s'ajoutent à l'historique —
+      les expéditions déjà présentes (même <code>ID_LS</code>) sont ignorées, pas de doublon.</p>
+    <p style="margin-top:10px"><a class="back" href="transport.html">← Aller au dashboard de consultation</a></p>
+  </header>
+
+  <div class="stat" id="stat">Connexion à la base…</div>
+
+  <div id="drop" class="drop">
+    <h2>Glisse le fichier ici</h2>
+    <p>ou clique pour choisir l'export de la semaine</p>
+    <span class="pill">CSV FastMag · séparateur ;</span>
+    <input type="file" id="file" accept=".csv,text/csv">
+  </div>
+
+  <div class="log" id="log">
+    <h3 id="logtitle">Traitement</h3>
+    <div class="row"><span>Lignes lues dans le fichier</span><span class="v" id="r-read">—</span></div>
+    <div class="row"><span>Envoyées à la base</span><span class="v" id="r-sent">—</span></div>
+    <div class="row"><span>Nouvelles / déjà présentes</span><span class="v" id="r-new">—</span></div>
+    <div class="bar"><i id="prog"></i></div>
+    <div class="status" id="status"></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://imurxmsglmpgxdbavalk.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltdXJ4bXNnbG1wZ3hkYmF2YWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNDg5NDMsImV4cCI6MjA5NTgyNDk0M30.GdmfOH-bG0ivzz8rFr83pZTBOjZecPgX_WXepAiuYo8';
+const TABLE = 'transport_ls';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ---- date FastMag -> ISO ----
+function frToISODate(s){ // "02/06/2026 09:10:25" -> "2026-06-02"
+  if(!s) return null;
+  const m = s.trim().match(/(\d{2})\/(\d{2})\/(\d{4})/);
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
+}
+function frToISOTimestamp(s){ // -> "2026-06-02T09:10:25"
+  if(!s) return null;
+  const m = s.trim().match(/(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}):(\d{2}))?/);
+  if(!m) return null;
+  const t = m[4] ? `T${m[4]}:${m[5]}:${m[6]}` : 'T00:00:00';
+  return `${m[3]}-${m[2]}-${m[1]}${t}`;
+}
+function toInt(x){ const n = parseInt(x,10); return Number.isFinite(n)?n:null; }
+
+// ---- parsing ----
+function parseCSV(text){
+  const lines = text.replace(/\r/g,'').split('\n').filter(l=>l.length);
+  const header = lines[0].split(';').map(h=>h.trim());
+  const idx = {}; header.forEach((h,i)=>idx[h]=i);
+  const get = (c,name)=> idx[name]!=null ? c[idx[name]] : null;
+  const rows = [];
+  for(let r=1;r<lines.length;r++){
+    const c = lines[r].split(';');
+    if(c.length < header.length) continue;
+    const id_ls = get(c,'ID_LS');
+    if(!id_ls) continue;
+    rows.push({
+      id_ls,
+      date_maj:      frToISOTimestamp(get(c,'DATE_MAJ')),
+      id_cli:        get(c,'ID_CLI'),
+      type_cli:      get(c,'TYPE_CLI'),
+      type_cde:      get(c,'TYPE_CDE'),
+      type_cmd:      get(c,'TYPE_CMD'),
+      trps:          get(c,'TRPS'),
+      id_soc:        get(c,'ID_SOC'),
+      etat_ls:       toInt(get(c,'ETAT_LS')),
+      dt_last_etat:  frToISOTimestamp(get(c,'DT_LAST_ETAT')),
+      dt_exp:        frToISODate(get(c,'DT_EXP')),
+      nb_colis:      toInt(get(c,'NB_COLIS')),
+      qte_a_prep:    toInt(get(c,'QTE_A_PREP')),
+      qte_prep:      toInt(get(c,'QTE_PREP')),
+      nb_jour_prep:  toInt(get(c,'NB_JOUR_PREP'))
+    });
+  }
+  return rows;
+}
+
+// ---- compte actuel en base ----
+async function refreshStat(){
+  const stat = document.getElementById('stat');
+  try{
+    const { count, error } = await sb.from(TABLE).select('id_ls',{count:'exact',head:true});
+    if(error) throw error;
+    // bornes de dates
+    const { data: minD } = await sb.from(TABLE).select('dt_exp').order('dt_exp',{ascending:true}).limit(1);
+    const { data: maxD } = await sb.from(TABLE).select('dt_exp').order('dt_exp',{ascending:false}).limit(1);
+    let period = '';
+    if(minD?.[0]?.dt_exp && maxD?.[0]?.dt_exp){
+      period = ` · du ${fmtD(minD[0].dt_exp)} au ${fmtD(maxD[0].dt_exp)}`;
+    }
+    stat.innerHTML = `Base actuelle : <b>${(count||0).toLocaleString('fr-FR')}</b> expéditions stockées${period}.`;
+  }catch(e){
+    stat.innerHTML = `<span style="color:var(--bad)">Impossible de lire la base : ${e.message}</span>`;
+  }
+}
+function fmtD(iso){ const d=new Date(iso); return d.toLocaleDateString('fr-FR'); }
+
+// ---- upload par lots (upsert anti-doublon) ----
+async function upload(rows){
+  const log = document.getElementById('log'); log.classList.add('show');
+  document.getElementById('logtitle').textContent = 'Traitement en cours…';
+  document.getElementById('r-read').textContent = rows.length.toLocaleString('fr-FR');
+  const status = document.getElementById('status');
+  status.className = 'status'; status.textContent = 'Comparaison avec la base…';
+
+  // compte avant
+  const before = (await sb.from(TABLE).select('id_ls',{count:'exact',head:true})).count || 0;
+
+  const CHUNK = 500;
+  let sent = 0, errMsg = null;
+  for(let i=0;i<rows.length;i+=CHUNK){
+    const batch = rows.slice(i,i+CHUNK);
+    const { error } = await sb.from(TABLE).upsert(batch,{onConflict:'id_ls',ignoreDuplicates:true});
+    if(error){ errMsg = error.message; break; }
+    sent += batch.length;
+    document.getElementById('r-sent').textContent = sent.toLocaleString('fr-FR');
+    document.getElementById('prog').style.width = Math.round(sent/rows.length*100)+'%';
+    await new Promise(r=>setTimeout(r,10));
+  }
+
+  if(errMsg){
+    status.className = 'status err';
+    status.textContent = 'Erreur : ' + errMsg;
+    document.getElementById('logtitle').textContent = 'Échec';
+    return;
+  }
+
+  // compte après -> nouvelles lignes réelles
+  const after = (await sb.from(TABLE).select('id_ls',{count:'exact',head:true})).count || 0;
+  const added = after - before;
+  const dupes = rows.length - added;
+  document.getElementById('r-new').innerHTML =
+    `<span class="good">${added.toLocaleString('fr-FR')} nouv.</span> / ${dupes.toLocaleString('fr-FR')} déjà là`;
+  document.getElementById('prog').style.width = '100%';
+  status.className = 'status ok';
+  status.textContent = added>0
+    ? `Import terminé. ${added.toLocaleString('fr-FR')} expéditions ajoutées à l'historique.`
+    : `Import terminé. Aucune nouvelle expédition (déjà toutes en base).`;
+  document.getElementById('logtitle').textContent = 'Terminé';
+  refreshStat();
+}
+
+// ---- events ----
+const drop = document.getElementById('drop');
+const fileInput = document.getElementById('file');
+drop.addEventListener('click',()=>fileInput.click());
+['dragenter','dragover'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove('over')}));
+drop.addEventListener('drop',ev=>{ const f=ev.dataTransfer.files[0]; if(f) handle(f); });
+fileInput.addEventListener('change',ev=>{ const f=ev.target.files[0]; if(f) handle(f); });
+
+function handle(f){
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const rows = parseCSV(e.target.result);
+      if(!rows.length){ alert('Aucune ligne lisible. Vérifie que c\'est bien l\'export FastMag (séparateur ;).'); return; }
+      upload(rows);
+    }catch(err){ alert('Erreur de lecture : '+err.message); }
+  };
+  reader.readAsText(f,'utf-8');
+}
+
+refreshStat();
+</script>
+</body>
+</html>
