@@ -19,6 +19,21 @@
   .hdr .sub{font-size:12px;color:rgba(255,255,255,.7);font-weight:600;margin-top:1px}
   .note{background:#fff;border:1px solid var(--line);border-left:3px solid var(--navy);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--ink2);margin-bottom:16px}
   .selectbar{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:16px}
+  .searchmag{margin-bottom:16px}
+  .searchmag input{width:100%;padding:14px 16px;border:1px solid var(--line);border-radius:10px;font-size:16px;background:#fff;color:var(--ink)}
+  .searchmag input:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(13,39,80,.08)}
+  .maggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+  .magcard{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;cursor:pointer;transition:.12s;text-align:left}
+  .magcard:hover{border-color:var(--navy);box-shadow:0 4px 14px rgba(13,39,80,.1);transform:translateY(-1px)}
+  .magcard .mn{font-weight:700;font-size:15px;color:var(--navy)}
+  .magcard .mt{font-size:11px;color:var(--ink3);margin-top:3px;text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+  .maggrid .none{grid-column:1/-1;text-align:center;color:var(--ink3);padding:30px;font-size:14px}
+  .magbar{background:var(--navy);border-radius:10px;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .magbar-info{display:flex;flex-direction:column}
+  .magbar-lab{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.6);font-weight:700}
+  .magbar-nom{font-size:17px;font-weight:800;color:#fff}
+  .magbar-change{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer}
+  .magbar-change:hover{background:rgba(255,255,255,.28)}
   .selectbar label{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);font-weight:700;margin-bottom:6px}
   .selectbar select{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:8px;font-size:15px;background:#fff;color:var(--ink)}
   .selectbar select:focus{outline:none;border-color:var(--navy)}
@@ -75,16 +90,25 @@
     <div><h1>Commande consommables</h1><div class="sub">À envoyer le vendredi avant 14h</div></div>
   </div>
 
-  <div class="note">Sélectionne ton magasin, saisis les quantités souhaitées, puis génère le fichier à transmettre au siège. Livraison sous 6 jours.</div>
+  <div class="note" id="note">Trouve ton magasin, saisis les quantités, puis valide la commande. Livraison sous 6 jours.</div>
 
-  <div class="selectbar">
-    <label>Magasin</label>
-    <select id="magSelect"><option value="">— Choisis ton magasin —</option></select>
+  <!-- bandeau magasin sélectionné -->
+  <div class="magbar hidden" id="magbar">
+    <div class="magbar-info"><span class="magbar-lab">Magasin</span><span class="magbar-nom" id="magbarNom">—</span></div>
+    <button class="magbar-change" id="changeMag">changer</button>
   </div>
 
-  <div id="loading" class="loading hidden"><div class="sp"></div>Chargement du catalogue…</div>
-  <div id="catalogue"></div>
-  <div id="empty" class="empty hidden">Choisis ton magasin pour afficher le catalogue.</div>
+  <!-- étape sélection : recherche + cartes -->
+  <div id="step-select">
+    <div class="searchmag"><input type="text" id="magSearch" placeholder="🔍 Tape les premières lettres de ton magasin…" autocomplete="off"></div>
+    <div class="maggrid" id="maggrid"></div>
+  </div>
+
+  <!-- étape catalogue -->
+  <div id="step-cat" class="hidden">
+    <div id="loading" class="loading hidden"><div class="sp"></div>Chargement…</div>
+    <div id="catalogue"></div>
+  </div>
 </div>
 
 <div class="footer-bar hidden" id="footerBar">
@@ -117,6 +141,7 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON);
 const TYPE_LABEL={R:'Réseau',O:'Outlet',A:'Affilié'};
 
 let MAGS=[], ARTS=[], curMag=null, qty={};
+const LS_KEY='izac_conso_mag';
 
 async function init(){
   try{
@@ -126,26 +151,57 @@ async function init(){
     ]);
     if(m.error) throw m.error; if(a.error) throw a.error;
     MAGS=m.data; ARTS=a.data;
-    const sel=document.getElementById('magSelect');
-    MAGS.forEach(mag=>{
-      const o=document.createElement('option');
-      o.value=mag.code; o.textContent=`${mag.nom} (${TYPE_LABEL[mag.type]})`;
-      sel.appendChild(o);
-    });
-    document.getElementById('empty').classList.remove('hidden');
-  }catch(e){ document.getElementById('empty').classList.remove('hidden'); document.getElementById('empty').textContent='Erreur de chargement : '+e.message; }
+    renderMagCards('');
+    // magasin mémorisé ?
+    let saved=null; try{ saved=localStorage.getItem(LS_KEY); }catch(e){}
+    if(saved){ const mag=MAGS.find(x=>x.code===saved); if(mag){ selectMag(mag,false); return; } }
+    showSelect();
+  }catch(e){
+    document.getElementById('maggrid').innerHTML='<div class="none">Erreur de chargement : '+e.message+'</div>';
+  }
 }
 
-document.getElementById('magSelect').addEventListener('change',e=>{
-  const code=e.target.value;
-  curMag=MAGS.find(m=>m.code===code)||null;
-  qty={};
-  if(!curMag){ document.getElementById('catalogue').innerHTML=''; document.getElementById('footerBar').classList.add('hidden'); document.getElementById('empty').classList.remove('hidden'); return; }
-  renderCatalogue();
+function renderMagCards(filter){
+  const f=(filter||'').trim().toLowerCase();
+  let list=MAGS;
+  if(f) list=MAGS.filter(m=>m.nom.toLowerCase().includes(f)||(m.fastmag||'').toLowerCase().includes(f));
+  const grid=document.getElementById('maggrid');
+  if(!list.length){ grid.innerHTML='<div class="none">Aucun magasin ne correspond.</div>'; return; }
+  grid.innerHTML=list.map(m=>`<button class="magcard" data-code="${m.code}"><div class="mn">${m.nom}</div><div class="mt">${TYPE_LABEL[m.type]}</div></button>`).join('');
+}
+
+document.getElementById('magSearch').addEventListener('input',e=>renderMagCards(e.target.value));
+document.getElementById('maggrid').addEventListener('click',e=>{
+  const card=e.target.closest('.magcard'); if(!card) return;
+  const mag=MAGS.find(m=>m.code===card.dataset.code); if(mag) selectMag(mag,true);
+});
+document.getElementById('changeMag').addEventListener('click',()=>{
+  try{ localStorage.removeItem(LS_KEY); }catch(e){}
+  curMag=null; qty={};
+  document.getElementById('magbar').classList.add('hidden');
+  document.getElementById('footerBar').classList.add('hidden');
+  document.getElementById('step-cat').classList.add('hidden');
+  showSelect();
+  document.getElementById('magSearch').value=''; renderMagCards('');
+  document.getElementById('magSearch').focus();
 });
 
+function showSelect(){
+  document.getElementById('step-select').classList.remove('hidden');
+  document.getElementById('note').classList.remove('hidden');
+}
+function selectMag(mag,remember){
+  curMag=mag; qty={};
+  if(remember){ try{ localStorage.setItem(LS_KEY,mag.code); }catch(e){} }
+  document.getElementById('step-select').classList.add('hidden');
+  document.getElementById('note').classList.add('hidden');
+  document.getElementById('magbar').classList.remove('hidden');
+  document.getElementById('magbarNom').textContent=`${mag.nom} · ${TYPE_LABEL[mag.type]}`;
+  document.getElementById('step-cat').classList.remove('hidden');
+  renderCatalogue();
+}
+
 function renderCatalogue(){
-  document.getElementById('empty').classList.add('hidden');
   const arts=ARTS.filter(a=>a.profils.split(',').includes(curMag.type));
   const cats={};
   arts.forEach(a=>{ (cats[a.categorie]=cats[a.categorie]||[]).push(a); });
@@ -258,14 +314,11 @@ document.getElementById('confirmBtn').addEventListener('click',async()=>{
     setTimeout(()=>{ window.location.href=mailto; }, depot.length?600:0);
   }
 
-  // fermer + réinitialiser
+  // fermer + réinitialiser (on garde le magasin sélectionné)
   document.getElementById('overlay').classList.remove('show');
   showDone(depot.length, siege.length);
-  // reset
   qty={}; document.getElementById('fNom').value=''; document.getElementById('fPrenom').value=''; document.getElementById('fCheck').checked=false;
-  document.getElementById('magSelect').value=''; curMag=null;
-  document.getElementById('catalogue').innerHTML=''; document.getElementById('footerBar').classList.add('hidden');
-  document.getElementById('empty').classList.remove('hidden');
+  renderCatalogue();  // ré-affiche le catalogue vidé pour le même magasin
 });
 
 function showDone(nDepot,nSiege){
