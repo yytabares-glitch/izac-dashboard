@@ -43,6 +43,29 @@
   .btn{background:var(--navy);color:#fff;border:none;border-radius:9px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer}
   .btn:hover{background:var(--navy2)} .btn:disabled{opacity:.4;cursor:default}
   .empty{text-align:center;color:var(--ink3);padding:50px 20px;font-size:14px}
+  .overlay{position:fixed;inset:0;background:rgba(13,39,80,.45);display:none;align-items:center;justify-content:center;z-index:60;padding:20px}
+  .overlay.show{display:flex}
+  .modal{background:#fff;border-radius:14px;max-width:540px;width:100%;max-height:88vh;overflow:auto;padding:26px 28px;box-shadow:0 20px 60px rgba(13,39,80,.3)}
+  .modal h2{font-size:19px;font-weight:800;color:var(--navy);margin-bottom:6px}
+  .modal-mag{font-size:13px;color:var(--ink2);font-weight:600;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+  .modal-list{margin-bottom:18px}
+  .ml-cat{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);font-weight:700;margin:12px 0 4px}
+  .ml-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line2);font-size:14px}
+  .ml-row .q{font-weight:700;font-variant-numeric:tabular-nums}
+  .ml-row .badge-s{font-size:10px;background:var(--warnbg);color:var(--warn);padding:1px 7px;border-radius:99px;margin-left:6px;font-weight:700}
+  .modal-form{display:flex;gap:12px;margin-bottom:14px}
+  .modal-form .ff{flex:1}
+  .modal-form label{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);font-weight:700;margin-bottom:5px}
+  .modal-form input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px}
+  .modal-form input:focus{outline:none;border-color:var(--navy)}
+  .modal-check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2);font-weight:600;cursor:pointer;margin-bottom:14px}
+  .modal-check input{width:17px;height:17px;accent-color:var(--navy);cursor:pointer}
+  .modal-err{color:var(--red);font-size:12.5px;font-weight:600;min-height:14px;margin-bottom:8px}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px}
+  .modal-actions button{padding:11px 20px;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;border:none}
+  .btn-close{background:var(--line2);color:var(--ink2)}
+  .btn-close:hover{background:var(--line)}
+  .btn:disabled{opacity:.4;cursor:default}
 </style>
 </head>
 <body>
@@ -66,7 +89,25 @@
 
 <div class="footer-bar hidden" id="footerBar">
   <div class="recap"><b id="recapN">0</b> article(s) · <span id="recapMag">—</span></div>
-  <button class="btn" id="genBtn" disabled>Générer le fichier</button>
+  <button class="btn" id="genBtn" disabled>Valider la commande</button>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2>Récapitulatif de la commande</h2>
+    <div class="modal-mag" id="modalMag"></div>
+    <div class="modal-list" id="modalList"></div>
+    <div class="modal-form">
+      <div class="ff"><label>Nom</label><input type="text" id="fNom" placeholder="Nom du demandeur"></div>
+      <div class="ff"><label>Prénom</label><input type="text" id="fPrenom" placeholder="Prénom"></div>
+    </div>
+    <label class="modal-check"><input type="checkbox" id="fCheck"> Je confirme avoir vérifié les quantités ci-dessus</label>
+    <div class="modal-err" id="modalErr"></div>
+    <div class="modal-actions">
+      <button class="btn-close" id="cancelBtn">Modifier</button>
+      <button class="btn" id="confirmBtn" disabled>Confirmer la commande</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -143,16 +184,60 @@ function updateRecap(){
 // adresse mail destinataire des commandes préparées au siège (à remplacer)
 const EMAIL_SIEGE='ADRESSE_A_DEFINIR@izac.fr';
 
+// Étape 1 : ouvrir le récap
 document.getElementById('genBtn').addEventListener('click',()=>{
   if(!curMag||!Object.keys(qty).length) return;
+  const arts=ARTS.filter(a=>a.profils.split(',').includes(curMag.type) && qty[a.id]);
+  const cats={};
+  arts.forEach(a=>{ (cats[a.categorie]=cats[a.categorie]||[]).push(a); });
+  let html='';
+  Object.keys(cats).forEach(cat=>{
+    html+=`<div class="ml-cat">${cat}</div>`;
+    cats[cat].forEach(a=>{
+      const siege=(a.circuit||'depot')==='siege';
+      html+=`<div class="ml-row"><span>${a.libelle}${siege?'<span class="badge-s">siège</span>':''}</span><span class="q">${qty[a.id]}</span></div>`;
+    });
+  });
+  document.getElementById('modalList').innerHTML=html;
+  document.getElementById('modalMag').textContent=`${curMag.nom} · ${TYPE_LABEL[curMag.type]} · ${new Date().toLocaleDateString('fr-FR')}`;
+  document.getElementById('modalErr').textContent='';
+  document.getElementById('overlay').classList.add('show');
+});
+document.getElementById('cancelBtn').addEventListener('click',()=>document.getElementById('overlay').classList.remove('show'));
+// activer Confirmer seulement si nom+prénom+check
+function checkForm(){
+  const ok=document.getElementById('fNom').value.trim() && document.getElementById('fPrenom').value.trim() && document.getElementById('fCheck').checked;
+  document.getElementById('confirmBtn').disabled=!ok;
+}
+['fNom','fPrenom'].forEach(id=>document.getElementById(id).addEventListener('input',checkForm));
+document.getElementById('fCheck').addEventListener('change',checkForm);
+
+// Étape 2 : confirmer -> enregistrer + générer
+document.getElementById('confirmBtn').addEventListener('click',async()=>{
+  const nom=document.getElementById('fNom').value.trim();
+  const prenom=document.getElementById('fPrenom').value.trim();
+  const btn=document.getElementById('confirmBtn'); btn.disabled=true;
+  const err=document.getElementById('modalErr'); err.textContent='Enregistrement…';
+
   const depot=[], siege=[];
   ARTS.forEach(a=>{
     if(!qty[a.id]) return;
     if((a.circuit||'depot')==='siege') siege.push(a);
-    else if(a.gencod) depot.push(a);   // dépôt = doit avoir un gencod
+    else if(a.gencod) depot.push(a);
   });
 
-  // 1) TXT Fastmag pour les articles dépôt
+  // enregistrer en base
+  try{
+    const {data:cmd,error:e1}=await sb.from('conso_commandes')
+      .insert({mag_code:curMag.code,mag_nom:curMag.nom,mag_type:curMag.type,demandeur_nom:nom,demandeur_prenom:prenom})
+      .select().single();
+    if(e1) throw e1;
+    const lignes=[...depot,...siege].map(a=>({commande_id:cmd.id,article_id:a.id,libelle:a.libelle,gencod:a.gencod||'',circuit:a.circuit||'depot',quantite:qty[a.id]}));
+    const {error:e2}=await sb.from('conso_commande_lignes').insert(lignes);
+    if(e2) throw e2;
+  }catch(e){ err.textContent='Erreur enregistrement : '+e.message; btn.disabled=false; return; }
+
+  // TXT dépôt
   if(depot.length){
     const lines=depot.map(a=>`${a.gencod}\t${qty[a.id]}\t\t`);
     const txt=lines.join('\r\n')+'\r\n';
@@ -162,32 +247,35 @@ document.getElementById('genBtn').addEventListener('click',()=>{
     const a=document.createElement('a'); a.href=url; a.download=fname; a.click();
     URL.revokeObjectURL(url);
   }
-
-  // 2) Mail pré-rempli pour les articles siège
+  // mail siège
   if(siege.length){
     const today=new Date().toLocaleDateString('fr-FR');
     const subject=`Commande consommables (siège) — ${curMag.nom} — ${today}`;
-    let body=`Magasin : ${curMag.nom} (${TYPE_LABEL[curMag.type]})\nCode : ${curMag.code}\nDate : ${today}\n\nArticles à préparer au siège :\n`;
+    let body=`Magasin : ${curMag.nom} (${TYPE_LABEL[curMag.type]})\nCode : ${curMag.code}\nDemandeur : ${prenom} ${nom}\nDate : ${today}\n\nArticles à préparer au siège :\n`;
     siege.forEach(a=>{ body+=`- ${a.libelle} : ${qty[a.id]}\n`; });
     body+=`\nMerci.`;
     const mailto=`mailto:${encodeURIComponent(EMAIL_SIEGE)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    // léger délai pour ne pas bloquer le téléchargement du TXT
     setTimeout(()=>{ window.location.href=mailto; }, depot.length?600:0);
   }
 
-  // message récap
+  // fermer + réinitialiser
+  document.getElementById('overlay').classList.remove('show');
   showDone(depot.length, siege.length);
+  // reset
+  qty={}; document.getElementById('fNom').value=''; document.getElementById('fPrenom').value=''; document.getElementById('fCheck').checked=false;
+  document.getElementById('magSelect').value=''; curMag=null;
+  document.getElementById('catalogue').innerHTML=''; document.getElementById('footerBar').classList.add('hidden');
+  document.getElementById('empty').classList.remove('hidden');
 });
 
 function showDone(nDepot,nSiege){
   const parts=[];
   if(nDepot) parts.push(`fichier dépôt téléchargé (${nDepot} article·s)`);
   if(nSiege) parts.push(`email siège préparé (${nSiege} article·s)`);
-  const bar=document.getElementById('footerBar');
   let msg=document.getElementById('doneMsg');
-  if(!msg){ msg=document.createElement('div'); msg.id='doneMsg'; msg.style.cssText='position:fixed;bottom:74px;left:0;right:0;text-align:center;font-size:13px;color:var(--green);font-weight:700'; document.body.appendChild(msg); }
-  msg.textContent='✓ '+parts.join(' · ');
-  setTimeout(()=>{ if(msg) msg.textContent=''; }, 5000);
+  if(!msg){ msg=document.createElement('div'); msg.id='doneMsg'; msg.style.cssText='position:fixed;bottom:74px;left:0;right:0;text-align:center;font-size:13px;color:var(--green);font-weight:700;z-index:55'; document.body.appendChild(msg); }
+  msg.textContent='✓ Commande validée — '+parts.join(' · ');
+  setTimeout(()=>{ if(msg) msg.textContent=''; }, 6000);
 }
 
 init();

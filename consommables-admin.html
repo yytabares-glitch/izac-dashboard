@@ -60,6 +60,7 @@
   .res .v{color:var(--ink3)}
   .btn-sm{padding:7px 12px;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer}
   .btn-clear{background:var(--line2);color:var(--ink2)}
+  .btn-edit{background:#e6eefb;color:var(--navy2)}
   .saved{font-size:12px;color:var(--green);font-weight:700;opacity:0;transition:opacity .2s}
   .saved.show{opacity:1}
   .groupbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px}
@@ -69,6 +70,28 @@
   .gchip.active{background:var(--navy);color:#fff;border-color:var(--navy)}
   .circuit{font-size:12px;color:var(--ink2);font-weight:600;display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap}
   .circuit input{width:15px;height:15px;cursor:pointer;accent-color:var(--navy)}
+  .tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid var(--line)}
+  .tab{background:none;border:none;padding:10px 18px;font-size:14px;font-weight:700;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px}
+  .tab:hover{color:var(--navy)}
+  .tab.active{color:var(--navy);border-bottom-color:var(--navy)}
+  .suivi-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+  .vchip{font-size:13px;font-weight:700;padding:7px 15px;border-radius:99px;border:1.5px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer}
+  .vchip:hover{border-color:var(--navy);color:var(--navy)}
+  .vchip.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .suivi-info{font-size:12px;color:var(--ink3);margin-left:auto}
+  .suivi-empty{text-align:center;color:var(--ink3);padding:40px;font-size:14px}
+  .stbl{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .stbl th,.stbl td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line2)}
+  .stbl th{background:var(--line2);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3);font-weight:700;position:sticky;top:0}
+  .stbl td.num,.stbl th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .stbl tbody tr:hover{background:var(--line2)}
+  .scrollbox{max-height:520px;overflow:auto;border-radius:8px}
+  .cmd-card{background:#fff;border:1px solid var(--line);border-radius:9px;padding:12px 16px;margin-bottom:10px}
+  .cmd-head{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:13px;border-bottom:1px solid var(--line2);padding-bottom:8px;margin-bottom:8px}
+  .cmd-head b{color:var(--navy)} .cmd-meta{color:var(--ink3)}
+  .cmd-line{display:flex;justify-content:space-between;font-size:13px;padding:3px 0}
+  .cmd-line .q{font-weight:700;font-variant-numeric:tabular-nums}
+  .hot{color:var(--red);font-weight:800}
 </style>
 </head>
 <body>
@@ -90,6 +113,12 @@
     <div class="stat"><a href="consommables.html" style="color:#fff">← Page magasin</a></div>
   </div>
 
+  <div class="tabs">
+    <button class="tab active" data-tab="refs">Références</button>
+    <button class="tab" data-tab="suivi">Suivi des commandes</button>
+  </div>
+
+  <div id="tab-refs">
   <div class="summary">
     <div class="pill ok">Validés <b id="nOk">0</b></div>
     <div class="pill ck">À vérifier <b id="nCheck">0</b></div>
@@ -105,6 +134,17 @@
   </div>
 
   <div id="list"></div>
+  </div>
+
+  <div id="tab-suivi" class="hidden">
+    <div class="suivi-controls">
+      <button class="vchip active" data-vue="hist">Historique</button>
+      <button class="vchip" data-vue="totaux">Totaux par magasin</button>
+      <button class="vchip" data-vue="abus">Alertes / abus</button>
+      <span class="suivi-info" id="suiviInfo"></span>
+    </div>
+    <div id="suiviContent"><div class="suivi-empty">Chargement…</div></div>
+  </div>
 </div>
 
 <script>
@@ -169,10 +209,11 @@ function render(){
       </div>
       <div class="art-gencod">
         <span class="cur ${a.gencod?'':'empty'}" id="cur-${a.id}">${a.gencod||'aucun gencod'}</span>
-        <div class="srch">
+        <div class="srch" id="srch-${a.id}" style="${valid?'display:none':''}">
           <input type="text" placeholder="Rechercher un article (nom, réf, gencod)…" data-search="${a.id}">
           <div class="results" id="res-${a.id}"></div>
         </div>
+        ${valid?`<button class="btn-sm btn-edit" data-edit="${a.id}">Modifier</button>`:''}
         ${a.gencod?`<button class="btn-sm btn-clear" data-clear="${a.id}">Vider</button>`:''}
         <span class="saved" id="saved-${a.id}">enregistré ✓</span>
       </div>
@@ -200,7 +241,12 @@ listEl.addEventListener('mousedown',e=>{
 });
 listEl.addEventListener('click',e=>{
   const clr=e.target.closest('[data-clear]'); if(clr){ setGencod(clr.dataset.clear,''); return; }
-  const cb=e.target.closest('input[data-siege]'); if(cb){ setCircuit(cb.dataset.siege, cb.checked?'siege':'depot'); }
+  const cb=e.target.closest('input[data-siege]'); if(cb){ setCircuit(cb.dataset.siege, cb.checked?'siege':'depot'); return; }
+  const ed=e.target.closest('[data-edit]'); if(ed){
+    const s=document.getElementById('srch-'+ed.dataset.edit);
+    if(s){ s.style.display=''; const i=s.querySelector('input'); if(i){i.value='';i.focus();} }
+    ed.remove();
+  }
 });
 // fermer les listes en cliquant ailleurs
 document.addEventListener('mousedown',e=>{
@@ -212,20 +258,8 @@ async function setGencod(id,g){
   const {error}=await sb.from('conso_articles').update({gencod:g,statut}).eq('id',id);
   if(error){alert('Erreur : '+error.message);return;}
   const art=ARTS.find(a=>String(a.id)===String(id)); if(art){art.gencod=g;art.statut=statut;}
-  const cur=document.getElementById('cur-'+id);
-  if(cur){cur.textContent=g||'aucun gencod'; cur.classList.toggle('empty',!g);}
+  render();  // re-render complet : champ caché si validé, vidé, statut à jour
   const sv=document.getElementById('saved-'+id); if(sv){sv.classList.add('show'); setTimeout(()=>sv.classList.remove('show'),1500);}
-  updateCounters();
-  const card=document.querySelector(`.art[data-id="${id}"]`);
-  if(card){ card.classList.toggle('ok',!!g); card.classList.toggle('check',!g);
-    const tag=card.querySelector('.tag'); tag.textContent=g?'validé':'à vérifier'; tag.className='tag '+(g?'ok':'ck');
-    // ajouter le bouton vider s'il n'existe pas
-    if(g && !card.querySelector('[data-clear]')){
-      const sv2=card.querySelector('.saved');
-      const btn=document.createElement('button'); btn.className='btn-sm btn-clear'; btn.dataset.clear=id; btn.textContent='Vider';
-      sv2.parentNode.insertBefore(btn,sv2);
-    } else if(!g){ const b=card.querySelector('[data-clear]'); if(b) b.remove(); }
-  }
 }
 async function setCircuit(id,circuit){
   const {error}=await sb.from('conso_articles').update({circuit}).eq('id',id);
@@ -239,6 +273,83 @@ document.getElementById('groupbar').addEventListener('click',e=>{
   document.querySelectorAll('#groupbar .gchip').forEach(c=>c.classList.toggle('active',c===ch));
   render();
 });
+
+// ===== Onglets =====
+let CMDS=null, CMDLIGNES=null;
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===t));
+  const tab=t.dataset.tab;
+  document.getElementById('tab-refs').classList.toggle('hidden',tab!=='refs');
+  document.getElementById('tab-suivi').classList.toggle('hidden',tab!=='suivi');
+  if(tab==='suivi' && CMDS===null) loadSuivi();
+}));
+
+async function loadSuivi(){
+  document.getElementById('suiviContent').innerHTML='<div class="suivi-empty">Chargement des commandes…</div>';
+  try{
+    const [c,l]=await Promise.all([
+      sb.from('conso_commandes').select('*').order('created_at',{ascending:false}),
+      sb.from('conso_commande_lignes').select('*')
+    ]);
+    if(c.error) throw c.error; if(l.error) throw l.error;
+    CMDS=c.data; CMDLIGNES=l.data;
+    document.getElementById('suiviInfo').textContent=`${CMDS.length} commande(s) enregistrée(s)`;
+    renderSuivi('hist');
+  }catch(e){ document.getElementById('suiviContent').innerHTML='<div class="suivi-empty">Erreur : '+e.message+'</div>'; }
+}
+let suiviVue='hist';
+document.querySelector('.suivi-controls').addEventListener('click',e=>{
+  const ch=e.target.closest('.vchip'); if(!ch) return;
+  suiviVue=ch.dataset.vue;
+  document.querySelectorAll('.vchip').forEach(c=>c.classList.toggle('active',c===ch));
+  renderSuivi(suiviVue);
+});
+function linesOf(cmdId){ return CMDLIGNES.filter(l=>String(l.commande_id)===String(cmdId)); }
+
+function renderSuivi(vue){
+  const box=document.getElementById('suiviContent');
+  if(!CMDS || !CMDS.length){ box.innerHTML='<div class="suivi-empty">Aucune commande enregistrée pour le moment.</div>'; return; }
+
+  if(vue==='hist'){
+    box.innerHTML=CMDS.map(c=>{
+      const ls=linesOf(c.id);
+      const d=new Date(c.created_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      return `<div class="cmd-card">
+        <div class="cmd-head"><span><b>${c.mag_nom}</b> · ${({R:'Réseau',O:'Outlet',A:'Affilié'})[c.mag_type]||c.mag_type}</span>
+          <span class="cmd-meta">${c.demandeur_prenom||''} ${c.demandeur_nom||''} · ${d}</span></div>
+        ${ls.map(l=>`<div class="cmd-line"><span>${l.libelle}${l.circuit==='siege'?' (siège)':''}</span><span class="q">${l.quantite}</span></div>`).join('')}
+      </div>`;
+    }).join('');
+  }
+  else if(vue==='totaux'){
+    // tableau magasin x total articles + total quantité
+    const byMag={};
+    CMDS.forEach(c=>{ byMag[c.mag_code]=byMag[c.mag_code]||{nom:c.mag_nom,type:c.mag_type,nbCmd:0,qte:0}; byMag[c.mag_code].nbCmd++; });
+    CMDLIGNES.forEach(l=>{ const c=CMDS.find(x=>String(x.id)===String(l.commande_id)); if(c&&byMag[c.mag_code]) byMag[c.mag_code].qte+=l.quantite; });
+    const rows=Object.entries(byMag).sort((a,b)=>b[1].qte-a[1].qte);
+    box.innerHTML=`<div class="scrollbox"><table class="stbl"><thead><tr><th>Magasin</th><th>Type</th><th class="num">Commandes</th><th class="num">Qté totale</th></tr></thead><tbody>`+
+      rows.map(([code,m])=>`<tr><td>${m.nom}</td><td>${({R:'Réseau',O:'Outlet',A:'Affilié'})[m.type]}</td><td class="num">${m.nbCmd}</td><td class="num">${m.qte.toLocaleString('fr-FR')}</td></tr>`).join('')+
+      `</tbody></table></div>`;
+  }
+  else if(vue==='abus'){
+    // article x magasin : quantités cumulées, tri décroissant ; mise en évidence des plus gros
+    const agg={};
+    CMDLIGNES.forEach(l=>{
+      const c=CMDS.find(x=>String(x.id)===String(l.commande_id)); if(!c) return;
+      const key=l.libelle+'|||'+c.mag_nom;
+      agg[key]=agg[key]||{lib:l.libelle,mag:c.mag_nom,qte:0,n:0};
+      agg[key].qte+=l.quantite; agg[key].n++;
+    });
+    const rows=Object.values(agg).sort((a,b)=>b.qte-a.qte);
+    // seuil "abus" = au-dessus du 90e percentile des quantités
+    const qs=rows.map(r=>r.qte).sort((a,b)=>a-b);
+    const p90=qs.length?qs[Math.floor(qs.length*0.9)]:0;
+    box.innerHTML=`<div class="suivi-info" style="margin:0 0 10px">Cumul par article × magasin. En rouge : quantités anormalement élevées (top 10%).</div>
+      <div class="scrollbox"><table class="stbl"><thead><tr><th>Article</th><th>Magasin</th><th class="num">Cmd</th><th class="num">Qté cumulée</th></tr></thead><tbody>`+
+      rows.map(r=>`<tr><td>${r.lib}</td><td>${r.mag}</td><td class="num">${r.n}</td><td class="num ${r.qte>=p90&&r.qte>0?'hot':''}">${r.qte.toLocaleString('fr-FR')}</td></tr>`).join('')+
+      `</tbody></table></div>`;
+  }
+}
 </script>
 </body>
 </html>
