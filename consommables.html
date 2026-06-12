@@ -34,6 +34,12 @@
   .magbar-nom{font-size:17px;font-weight:800;color:#fff}
   .magbar-change{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:7px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer}
   .magbar-change:hover{background:rgba(255,255,255,.28)}
+  .window-info{font-size:13px;font-weight:600;border-radius:8px;padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+  .window-info.open{background:var(--greenbg);color:var(--green)}
+  .window-info.closed{background:var(--warnbg);color:var(--warn)}
+  .reorder{background:#e6eefb;border:1px solid #c5d6f5;border-radius:9px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .reorder span{font-size:13px;color:var(--navy2);font-weight:600}
+  .reorder button{background:var(--navy);color:#fff;border:none;border-radius:7px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer}
   .selectbar label{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);font-weight:700;margin-bottom:6px}
   .selectbar select{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:8px;font-size:15px;background:#fff;color:var(--ink)}
   .selectbar select:focus{outline:none;border-color:var(--navy)}
@@ -75,6 +81,11 @@
   .modal-form input:focus{outline:none;border-color:var(--navy)}
   .modal-check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2);font-weight:600;cursor:pointer;margin-bottom:14px}
   .modal-check input{width:17px;height:17px;accent-color:var(--navy);cursor:pointer}
+  .alert-box{background:var(--warnbg);color:var(--warn);border-radius:8px;padding:11px 14px;font-size:13px;font-weight:600;margin-bottom:14px;line-height:1.6}
+  .just-wrap{margin-bottom:14px}
+  .just-wrap label{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--warn);font-weight:700;margin-bottom:5px}
+  .just-wrap textarea{width:100%;padding:10px 12px;border:1px solid var(--warnbg);border-radius:8px;font-size:14px;font-family:inherit;resize:vertical}
+  .just-wrap textarea:focus{outline:none;border-color:var(--warn)}
   .modal-err{color:var(--red);font-size:12.5px;font-weight:600;min-height:14px;margin-bottom:8px}
   .modal-actions{display:flex;justify-content:flex-end;gap:10px}
   .modal-actions button{padding:11px 20px;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;border:none}
@@ -91,6 +102,7 @@
   </div>
 
   <div class="note" id="note">Trouve ton magasin, saisis les quantités, puis valide la commande. Livraison sous 6 jours.</div>
+  <div class="window-info" id="windowInfo"></div>
 
   <!-- bandeau magasin sélectionné -->
   <div class="magbar hidden" id="magbar">
@@ -121,9 +133,14 @@
     <h2>Récapitulatif de la commande</h2>
     <div class="modal-mag" id="modalMag"></div>
     <div class="modal-list" id="modalList"></div>
+    <div class="alert-box hidden" id="alertBox"></div>
     <div class="modal-form">
       <div class="ff"><label>Nom</label><input type="text" id="fNom" placeholder="Nom du demandeur"></div>
       <div class="ff"><label>Prénom</label><input type="text" id="fPrenom" placeholder="Prénom"></div>
+    </div>
+    <div class="just-wrap hidden" id="justWrap">
+      <label>Justification (quantités inhabituelles)</label>
+      <textarea id="fJust" rows="2" placeholder="Explique brièvement pourquoi ces quantités…"></textarea>
     </div>
     <label class="modal-check"><input type="checkbox" id="fCheck"> Je confirme avoir vérifié les quantités ci-dessus</label>
     <div class="modal-err" id="modalErr"></div>
@@ -143,7 +160,23 @@ const TYPE_LABEL={R:'Réseau',O:'Outlet',A:'Affilié'};
 let MAGS=[], ARTS=[], curMag=null, qty={};
 const LS_KEY='izac_conso_mag';
 
+function showWindowInfo(){
+  const el=document.getElementById('windowInfo'); if(!el) return;
+  const now=new Date();
+  const j=now.getDay(), h=now.getHours(); // 5 = vendredi
+  // fenêtre ouverte : on considère "à temps" jusqu'au vendredi 14h
+  const open = (j<5) || (j===5 && h<14);
+  if(open){
+    el.className='window-info open';
+    el.textContent='🟢 Fenêtre de commande ouverte — à envoyer avant vendredi 14h.';
+  } else {
+    el.className='window-info closed';
+    el.textContent='🟠 Hors créneau (vendredi 14h passé). Ta commande sera traitée la semaine suivante.';
+  }
+}
+
 async function init(){
+  showWindowInfo();
   try{
     const [m,a]=await Promise.all([
       sb.from('conso_magasins').select('*').order('nom'),
@@ -190,7 +223,10 @@ function showSelect(){
   document.getElementById('step-select').classList.remove('hidden');
   document.getElementById('note').classList.remove('hidden');
 }
-function selectMag(mag,remember){
+let lastOrder=null;       // dernière commande du magasin (pour recommander)
+let avgByArticle={};      // moyenne historique qté par article pour ce magasin
+
+async function selectMag(mag,remember){
   curMag=mag; qty={};
   if(remember){ try{ localStorage.setItem(LS_KEY,mag.code); }catch(e){} }
   document.getElementById('step-select').classList.add('hidden');
@@ -198,7 +234,30 @@ function selectMag(mag,remember){
   document.getElementById('magbar').classList.remove('hidden');
   document.getElementById('magbarNom').textContent=`${mag.nom} · ${TYPE_LABEL[mag.type]}`;
   document.getElementById('step-cat').classList.remove('hidden');
+  await loadHistory(mag.code);
   renderCatalogue();
+}
+
+async function loadHistory(code){
+  lastOrder=null; avgByArticle={};
+  try{
+    const {data:cmds}=await sb.from('conso_commandes').select('id,created_at').eq('mag_code',code).order('created_at',{ascending:false});
+    if(cmds && cmds.length){
+      const ids=cmds.map(c=>c.id);
+      const {data:lignes}=await sb.from('conso_commande_lignes').select('*').in('commande_id',ids);
+      if(lignes){
+        // dernière commande
+        const lastId=cmds[0].id;
+        lastOrder=lignes.filter(l=>String(l.commande_id)===String(lastId));
+        // moyenne par article (sur toutes les commandes)
+        const sums={}, counts={};
+        lignes.forEach(l=>{ if(l.article_id==null)return; sums[l.article_id]=(sums[l.article_id]||0)+l.quantite; counts[l.article_id]=(counts[l.article_id]||0)+1; });
+        Object.keys(sums).forEach(id=>{ avgByArticle[id]=sums[id]/counts[id]; });
+        // nb de commandes total pour décider si la moyenne est fiable (>=4)
+        avgByArticle.__n=cmds.length;
+      }
+    }
+  }catch(e){ /* silencieux : pas bloquant */ }
 }
 
 function renderCatalogue(){
@@ -219,6 +278,13 @@ function renderCatalogue(){
     html+='</div>';
   });
   document.getElementById('catalogue').innerHTML=html;
+  // bloc "recommander ma dernière commande"
+  if(lastOrder && lastOrder.length){
+    const ro=document.createElement('div'); ro.className='reorder';
+    ro.innerHTML=`<span>↻ Recommander ta dernière commande (${lastOrder.length} article·s)</span><button id="reorderBtn">Reprendre</button>`;
+    const cont=document.getElementById('catalogue'); cont.insertBefore(ro, cont.firstChild);
+    document.getElementById('reorderBtn').addEventListener('click',applyLastOrder);
+  }
   document.getElementById('catalogue').querySelectorAll('input[type=number]').forEach(inp=>{
     inp.addEventListener('input',()=>{
       const id=inp.dataset.id, v=parseInt(inp.value,10);
@@ -231,6 +297,15 @@ function renderCatalogue(){
   document.getElementById('recapMag').textContent=curMag.nom+' · '+TYPE_LABEL[curMag.type];
   updateRecap();
 }
+function applyLastOrder(){
+  if(!lastOrder) return;
+  lastOrder.forEach(l=>{
+    if(l.article_id==null) return;
+    const inp=document.querySelector(`#catalogue input[data-id="${l.article_id}"]`);
+    if(inp && !inp.disabled){ inp.value=l.quantite; qty[l.article_id]=l.quantite; inp.closest('.item').classList.add('filled'); }
+  });
+  updateRecap();
+}
 function updateRecap(){
   const n=Object.keys(qty).length;
   document.getElementById('recapN').textContent=n;
@@ -239,6 +314,8 @@ function updateRecap(){
 
 // adresse mail destinataire des commandes préparées au siège (à remplacer)
 const EMAIL_SIEGE='ADRESSE_A_DEFINIR@izac.fr';
+// adresse mail destinataire des alertes de dépassement (à remplacer)
+const EMAIL_ALERTE='ADRESSE_ALERTE_A_DEFINIR@izac.fr';
 
 // Étape 1 : ouvrir le récap
 document.getElementById('genBtn').addEventListener('click',()=>{
@@ -257,23 +334,54 @@ document.getElementById('genBtn').addEventListener('click',()=>{
   document.getElementById('modalList').innerHTML=html;
   document.getElementById('modalMag').textContent=`${curMag.nom} · ${TYPE_LABEL[curMag.type]} · ${new Date().toLocaleDateString('fr-FR')}`;
   document.getElementById('modalErr').textContent='';
+
+  // --- détection des dépassements (seuil fixe + moyenne 2x si historique fiable) ---
+  const fiable = (avgByArticle.__n||0) >= 4;
+  overQty=[];
+  ARTS.forEach(a=>{
+    if(!qty[a.id]) return;
+    const q=qty[a.id];
+    let raison=null;
+    if(a.seuil_alerte!=null && q>a.seuil_alerte) raison=`plafond ${a.seuil_alerte} dépassé`;
+    else if(fiable && avgByArticle[a.id] && q > 2*avgByArticle[a.id]) raison=`2× la moyenne habituelle (~${Math.round(avgByArticle[a.id])})`;
+    if(raison) overQty.push({lib:a.libelle, q, raison});
+  });
+  const alertBox=document.getElementById('alertBox');
+  const justWrap=document.getElementById('justWrap');
+  if(overQty.length){
+    alertBox.innerHTML='⚠️ Quantités inhabituelles :<br>'+overQty.map(o=>`• ${o.lib} : ${o.q} (${o.raison})`).join('<br>');
+    alertBox.classList.remove('hidden');
+    justWrap.classList.remove('hidden');
+  } else {
+    alertBox.classList.add('hidden'); justWrap.classList.add('hidden');
+    document.getElementById('fJust').value='';
+  }
+  checkForm();
   document.getElementById('overlay').classList.add('show');
 });
 document.getElementById('cancelBtn').addEventListener('click',()=>document.getElementById('overlay').classList.remove('show'));
-// activer Confirmer seulement si nom+prénom+check
+let overQty=[];
+// activer Confirmer seulement si nom+prénom+check (+justif si dépassement)
 function checkForm(){
-  const ok=document.getElementById('fNom').value.trim() && document.getElementById('fPrenom').value.trim() && document.getElementById('fCheck').checked;
-  document.getElementById('confirmBtn').disabled=!ok;
+  const base=document.getElementById('fNom').value.trim() && document.getElementById('fPrenom').value.trim() && document.getElementById('fCheck').checked;
+  const justOk = overQty.length===0 || document.getElementById('fJust').value.trim().length>0;
+  document.getElementById('confirmBtn').disabled=!(base && justOk);
 }
-['fNom','fPrenom'].forEach(id=>document.getElementById(id).addEventListener('input',checkForm));
+['fNom','fPrenom','fJust'].forEach(id=>document.getElementById(id).addEventListener('input',checkForm));
 document.getElementById('fCheck').addEventListener('change',checkForm);
 
 // Étape 2 : confirmer -> enregistrer + générer
 document.getElementById('confirmBtn').addEventListener('click',async()=>{
   const nom=document.getElementById('fNom').value.trim();
   const prenom=document.getElementById('fPrenom').value.trim();
+  const justification=document.getElementById('fJust').value.trim();
   const btn=document.getElementById('confirmBtn'); btn.disabled=true;
   const err=document.getElementById('modalErr'); err.textContent='Enregistrement…';
+
+  // n° de commande lisible : MAG-AAAAMMJJ-HHMM
+  const now=new Date();
+  const pad=n=>String(n).padStart(2,'0');
+  const numero=`${curMag.fastmag.replace(/[^A-Za-z0-9]/g,'').slice(0,8)}-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
 
   const depot=[], siege=[];
   ARTS.forEach(a=>{
@@ -285,7 +393,7 @@ document.getElementById('confirmBtn').addEventListener('click',async()=>{
   // enregistrer en base
   try{
     const {data:cmd,error:e1}=await sb.from('conso_commandes')
-      .insert({mag_code:curMag.code,mag_nom:curMag.nom,mag_type:curMag.type,demandeur_nom:nom,demandeur_prenom:prenom})
+      .insert({mag_code:curMag.code,mag_nom:curMag.nom,mag_type:curMag.type,demandeur_nom:nom,demandeur_prenom:prenom,numero,justification:justification||null})
       .select().single();
     if(e1) throw e1;
     const lignes=[...depot,...siege].map(a=>({commande_id:cmd.id,article_id:a.id,libelle:a.libelle,gencod:a.gencod||'',circuit:a.circuit||'depot',quantite:qty[a.id]}));
@@ -307,28 +415,42 @@ document.getElementById('confirmBtn').addEventListener('click',async()=>{
   if(siege.length){
     const today=new Date().toLocaleDateString('fr-FR');
     const subject=`Commande consommables (siège) — ${curMag.nom} — ${today}`;
-    let body=`Magasin : ${curMag.nom} (${TYPE_LABEL[curMag.type]})\nCode : ${curMag.code}\nDemandeur : ${prenom} ${nom}\nDate : ${today}\n\nArticles à préparer au siège :\n`;
+    let body=`N° commande : ${numero}\nMagasin : ${curMag.nom} (${TYPE_LABEL[curMag.type]})\nCode : ${curMag.code}\nDemandeur : ${prenom} ${nom}\nDate : ${today}\n\nArticles à préparer au siège :\n`;
     siege.forEach(a=>{ body+=`- ${a.libelle} : ${qty[a.id]}\n`; });
+    if(justification) body+=`\nJustification : ${justification}\n`;
     body+=`\nMerci.`;
     const mailto=`mailto:${encodeURIComponent(EMAIL_SIEGE)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     setTimeout(()=>{ window.location.href=mailto; }, depot.length?600:0);
   }
 
+  // mail d'alerte au siège si quantités inhabituelles
+  if(overQty.length){
+    const today=new Date().toLocaleDateString('fr-FR');
+    const subject=`⚠️ ALERTE quantités — ${curMag.nom} — ${today}`;
+    let body=`Alerte : quantités inhabituelles sur la commande ${numero}.\n\nMagasin : ${curMag.nom} (${TYPE_LABEL[curMag.type]})\nDemandeur : ${prenom} ${nom}\nDate : ${today}\n\nArticles concernés :\n`;
+    overQty.forEach(o=>{ body+=`- ${o.lib} : ${o.q} (${o.raison})\n`; });
+    body+=`\nJustification du magasin : ${justification||'(aucune)'}\n`;
+    const mailto=`mailto:${encodeURIComponent(EMAIL_ALERTE)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setTimeout(()=>{ window.location.href=mailto; }, (depot.length?600:0)+(siege.length?1200:600));
+  }
+
   // fermer + réinitialiser (on garde le magasin sélectionné)
   document.getElementById('overlay').classList.remove('show');
-  showDone(depot.length, siege.length);
+  showDone(depot.length, siege.length, numero);
   qty={}; document.getElementById('fNom').value=''; document.getElementById('fPrenom').value=''; document.getElementById('fCheck').checked=false;
+  document.getElementById('fJust').value=''; overQty=[];
+  lastOrder=null; await loadHistory(curMag.code); // recharge l'historique (la nouvelle commande devient la dernière)
   renderCatalogue();  // ré-affiche le catalogue vidé pour le même magasin
 });
 
-function showDone(nDepot,nSiege){
+function showDone(nDepot,nSiege,numero){
   const parts=[];
   if(nDepot) parts.push(`fichier dépôt téléchargé (${nDepot} article·s)`);
   if(nSiege) parts.push(`email siège préparé (${nSiege} article·s)`);
   let msg=document.getElementById('doneMsg');
-  if(!msg){ msg=document.createElement('div'); msg.id='doneMsg'; msg.style.cssText='position:fixed;bottom:74px;left:0;right:0;text-align:center;font-size:13px;color:var(--green);font-weight:700;z-index:55'; document.body.appendChild(msg); }
-  msg.textContent='✓ Commande validée — '+parts.join(' · ');
-  setTimeout(()=>{ if(msg) msg.textContent=''; }, 6000);
+  if(!msg){ msg=document.createElement('div'); msg.id='doneMsg'; msg.style.cssText='position:fixed;bottom:74px;left:0;right:0;text-align:center;font-size:13px;color:var(--green);font-weight:700;z-index:55;padding:0 16px'; document.body.appendChild(msg); }
+  msg.innerHTML=`✓ Commande <b>${numero||''}</b> enregistrée — `+parts.join(' · ');
+  setTimeout(()=>{ if(msg) msg.textContent=''; }, 8000);
 }
 
 init();

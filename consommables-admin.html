@@ -70,6 +70,9 @@
   .gchip.active{background:var(--navy);color:#fff;border-color:var(--navy)}
   .circuit{font-size:12px;color:var(--ink2);font-weight:600;display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap}
   .circuit input{width:15px;height:15px;cursor:pointer;accent-color:var(--navy)}
+  .seuil{font-size:12px;color:var(--ink2);font-weight:600;display:flex;align-items:center;gap:5px;white-space:nowrap}
+  .seuil input{width:62px;padding:5px 7px;border:1px solid var(--line);border-radius:6px;font-size:13px;text-align:center;font-variant-numeric:tabular-nums}
+  .seuil input:focus{outline:none;border-color:var(--navy)}
   .tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid var(--line)}
   .tab{background:none;border:none;padding:10px 18px;font-size:14px;font-weight:700;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px}
   .tab:hover{color:var(--navy)}
@@ -78,6 +81,8 @@
   .vchip{font-size:13px;font-weight:700;padding:7px 15px;border-radius:99px;border:1.5px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer}
   .vchip:hover{border-color:var(--navy);color:var(--navy)}
   .vchip.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .vexport{background:var(--greenbg);color:var(--green);border-color:var(--greenline)}
+  .vexport:hover{background:#d5f0e0;color:var(--green);border-color:var(--green)}
   .suivi-info{font-size:12px;color:var(--ink3);margin-left:auto}
   .suivi-empty{text-align:center;color:var(--ink3);padding:40px;font-size:14px}
   .stbl{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
@@ -141,6 +146,8 @@
       <button class="vchip active" data-vue="hist">Historique</button>
       <button class="vchip" data-vue="totaux">Totaux par magasin</button>
       <button class="vchip" data-vue="abus">Alertes / abus</button>
+      <button class="vchip" data-vue="rythme">Rythme</button>
+      <button class="vchip vexport" id="exportBtn">⬇ Export Excel</button>
       <span class="suivi-info" id="suiviInfo"></span>
     </div>
     <div id="suiviContent"><div class="suivi-empty">Chargement…</div></div>
@@ -205,6 +212,7 @@ function render(){
         <span class="art-lib">${a.libelle}</span>
         <span class="art-prof">${profs}</span>
         <label class="circuit"><input type="checkbox" data-siege="${a.id}" ${siege?'checked':''}> préparé au siège</label>
+        <label class="seuil">Plafond/cmd <input type="number" min="0" data-seuil="${a.id}" value="${a.seuil_alerte!=null?a.seuil_alerte:''}" placeholder="—"></label>
         <span class="tag ${valid?'ok':'ck'}">${valid?'validé':'à vérifier'}</span>
       </div>
       <div class="art-gencod">
@@ -252,6 +260,18 @@ listEl.addEventListener('click',e=>{
 document.addEventListener('mousedown',e=>{
   if(!e.target.closest('.srch')) document.querySelectorAll('.results.show').forEach(b=>b.classList.remove('show'));
 });
+// enregistrer le seuil par article
+listEl.addEventListener('change',e=>{
+  const s=e.target.closest('input[data-seuil]'); if(!s) return;
+  const v=s.value.trim()===''?null:parseInt(s.value,10);
+  setSeuil(s.dataset.seuil, (v!=null && v>=0)?v:null);
+});
+async function setSeuil(id,seuil){
+  const {error}=await sb.from('conso_articles').update({seuil_alerte:seuil}).eq('id',id);
+  if(error){alert('Erreur : '+error.message);return;}
+  const art=ARTS.find(a=>String(a.id)===String(id)); if(art) art.seuil_alerte=seuil;
+  const sv=document.getElementById('saved-'+id); if(sv){sv.classList.add('show'); setTimeout(()=>sv.classList.remove('show'),1500);}
+}
 
 async function setGencod(id,g){
   const statut=g?'ok':'check';
@@ -275,7 +295,7 @@ document.getElementById('groupbar').addEventListener('click',e=>{
 });
 
 // ===== Onglets =====
-let CMDS=null, CMDLIGNES=null;
+let CMDS=null, CMDLIGNES=null, MAGS_ALL=[];
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===t));
   const tab=t.dataset.tab;
@@ -293,17 +313,37 @@ async function loadSuivi(){
     ]);
     if(c.error) throw c.error; if(l.error) throw l.error;
     CMDS=c.data; CMDLIGNES=l.data;
+    if(!MAGS_ALL.length){ const m=await sb.from('conso_magasins').select('*'); if(!m.error) MAGS_ALL=m.data; }
     document.getElementById('suiviInfo').textContent=`${CMDS.length} commande(s) enregistrée(s)`;
     renderSuivi('hist');
   }catch(e){ document.getElementById('suiviContent').innerHTML='<div class="suivi-empty">Erreur : '+e.message+'</div>'; }
 }
 let suiviVue='hist';
 document.querySelector('.suivi-controls').addEventListener('click',e=>{
-  const ch=e.target.closest('.vchip'); if(!ch) return;
+  const ch=e.target.closest('.vchip'); if(!ch || ch.id==='exportBtn') return;
   suiviVue=ch.dataset.vue;
-  document.querySelectorAll('.vchip').forEach(c=>c.classList.toggle('active',c===ch));
+  document.querySelectorAll('.vchip:not(.vexport)').forEach(c=>c.classList.toggle('active',c===ch));
   renderSuivi(suiviVue);
 });
+document.getElementById('exportBtn').addEventListener('click',exportExcel);
+function exportExcel(){
+  if(!CMDS||!CMDS.length){ alert('Aucune commande à exporter.'); return; }
+  const rows=[['N° commande','Date','Magasin','Type','Demandeur','Article','Circuit','Quantité','Gencod','Justification']];
+  const PROFL={R:'Réseau',O:'Outlet',A:'Affilié'};
+  CMDS.forEach(c=>{
+    const d=new Date(c.created_at).toLocaleString('fr-FR');
+    linesOf(c.id).forEach(l=>{
+      rows.push([c.numero||c.id, d, c.mag_nom, PROFL[c.mag_type]||c.mag_type,
+        `${c.demandeur_prenom||''} ${c.demandeur_nom||''}`.trim(), l.libelle,
+        l.circuit==='siege'?'Siège':'Dépôt', l.quantite, l.gencod||'', c.justification||'']);
+    });
+  });
+  const csv=rows.map(r=>r.map(v=>{const s=String(v).replace(/"/g,'""'); return /[;"\n]/.test(s)?`"${s}"`:s;}).join(';')).join('\r\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}); // BOM pour Excel
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='suivi_consommables_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
 function linesOf(cmdId){ return CMDLIGNES.filter(l=>String(l.commande_id)===String(cmdId)); }
 
 function renderSuivi(vue){
@@ -347,6 +387,25 @@ function renderSuivi(vue){
     box.innerHTML=`<div class="suivi-info" style="margin:0 0 10px">Cumul par article × magasin. En rouge : quantités anormalement élevées (top 10%).</div>
       <div class="scrollbox"><table class="stbl"><thead><tr><th>Article</th><th>Magasin</th><th class="num">Cmd</th><th class="num">Qté cumulée</th></tr></thead><tbody>`+
       rows.map(r=>`<tr><td>${r.lib}</td><td>${r.mag}</td><td class="num">${r.n}</td><td class="num ${r.qte>=p90&&r.qte>0?'hot':''}">${r.qte.toLocaleString('fr-FR')}</td></tr>`).join('')+
+      `</tbody></table></div>`;
+  }
+  else if(vue==='rythme'){
+    const byMag={};
+    CMDS.forEach(c=>{ const m=byMag[c.mag_code]=byMag[c.mag_code]||{nom:c.mag_nom,type:c.mag_type,dates:[]}; m.dates.push(new Date(c.created_at)); });
+    const actifs=new Set(Object.keys(byMag));
+    const inactifs=MAGS_ALL.filter(m=>!actifs.has(m.code));
+    const now=new Date();
+    const rows=Object.entries(byMag).map(([code,m])=>{
+      const last=new Date(Math.max(...m.dates.map(d=>d.getTime())));
+      const first=new Date(Math.min(...m.dates.map(d=>d.getTime())));
+      const joursDepuis=Math.floor((now-last)/86400000);
+      const span=Math.max(1,(now-first)/604800000);
+      return {nom:m.nom,type:m.type,n:m.dates.length,last,joursDepuis,parSem:m.dates.length/span};
+    }).sort((a,b)=>b.parSem-a.parSem);
+    box.innerHTML=`<div class="suivi-info" style="margin:0 0 10px">Fréquence de commande. En rouge : plus d'1 commande/semaine (sur-commande possible).</div>
+      <div class="scrollbox"><table class="stbl"><thead><tr><th>Magasin</th><th>Type</th><th class="num">Cmd</th><th class="num">/sem.</th><th class="num">Dernière</th><th class="num">Il y a</th></tr></thead><tbody>`+
+      rows.map(r=>`<tr><td>${r.nom}</td><td>${PROF[r.type]}</td><td class="num">${r.n}</td><td class="num ${r.parSem>1?'hot':''}">${r.parSem.toFixed(1)}</td><td class="num">${r.last.toLocaleDateString('fr-FR')}</td><td class="num">${r.joursDepuis} j</td></tr>`).join('')+
+      (inactifs.length?`<tr><td colspan="6" style="background:var(--warnbg);font-weight:700;color:var(--warn)">${inactifs.length} magasin(s) sans commande : ${inactifs.map(m=>m.nom).join(', ')}</td></tr>`:'')+
       `</tbody></table></div>`;
   }
 }
