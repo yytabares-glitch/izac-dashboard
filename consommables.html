@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Commande consommables — IZAC</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --navy:#0D2750; --navy2:#0C447C; --bg:#EDEFF3; --card:#fff; --line:#E5E9F2; --line2:#EEF1F6;
+    --ink:#263145; --ink2:#5b647a; --ink3:#828a9c; --green:#1f9d57; --greenbg:#e6f6ed; --red:#D64545; --redbg:#FDECEC;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.4}
+  .wrap{max-width:920px;margin:0 auto;padding:18px 18px 120px}
+  .hdr{background:var(--navy);border-radius:10px;padding:16px 22px;display:flex;align-items:center;gap:14px;margin-bottom:16px}
+  .hdr-logo{width:38px;height:38px;background:#1E4D9B;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff}
+  .hdr h1{font-size:19px;font-weight:800;color:#fff}
+  .hdr .sub{font-size:12px;color:rgba(255,255,255,.7);font-weight:600;margin-top:1px}
+  .note{background:#fff;border:1px solid var(--line);border-left:3px solid var(--navy);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--ink2);margin-bottom:16px}
+  .selectbar{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:16px}
+  .selectbar label{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);font-weight:700;margin-bottom:6px}
+  .selectbar select{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:8px;font-size:15px;background:#fff;color:var(--ink)}
+  .selectbar select:focus{outline:none;border-color:var(--navy)}
+  .badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;margin-left:8px}
+  .badge.R{background:#e6eefb;color:var(--navy2)} .badge.O{background:#fdeee0;color:#b8860b} .badge.A{background:var(--greenbg);color:var(--green)}
+  .loading{text-align:center;color:var(--ink2);padding:40px}
+  .loading .sp{width:30px;height:30px;border:3px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .hidden{display:none!important}
+  .cat{margin-top:18px}
+  .cat h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--navy);font-weight:800;padding:0 4px 8px;border-bottom:2px solid var(--navy);margin-bottom:4px}
+  .item{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:11px 14px;margin-top:8px}
+  .item .lib{flex:1;font-size:14px}
+  .item .warn{font-size:11px;color:var(--red);font-weight:600;margin-top:2px}
+  .item .qty{width:88px}
+  .item .qty input{width:100%;padding:9px;border:1px solid var(--line);border-radius:7px;font-size:15px;text-align:center;font-variant-numeric:tabular-nums}
+  .item .qty input:focus{outline:none;border-color:var(--navy)}
+  .item.filled{border-color:var(--navy);background:#f7faff}
+  .footer-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:0 -4px 20px rgba(13,39,80,.06)}
+  .footer-bar .recap{font-size:13px;color:var(--ink2)}
+  .footer-bar .recap b{color:var(--navy);font-size:16px}
+  .btn{background:var(--navy);color:#fff;border:none;border-radius:9px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer}
+  .btn:hover{background:var(--navy2)} .btn:disabled{opacity:.4;cursor:default}
+  .empty{text-align:center;color:var(--ink3);padding:50px 20px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <div class="hdr-logo">IZ</div>
+    <div><h1>Commande consommables</h1><div class="sub">À envoyer le vendredi avant 14h</div></div>
+  </div>
+
+  <div class="note">Sélectionne ton magasin, saisis les quantités souhaitées, puis génère le fichier à transmettre au siège. Livraison sous 6 jours.</div>
+
+  <div class="selectbar">
+    <label>Magasin</label>
+    <select id="magSelect"><option value="">— Choisis ton magasin —</option></select>
+  </div>
+
+  <div id="loading" class="loading hidden"><div class="sp"></div>Chargement du catalogue…</div>
+  <div id="catalogue"></div>
+  <div id="empty" class="empty hidden">Choisis ton magasin pour afficher le catalogue.</div>
+</div>
+
+<div class="footer-bar hidden" id="footerBar">
+  <div class="recap"><b id="recapN">0</b> article(s) · <span id="recapMag">—</span></div>
+  <button class="btn" id="genBtn" disabled>Générer le fichier</button>
+</div>
+
+<script>
+const SUPABASE_URL='https://imurxmsglmpgxdbavalk.supabase.co';
+const SUPABASE_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltdXJ4bXNnbG1wZ3hkYmF2YWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNDg5NDMsImV4cCI6MjA5NTgyNDk0M30.GdmfOH-bG0ivzz8rFr83pZTBOjZecPgX_WXepAiuYo8';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON);
+const TYPE_LABEL={R:'Réseau',O:'Outlet',A:'Affilié'};
+
+let MAGS=[], ARTS=[], curMag=null, qty={};
+
+async function init(){
+  try{
+    const [m,a]=await Promise.all([
+      sb.from('conso_magasins').select('*').order('nom'),
+      sb.from('conso_articles').select('*').order('ordre')
+    ]);
+    if(m.error) throw m.error; if(a.error) throw a.error;
+    MAGS=m.data; ARTS=a.data;
+    const sel=document.getElementById('magSelect');
+    MAGS.forEach(mag=>{
+      const o=document.createElement('option');
+      o.value=mag.code; o.textContent=`${mag.nom} (${TYPE_LABEL[mag.type]})`;
+      sel.appendChild(o);
+    });
+    document.getElementById('empty').classList.remove('hidden');
+  }catch(e){ document.getElementById('empty').classList.remove('hidden'); document.getElementById('empty').textContent='Erreur de chargement : '+e.message; }
+}
+
+document.getElementById('magSelect').addEventListener('change',e=>{
+  const code=e.target.value;
+  curMag=MAGS.find(m=>m.code===code)||null;
+  qty={};
+  if(!curMag){ document.getElementById('catalogue').innerHTML=''; document.getElementById('footerBar').classList.add('hidden'); document.getElementById('empty').classList.remove('hidden'); return; }
+  renderCatalogue();
+});
+
+function renderCatalogue(){
+  document.getElementById('empty').classList.add('hidden');
+  const arts=ARTS.filter(a=>a.profils.split(',').includes(curMag.type));
+  const cats={};
+  arts.forEach(a=>{ (cats[a.categorie]=cats[a.categorie]||[]).push(a); });
+  let html='';
+  Object.keys(cats).forEach(cat=>{
+    html+=`<div class="cat"><h3>${cat}</h3>`;
+    cats[cat].forEach(a=>{
+      const noGencod=!a.gencod;
+      html+=`<div class="item" data-id="${a.id}">
+        <div class="lib">${a.libelle}${noGencod?'<div class="warn">référence non configurée — indisponible</div>':''}</div>
+        <div class="qty"><input type="number" min="0" inputmode="numeric" data-id="${a.id}" ${noGencod?'disabled':''} placeholder="0"></div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  document.getElementById('catalogue').innerHTML=html;
+  document.getElementById('catalogue').querySelectorAll('input[type=number]').forEach(inp=>{
+    inp.addEventListener('input',()=>{
+      const id=inp.dataset.id, v=parseInt(inp.value,10);
+      if(v>0) qty[id]=v; else delete qty[id];
+      inp.closest('.item').classList.toggle('filled',v>0);
+      updateRecap();
+    });
+  });
+  document.getElementById('footerBar').classList.remove('hidden');
+  document.getElementById('recapMag').textContent=curMag.nom+' · '+TYPE_LABEL[curMag.type];
+  updateRecap();
+}
+function updateRecap(){
+  const n=Object.keys(qty).length;
+  document.getElementById('recapN').textContent=n;
+  document.getElementById('genBtn').disabled=n===0;
+}
+
+document.getElementById('genBtn').addEventListener('click',()=>{
+  if(!curMag||!Object.keys(qty).length) return;
+  // TXT Fastmag : gencod \t quantité \t prix \t remise (prix/remise vides)
+  const lines=[];
+  ARTS.forEach(a=>{
+    if(qty[a.id] && a.gencod){
+      lines.push(`${a.gencod}\t${qty[a.id]}\t\t`);
+    }
+  });
+  const txt=lines.join('\r\n')+'\r\n';
+  const fname=curMag.fastmag.replace(/[^A-Za-z0-9_-]/g,'_')+'.txt';
+  const blob=new Blob([txt],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=fname; a.click();
+  URL.revokeObjectURL(url);
+});
+
+init();
+</script>
+</body>
+</html>
