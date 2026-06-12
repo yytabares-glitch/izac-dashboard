@@ -65,6 +65,26 @@
   .saved.show{opacity:1}
   .groupbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px}
   .groupbar .gl{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);font-weight:700;margin-right:2px}
+  .showoff{font-size:12px;color:var(--ink2);font-weight:600;display:flex;align-items:center;gap:5px;cursor:pointer;margin-left:8px}
+  .showoff input{width:15px;height:15px;accent-color:var(--navy);cursor:pointer}
+  .btn-add{margin-left:auto;background:var(--navy);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer}
+  .btn-add:hover{background:var(--navy2)}
+  .addform{background:#fff;border:1.5px solid var(--navy);border-radius:10px;padding:16px 18px;margin-bottom:16px}
+  .af-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+  .af-row:last-child{margin-bottom:0}
+  .af-row input[type=text]{flex:1;min-width:180px;padding:9px 12px;border:1px solid var(--line);border-radius:7px;font-size:14px}
+  .af-row input[type=text]:focus{outline:none;border-color:var(--navy)}
+  .af-lab{font-size:12px;color:var(--ink3);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+  .af-grp{font-size:13px;color:var(--ink2);font-weight:600;display:flex;align-items:center;gap:5px;cursor:pointer}
+  .af-grp input{width:16px;height:16px;accent-color:var(--navy);cursor:pointer}
+  .art.inactif{opacity:.5;background:var(--line2)}
+  .btn-off{background:#fbe9e4;color:var(--red)}
+  .btn-on{background:var(--greenbg);color:var(--green)}
+  .edit-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+  .edit-row input[type=text]{flex:1;min-width:160px;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-size:13px}
+  .edit-row input[type=text]:focus{outline:none;border-color:var(--navy)}
+  .edit-row .eg{font-size:12px;color:var(--ink2);font-weight:600;display:flex;align-items:center;gap:4px;cursor:pointer}
+  .edit-row .eg input{width:15px;height:15px;accent-color:var(--navy)}
   .gchip{font-size:13px;font-weight:700;padding:7px 16px;border-radius:99px;border:1.5px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer;transition:.12s}
   .gchip:hover{border-color:var(--navy);color:var(--navy)}
   .gchip.active{background:var(--navy);color:#fff;border-color:var(--navy)}
@@ -136,6 +156,24 @@
     <button class="gchip" data-grp="R">Réseau</button>
     <button class="gchip" data-grp="O">Outlet</button>
     <button class="gchip" data-grp="A">Affilié</button>
+    <label class="showoff"><input type="checkbox" id="showInactifs"> afficher les désactivés</label>
+    <button class="btn-add" id="addBtn">+ Ajouter une référence</button>
+  </div>
+
+  <div id="addForm" class="addform hidden">
+    <div class="af-row">
+      <input type="text" id="afLib" placeholder="Nom de l'article (ex. Sac petit modèle)">
+      <input type="text" id="afCat" placeholder="Catégorie (ex. Sacherie)" list="catList">
+      <datalist id="catList"></datalist>
+    </div>
+    <div class="af-row">
+      <span class="af-lab">Groupes :</span>
+      <label class="af-grp"><input type="checkbox" id="afR" checked> Réseau</label>
+      <label class="af-grp"><input type="checkbox" id="afO"> Outlet</label>
+      <label class="af-grp"><input type="checkbox" id="afA"> Affilié</label>
+      <button class="btn-add" id="afSave">Créer</button>
+      <button class="btn-sm btn-clear" id="afCancel">Annuler</button>
+    </div>
   </div>
 
   <div id="list"></div>
@@ -189,11 +227,18 @@ async function loadArts(){
   if(error){document.getElementById('list').innerHTML='Erreur : '+error.message;return;}
   ARTS=data; render();
 }
-let groupFilter='ALL';
+let groupFilter='ALL', showInactifs=false;
 const PROF={R:'Réseau',O:'Outlet',A:'Affilié'};
 
+function visibleArts(){
+  return ARTS.filter(a=>{
+    if(!showInactifs && a.actif===false) return false;
+    if(groupFilter!=='ALL' && !a.profils.split(',').includes(groupFilter)) return false;
+    return true;
+  });
+}
 function updateCounters(){
-  const shown=ARTS.filter(a=>groupFilter==='ALL'||a.profils.split(',').includes(groupFilter));
+  const shown=visibleArts();
   const ok=shown.filter(a=>a.gencod && a.statut==='ok').length;
   document.getElementById('nOk').textContent=ok;
   document.getElementById('nCheck').textContent=shown.length-ok;
@@ -201,12 +246,13 @@ function updateCounters(){
 }
 function render(){
   updateCounters();
-  const shown=ARTS.filter(a=>groupFilter==='ALL'||a.profils.split(',').includes(groupFilter));
+  const shown=visibleArts();
   document.getElementById('list').innerHTML=shown.map(a=>{
     const valid=a.gencod && a.statut==='ok';
     const profs=a.profils.split(',').map(p=>PROF[p]).join(' · ');
     const siege=a.circuit==='siege';
-    return `<div class="art ${valid?'ok':'check'}" data-id="${a.id}">
+    const inactif=a.actif===false;
+    return `<div class="art ${inactif?'inactif':(valid?'ok':'check')}" data-id="${a.id}">
       <div class="art-head">
         <span class="art-cat">${a.categorie}</span>
         <span class="art-lib">${a.libelle}</span>
@@ -221,12 +267,26 @@ function render(){
           <input type="text" placeholder="Rechercher un article (nom, réf, gencod)…" data-search="${a.id}">
           <div class="results" id="res-${a.id}"></div>
         </div>
-        ${valid?`<button class="btn-sm btn-edit" data-edit="${a.id}">Modifier</button>`:''}
+        ${valid?`<button class="btn-sm btn-edit" data-editgc="${a.id}">Changer gencod</button>`:''}
         ${a.gencod?`<button class="btn-sm btn-clear" data-clear="${a.id}">Vider</button>`:''}
+        <button class="btn-sm btn-edit" data-editart="${a.id}">Modifier l'article</button>
+        <button class="btn-sm ${inactif?'btn-on':'btn-off'}" data-toggle="${a.id}">${inactif?'Réactiver':'Désactiver'}</button>
         <span class="saved" id="saved-${a.id}">enregistré ✓</span>
+      </div>
+      <div class="edit-row hidden" id="edit-${a.id}">
+        <input type="text" data-elib="${a.id}" value="${a.libelle.replace(/"/g,'&quot;')}" placeholder="Nom">
+        <input type="text" data-ecat="${a.id}" value="${a.categorie.replace(/"/g,'&quot;')}" placeholder="Catégorie" list="catList">
+        <label class="eg"><input type="checkbox" data-eg="${a.id}" value="R" ${a.profils.includes('R')?'checked':''}> R</label>
+        <label class="eg"><input type="checkbox" data-eg="${a.id}" value="O" ${a.profils.includes('O')?'checked':''}> O</label>
+        <label class="eg"><input type="checkbox" data-eg="${a.id}" value="A" ${a.profils.includes('A')?'checked':''}> A</label>
+        <button class="btn-sm btn-add" data-esave="${a.id}">Enregistrer</button>
+        <button class="btn-sm btn-clear" data-ecancel="${a.id}">Annuler</button>
       </div>
     </div>`;
   }).join('');
+  // remplir la datalist des catégories
+  const cats=[...new Set(ARTS.map(a=>a.categorie))];
+  const dl=document.getElementById('catList'); if(dl) dl.innerHTML=cats.map(c=>`<option value="${c}">`).join('');
 }
 
 // ---- délégation d'événements (robuste, survit aux re-render) ----
@@ -250,11 +310,24 @@ listEl.addEventListener('mousedown',e=>{
 listEl.addEventListener('click',e=>{
   const clr=e.target.closest('[data-clear]'); if(clr){ setGencod(clr.dataset.clear,''); return; }
   const cb=e.target.closest('input[data-siege]'); if(cb){ setCircuit(cb.dataset.siege, cb.checked?'siege':'depot'); return; }
-  const ed=e.target.closest('[data-edit]'); if(ed){
-    const s=document.getElementById('srch-'+ed.dataset.edit);
+  const ed=e.target.closest('[data-editgc]'); if(ed){
+    const s=document.getElementById('srch-'+ed.dataset.editgc);
     if(s){ s.style.display=''; const i=s.querySelector('input'); if(i){i.value='';i.focus();} }
-    ed.remove();
+    ed.remove(); return;
   }
+  // ouvrir l'édition de l'article
+  const ea=e.target.closest('[data-editart]'); if(ea){
+    const row=document.getElementById('edit-'+ea.dataset.editart);
+    if(row) row.classList.toggle('hidden'); return;
+  }
+  // annuler l'édition
+  const ec=e.target.closest('[data-ecancel]'); if(ec){
+    const row=document.getElementById('edit-'+ec.dataset.ecancel); if(row) row.classList.add('hidden'); return;
+  }
+  // enregistrer l'édition
+  const es=e.target.closest('[data-esave]'); if(es){ saveArticle(es.dataset.esave); return; }
+  // désactiver / réactiver
+  const tg=e.target.closest('[data-toggle]'); if(tg){ toggleActif(tg.dataset.toggle); return; }
 });
 // fermer les listes en cliquant ailleurs
 document.addEventListener('mousedown',e=>{
@@ -272,6 +345,46 @@ async function setSeuil(id,seuil){
   const art=ARTS.find(a=>String(a.id)===String(id)); if(art) art.seuil_alerte=seuil;
   const sv=document.getElementById('saved-'+id); if(sv){sv.classList.add('show'); setTimeout(()=>sv.classList.remove('show'),1500);}
 }
+
+async function saveArticle(id){
+  const lib=document.querySelector(`[data-elib="${id}"]`).value.trim();
+  const cat=document.querySelector(`[data-ecat="${id}"]`).value.trim();
+  const grps=[...document.querySelectorAll(`[data-eg="${id}"]:checked`)].map(c=>c.value);
+  if(!lib){ alert('Le nom ne peut pas être vide.'); return; }
+  if(!grps.length){ alert('Sélectionne au moins un groupe (R/O/A).'); return; }
+  const profils=grps.join(',');
+  const {error}=await sb.from('conso_articles').update({libelle:lib,categorie:cat||'Divers',profils}).eq('id',id);
+  if(error){ alert('Erreur : '+error.message); return; }
+  const art=ARTS.find(a=>String(a.id)===String(id)); if(art){art.libelle=lib;art.categorie=cat||'Divers';art.profils=profils;}
+  render();
+}
+async function toggleActif(id){
+  const art=ARTS.find(a=>String(a.id)===String(id)); if(!art) return;
+  const next=!(art.actif===false)?false:true; // si actif -> false, sinon -> true
+  const {error}=await sb.from('conso_articles').update({actif:next}).eq('id',id);
+  if(error){ alert('Erreur : '+error.message); return; }
+  art.actif=next; render();
+}
+async function addArticle(){
+  const lib=document.getElementById('afLib').value.trim();
+  const cat=document.getElementById('afCat').value.trim()||'Divers';
+  const grps=['R','O','A'].filter(g=>document.getElementById('af'+g).checked);
+  if(!lib){ alert('Donne un nom à l\'article.'); return; }
+  if(!grps.length){ alert('Sélectionne au moins un groupe.'); return; }
+  const maxOrdre=Math.max(0,...ARTS.map(a=>a.ordre||0));
+  const {data,error}=await sb.from('conso_articles')
+    .insert({ordre:maxOrdre+1,categorie:cat,libelle:lib,gencod:'',statut:'check',profils:grps.join(','),circuit:'depot',actif:true})
+    .select().single();
+  if(error){ alert('Erreur : '+error.message); return; }
+  ARTS.push(data);
+  document.getElementById('afLib').value=''; document.getElementById('afCat').value='';
+  document.getElementById('addForm').classList.add('hidden');
+  render();
+}
+document.getElementById('addBtn').addEventListener('click',()=>document.getElementById('addForm').classList.toggle('hidden'));
+document.getElementById('afCancel').addEventListener('click',()=>document.getElementById('addForm').classList.add('hidden'));
+document.getElementById('afSave').addEventListener('click',addArticle);
+document.getElementById('showInactifs').addEventListener('change',e=>{ showInactifs=e.target.checked; render(); });
 
 async function setGencod(id,g){
   const statut=g?'ok':'check';

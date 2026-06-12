@@ -261,7 +261,7 @@ async function loadHistory(code){
 }
 
 function renderCatalogue(){
-  const arts=ARTS.filter(a=>a.profils.split(',').includes(curMag.type));
+  const arts=ARTS.filter(a=>a.actif!==false && a.profils.split(',').includes(curMag.type));
   const cats={};
   arts.forEach(a=>{ (cats[a.categorie]=cats[a.categorie]||[]).push(a); });
   let html='';
