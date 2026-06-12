@@ -112,10 +112,11 @@ function renderCatalogue(){
   Object.keys(cats).forEach(cat=>{
     html+=`<div class="cat"><h3>${cat}</h3>`;
     cats[cat].forEach(a=>{
-      const noGencod=!a.gencod;
+      const isSiege=(a.circuit||'depot')==='siege';
+      const indispo=!isSiege && !a.gencod;
       html+=`<div class="item" data-id="${a.id}">
-        <div class="lib">${a.libelle}${noGencod?'<div class="warn">référence non configurée — indisponible</div>':''}</div>
-        <div class="qty"><input type="number" min="0" inputmode="numeric" data-id="${a.id}" ${noGencod?'disabled':''} placeholder="0"></div>
+        <div class="lib">${a.libelle}${indispo?'<div class="warn">référence non configurée — indisponible</div>':''}</div>
+        <div class="qty"><input type="number" min="0" inputmode="numeric" data-id="${a.id}" ${indispo?'disabled':''} placeholder="0"></div>
       </div>`;
     });
     html+='</div>';
@@ -139,22 +140,55 @@ function updateRecap(){
   document.getElementById('genBtn').disabled=n===0;
 }
 
+// adresse mail destinataire des commandes préparées au siège (à remplacer)
+const EMAIL_SIEGE='ADRESSE_A_DEFINIR@izac.fr';
+
 document.getElementById('genBtn').addEventListener('click',()=>{
   if(!curMag||!Object.keys(qty).length) return;
-  // TXT Fastmag : gencod \t quantité \t prix \t remise (prix/remise vides)
-  const lines=[];
+  const depot=[], siege=[];
   ARTS.forEach(a=>{
-    if(qty[a.id] && a.gencod){
-      lines.push(`${a.gencod}\t${qty[a.id]}\t\t`);
-    }
+    if(!qty[a.id]) return;
+    if((a.circuit||'depot')==='siege') siege.push(a);
+    else if(a.gencod) depot.push(a);   // dépôt = doit avoir un gencod
   });
-  const txt=lines.join('\r\n')+'\r\n';
-  const fname=curMag.fastmag.replace(/[^A-Za-z0-9_-]/g,'_')+'.txt';
-  const blob=new Blob([txt],{type:'text/plain;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a'); a.href=url; a.download=fname; a.click();
-  URL.revokeObjectURL(url);
+
+  // 1) TXT Fastmag pour les articles dépôt
+  if(depot.length){
+    const lines=depot.map(a=>`${a.gencod}\t${qty[a.id]}\t\t`);
+    const txt=lines.join('\r\n')+'\r\n';
+    const fname=curMag.fastmag.replace(/[^A-Za-z0-9_-]/g,'_')+'.txt';
+    const blob=new Blob([txt],{type:'text/plain;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download=fname; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // 2) Mail pré-rempli pour les articles siège
+  if(siege.length){
+    const today=new Date().toLocaleDateString('fr-FR');
+    const subject=`Commande consommables (siège) — ${curMag.nom} — ${today}`;
+    let body=`Magasin : ${curMag.nom} (${TYPE_LABEL[curMag.type]})\nCode : ${curMag.code}\nDate : ${today}\n\nArticles à préparer au siège :\n`;
+    siege.forEach(a=>{ body+=`- ${a.libelle} : ${qty[a.id]}\n`; });
+    body+=`\nMerci.`;
+    const mailto=`mailto:${encodeURIComponent(EMAIL_SIEGE)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    // léger délai pour ne pas bloquer le téléchargement du TXT
+    setTimeout(()=>{ window.location.href=mailto; }, depot.length?600:0);
+  }
+
+  // message récap
+  showDone(depot.length, siege.length);
 });
+
+function showDone(nDepot,nSiege){
+  const parts=[];
+  if(nDepot) parts.push(`fichier dépôt téléchargé (${nDepot} article·s)`);
+  if(nSiege) parts.push(`email siège préparé (${nSiege} article·s)`);
+  const bar=document.getElementById('footerBar');
+  let msg=document.getElementById('doneMsg');
+  if(!msg){ msg=document.createElement('div'); msg.id='doneMsg'; msg.style.cssText='position:fixed;bottom:74px;left:0;right:0;text-align:center;font-size:13px;color:var(--green);font-weight:700'; document.body.appendChild(msg); }
+  msg.textContent='✓ '+parts.join(' · ');
+  setTimeout(()=>{ if(msg) msg.textContent=''; }, 5000);
+}
 
 init();
 </script>

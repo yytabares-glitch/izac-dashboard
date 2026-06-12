@@ -62,6 +62,13 @@
   .btn-clear{background:var(--line2);color:var(--ink2)}
   .saved{font-size:12px;color:var(--green);font-weight:700;opacity:0;transition:opacity .2s}
   .saved.show{opacity:1}
+  .groupbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .groupbar .gl{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);font-weight:700;margin-right:2px}
+  .gchip{font-size:13px;font-weight:700;padding:7px 16px;border-radius:99px;border:1.5px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer;transition:.12s}
+  .gchip:hover{border-color:var(--navy);color:var(--navy)}
+  .gchip.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .circuit{font-size:12px;color:var(--ink2);font-weight:600;display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap}
+  .circuit input{width:15px;height:15px;cursor:pointer;accent-color:var(--navy)}
 </style>
 </head>
 <body>
@@ -87,6 +94,14 @@
     <div class="pill ok">Validés <b id="nOk">0</b></div>
     <div class="pill ck">À vérifier <b id="nCheck">0</b></div>
     <div class="pill">Total <b id="nTot">0</b></div>
+  </div>
+
+  <div class="groupbar" id="groupbar">
+    <span class="gl">Groupe :</span>
+    <button class="gchip active" data-grp="ALL">Tout</button>
+    <button class="gchip" data-grp="R">Réseau</button>
+    <button class="gchip" data-grp="O">Outlet</button>
+    <button class="gchip" data-grp="A">Affilié</button>
   </div>
 
   <div id="list"></div>
@@ -127,27 +142,35 @@ async function loadArts(){
   if(error){document.getElementById('list').innerHTML='Erreur : '+error.message;return;}
   ARTS=data; render();
 }
-function render(){
-  const ok=ARTS.filter(a=>a.gencod && a.statut==='ok').length;
-  const tot=ARTS.length;
+let groupFilter='ALL';
+const PROF={R:'Réseau',O:'Outlet',A:'Affilié'};
+
+function updateCounters(){
+  const shown=ARTS.filter(a=>groupFilter==='ALL'||a.profils.split(',').includes(groupFilter));
+  const ok=shown.filter(a=>a.gencod && a.statut==='ok').length;
   document.getElementById('nOk').textContent=ok;
-  document.getElementById('nCheck').textContent=tot-ok;
-  document.getElementById('nTot').textContent=tot;
-  const PROF={R:'Réseau',O:'Outlet',A:'Affilié'};
-  document.getElementById('list').innerHTML=ARTS.map(a=>{
+  document.getElementById('nCheck').textContent=shown.length-ok;
+  document.getElementById('nTot').textContent=shown.length;
+}
+function render(){
+  updateCounters();
+  const shown=ARTS.filter(a=>groupFilter==='ALL'||a.profils.split(',').includes(groupFilter));
+  document.getElementById('list').innerHTML=shown.map(a=>{
     const valid=a.gencod && a.statut==='ok';
     const profs=a.profils.split(',').map(p=>PROF[p]).join(' · ');
+    const siege=a.circuit==='siege';
     return `<div class="art ${valid?'ok':'check'}" data-id="${a.id}">
       <div class="art-head">
         <span class="art-cat">${a.categorie}</span>
         <span class="art-lib">${a.libelle}</span>
         <span class="art-prof">${profs}</span>
+        <label class="circuit"><input type="checkbox" data-siege="${a.id}" ${siege?'checked':''}> préparé au siège</label>
         <span class="tag ${valid?'ok':'ck'}">${valid?'validé':'à vérifier'}</span>
       </div>
       <div class="art-gencod">
         <span class="cur ${a.gencod?'':'empty'}" id="cur-${a.id}">${a.gencod||'aucun gencod'}</span>
         <div class="srch">
-          <input type="text" placeholder="Rechercher un article (nom, réf, gencod)…" data-id="${a.id}">
+          <input type="text" placeholder="Rechercher un article (nom, réf, gencod)…" data-search="${a.id}">
           <div class="results" id="res-${a.id}"></div>
         </div>
         ${a.gencod?`<button class="btn-sm btn-clear" data-clear="${a.id}">Vider</button>`:''}
@@ -155,43 +178,67 @@ function render(){
       </div>
     </div>`;
   }).join('');
-  attach();
 }
-function attach(){
-  document.querySelectorAll('.srch input').forEach(inp=>{
-    inp.addEventListener('input',()=>{
-      const id=inp.dataset.id, q=inp.value.trim().toLowerCase();
-      const box=document.getElementById('res-'+id);
-      if(q.length<2){box.classList.remove('show');return;}
-      const hits=REF.filter(r=>(r.g+' '+r.r+' '+r.l+' '+r.v).toLowerCase().includes(q)).slice(0,30);
-      box.innerHTML=hits.map(r=>`<div class="res" data-id="${id}" data-g="${r.g}"><span class="g">${r.g}</span> · ${r.l} <span class="v">${r.v||''}</span> <span class="v">[${r.r}]</span></div>`).join('')||'<div class="res">aucun résultat</div>';
-      box.classList.add('show');
-    });
-    inp.addEventListener('blur',()=>setTimeout(()=>document.getElementById('res-'+inp.dataset.id).classList.remove('show'),200));
-  });
-  document.querySelectorAll('.res[data-g]').forEach(el=>{
-    el.addEventListener('mousedown',e=>{e.preventDefault();setGencod(el.dataset.id,el.dataset.g);});
-  });
-  document.querySelectorAll('[data-clear]').forEach(b=>{
-    b.addEventListener('click',()=>setGencod(b.dataset.clear,''));
-  });
-}
+
+// ---- délégation d'événements (robuste, survit aux re-render) ----
+const listEl=document.getElementById('list');
+listEl.addEventListener('input',e=>{
+  const inp=e.target.closest('input[data-search]'); if(!inp) return;
+  const id=inp.dataset.search, q=inp.value.trim().toLowerCase();
+  const box=document.getElementById('res-'+id);
+  if(q.length<2){box.classList.remove('show');return;}
+  const hits=REF.filter(r=>(r.g+' '+r.r+' '+r.l+' '+r.v).toLowerCase().includes(q)).slice(0,30);
+  box.innerHTML=hits.map(r=>`<div class="res" data-pick="${id}" data-g="${r.g}"><span class="g">${r.g}</span> · ${r.l} <span class="v">${r.v||''}</span> <span class="v">[${r.r}]</span></div>`).join('')||'<div class="res" style="color:var(--ink3)">aucun résultat</div>';
+  box.classList.add('show');
+});
+// mousedown sur résultat = AVANT le blur, donc validation fiable
+listEl.addEventListener('mousedown',e=>{
+  const res=e.target.closest('.res[data-g]'); if(!res) return;
+  e.preventDefault();
+  setGencod(res.dataset.pick, res.dataset.g);
+  const box=document.getElementById('res-'+res.dataset.pick); if(box) box.classList.remove('show');
+});
+listEl.addEventListener('click',e=>{
+  const clr=e.target.closest('[data-clear]'); if(clr){ setGencod(clr.dataset.clear,''); return; }
+  const cb=e.target.closest('input[data-siege]'); if(cb){ setCircuit(cb.dataset.siege, cb.checked?'siege':'depot'); }
+});
+// fermer les listes en cliquant ailleurs
+document.addEventListener('mousedown',e=>{
+  if(!e.target.closest('.srch')) document.querySelectorAll('.results.show').forEach(b=>b.classList.remove('show'));
+});
+
 async function setGencod(id,g){
   const statut=g?'ok':'check';
   const {error}=await sb.from('conso_articles').update({gencod:g,statut}).eq('id',id);
   if(error){alert('Erreur : '+error.message);return;}
   const art=ARTS.find(a=>String(a.id)===String(id)); if(art){art.gencod=g;art.statut=statut;}
   const cur=document.getElementById('cur-'+id);
-  cur.textContent=g||'aucun gencod'; cur.classList.toggle('empty',!g);
-  const sv=document.getElementById('saved-'+id); sv.classList.add('show'); setTimeout(()=>sv.classList.remove('show'),1500);
-  // maj compteurs + statut visuel
-  const ok=ARTS.filter(a=>a.gencod&&a.statut==='ok').length;
-  document.getElementById('nOk').textContent=ok;
-  document.getElementById('nCheck').textContent=ARTS.length-ok;
+  if(cur){cur.textContent=g||'aucun gencod'; cur.classList.toggle('empty',!g);}
+  const sv=document.getElementById('saved-'+id); if(sv){sv.classList.add('show'); setTimeout(()=>sv.classList.remove('show'),1500);}
+  updateCounters();
   const card=document.querySelector(`.art[data-id="${id}"]`);
   if(card){ card.classList.toggle('ok',!!g); card.classList.toggle('check',!g);
-    const tag=card.querySelector('.tag'); tag.textContent=g?'validé':'à vérifier'; tag.className='tag '+(g?'ok':'ck'); }
+    const tag=card.querySelector('.tag'); tag.textContent=g?'validé':'à vérifier'; tag.className='tag '+(g?'ok':'ck');
+    // ajouter le bouton vider s'il n'existe pas
+    if(g && !card.querySelector('[data-clear]')){
+      const sv2=card.querySelector('.saved');
+      const btn=document.createElement('button'); btn.className='btn-sm btn-clear'; btn.dataset.clear=id; btn.textContent='Vider';
+      sv2.parentNode.insertBefore(btn,sv2);
+    } else if(!g){ const b=card.querySelector('[data-clear]'); if(b) b.remove(); }
+  }
 }
+async function setCircuit(id,circuit){
+  const {error}=await sb.from('conso_articles').update({circuit}).eq('id',id);
+  if(error){alert('Erreur : '+error.message);return;}
+  const art=ARTS.find(a=>String(a.id)===String(id)); if(art) art.circuit=circuit;
+}
+
+document.getElementById('groupbar').addEventListener('click',e=>{
+  const ch=e.target.closest('.gchip'); if(!ch) return;
+  groupFilter=ch.dataset.grp;
+  document.querySelectorAll('#groupbar .gchip').forEach(c=>c.classList.toggle('active',c===ch));
+  render();
+});
 </script>
 </body>
 </html>
