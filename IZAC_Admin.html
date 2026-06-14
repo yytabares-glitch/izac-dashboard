@@ -113,6 +113,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
 .bar-track{flex:1;background:rgba(38,49,69,.06);border-radius:6px;height:18px;position:relative;overflow:hidden;min-width:60px}
 .bar-fill{position:absolute;left:0;top:0;bottom:0;background:#263145;border-radius:6px;transition:width .3s}
 .bar-val{font-size:11px;color:#5b647a;width:34px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums;font-weight:600}
+.back-hub{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.75);text-decoration:none;font-weight:600;position:relative;z-index:1;margin-right:14px}
+.back-hub:hover{color:#fff}
 @media (max-width:760px){
   .admin-wrap{padding:16px 13px 40px}
   .hdr{padding:15px 17px;border-radius:14px;margin-bottom:16px}
@@ -138,17 +140,17 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
 <div class="login-wrap" id="login-wrap">
   <div class="login-box">
     <div class="login-logo">IZ</div>
-    <div class="login-sub">Pilotage des messages en temps réel</div>
-    <input type="email" class="form-input" id="email" placeholder="Email" onkeypress="if(event.key==='Enter')login()">
-    <input type="password" class="form-input" id="pwd" placeholder="Mot de passe" onkeypress="if(event.key==='Enter')login()">
+    <div class="login-sub">Pilotage des messages — accès réservé</div>
+    <input type="password" inputmode="numeric" class="form-input" id="pin" placeholder="Code PIN" style="text-align:center;letter-spacing:.3em" onkeypress="if(event.key==='Enter')login()">
     <button class="btn-primary" onclick="login()">Accéder →</button>
-    <div class="login-err" id="login-err">Email ou mot de passe incorrect</div>
+    <div class="login-err" id="login-err">Code incorrect</div>
   </div>
 </div>
 
 <div class="admin-wrap" id="admin-wrap">
   <div class="hdr">
     <div class="hdr-left">
+      <a href="index.html" class="back-hub">← Portail</a>
       <div class="hdr-logo">IZ</div>
       <div>
         <div class="hdr-title">IZAC — Pilotage Messages Boutiques</div>
@@ -294,12 +296,7 @@ const SUPA_URL = 'https://imurxmsglmpgxdbavalk.supabase.co';
 const SUPA_KEY = 'sb_publishable_-FqQ5I6tx4rCUwUqmsf5DA_IFsfkUlQ';
 const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 
-// ── EMAILJS (MODE TEST) ──────────────────────────────────────────────
-// 1. Compte gratuit sur emailjs.com
-// 2. Email Services > connecte Gmail  ->  copie le SERVICE ID
-// 3. Email Templates > crée le template (voir instructions)  ->  copie le TEMPLATE ID
-// 4. Account > General  ->  copie ta PUBLIC KEY
-// 5. Colle les 3 valeurs ci-dessous entre les apostrophes :
+// ── EMAILJS (MODE TEST) ──
 const EMAILJS_PUBLIC_KEY  = 'VGbb67VPHO3Pv4awa';
 const EMAILJS_SERVICE_ID  = 'service_a47v05p';
 const EMAILJS_TEMPLATE_ID = 'template_4xqfzyt';
@@ -307,9 +304,6 @@ const EMAIL_TEST          = 'tabares.yendi@icloud.com';
 if (window.emailjs && !EMAILJS_PUBLIC_KEY.startsWith('COLLE')) {
   emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 }
-
-
-
 
 const REGIONS = [
   {nom:'Paris Ouest',  bouts:['A13','BELLE EPINE','CAEN','CRETEIL','DEAUVILLE','GIVERNY','LA DEFENSE','MONTPARNASSE','ORLEANS','PARLY 2','ROUEN','ST DENIS','ST QUENTIN','VELIZY','VILLENEUVE']},
@@ -328,54 +322,59 @@ let selMags = [];
 let messages = [];
 let ghSha = null;
 
-// ── AUTH ─────────────────────────────────────────────────────────────
+// ── AUTH PAR PIN (même système que consommables / transport) ──
+async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
 async function login() {
-  const email = document.getElementById('email').value.trim();
-  const pwd = document.getElementById('pwd').value;
-  const { error } = await sb.auth.signInWithPassword({ email, password: pwd });
-  if (error) {
-    document.getElementById('login-err').style.display = 'block';
-    document.getElementById('pwd').value = '';
-    return;
-  }
-  document.getElementById('login-err').style.display = 'none';
-  document.getElementById('login-wrap').style.display = 'none';
-  document.getElementById('admin-wrap').style.display = 'block';
-  initAdmin();
+  const pin = (document.getElementById('pin').value||'').trim();
+  const err = document.getElementById('login-err');
+  if(!pin){ err.textContent='Entre le code PIN.'; err.style.display='block'; return; }
+  try{
+    const hash = await sha256(pin);
+    const { data, error } = await sb.rpc('conso_login', { p_hash: hash });
+    if(error){ err.textContent='Erreur de connexion.'; err.style.display='block'; return; }
+    if(data && data.ok){
+      err.style.display='none';
+      document.getElementById('login-wrap').style.display='none';
+      document.getElementById('admin-wrap').style.display='block';
+      initAdmin();
+      return;
+    }
+    if(data && data.locked) err.textContent='Trop d\'essais. Réessaie dans '+(data.wait||15)+' min.';
+    else if(data && typeof data.left==='number') err.textContent='Code incorrect — '+data.left+' essai(s) restant(s).';
+    else err.textContent='Code incorrect.';
+    err.style.display='block';
+    document.getElementById('pin').value='';
+  }catch(e){ err.textContent='Erreur : '+(e.message||e); err.style.display='block'; }
 }
 function logout() {
-  sb.auth.signOut();
   document.getElementById('login-wrap').style.display = 'flex';
   document.getElementById('admin-wrap').style.display = 'none';
+  document.getElementById('pin').value='';
 }
 
-// ── SUPABASE DATA ────────────────────────────────────────────────────
+// ── SUPABASE DATA ──
 async function chargerMessages() {
   const { data, error } = await sb.from('messages').select('*').order('id', { ascending: false });
   if (error) return [];
   return data || [];
 }
 
-// ── INIT ─────────────────────────────────────────────────────────────
+// ── INIT ──
 async function initAdmin() {
-  // Dates par défaut
   const t = new Date(), f = new Date();
   f.setDate(f.getDate() + 7);
   document.getElementById('msg-debut').value = t.toISOString().split('T')[0];
   document.getElementById('msg-fin').value   = f.toISOString().split('T')[0];
 
-  // Régions
   document.getElementById('reg-list').innerHTML = REGIONS.map(r =>
     `<button class="region-btn" onclick="toggleReg(this,'${r.nom}')">${r.nom} <span style="font-size:10px;color:#9CA3AF">${r.bouts.length} boutiques</span></button>`
   ).join('');
 
-  // Boutiques
   const allB = REGIONS.flatMap(r => r.bouts);
   document.getElementById('mag-list').innerHTML = allB.map(m =>
     `<button class="mag-btn" onclick="toggleMag(this,'${m}')">${m}</button>`
   ).join('');
 
-  // Charger depuis Supabase
   showStatus('Synchronisation...', 'loading');
   try {
     messages = await chargerMessages();
@@ -387,12 +386,11 @@ async function initAdmin() {
   }
 }
 
-// ── FORM ─────────────────────────────────────────────────────────────
+// ── FORM ──
 function selectEmoji(btn, e) {
   document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected'); emoji = e; updatePreview();
 }
-
 function setCible(mode, btn) {
   cibleMode = mode;
   document.querySelectorAll('.cible-tab').forEach(b => b.classList.remove('active'));
@@ -404,13 +402,11 @@ function setCible(mode, btn) {
   });
   updatePreview();
 }
-
 function toggleReg(btn, reg) {
   btn.classList.toggle('selected');
   selRegions = selRegions.includes(reg) ? selRegions.filter(r=>r!==reg) : [...selRegions, reg];
   updatePreview();
 }
-
 function toggleMag(btn, mag) {
   btn.classList.toggle('selected');
   selMags = selMags.includes(mag) ? selMags.filter(m=>m!==mag) : [...selMags, mag];
@@ -419,7 +415,6 @@ function toggleMag(btn, mag) {
   el.textContent = selMags.length + ' boutique(s) sélectionnée(s)';
   updatePreview();
 }
-
 function selectAll() {
   const btns = document.querySelectorAll('.mag-btn');
   const all = selMags.length === btns.length;
@@ -430,7 +425,6 @@ function selectAll() {
   if (selMags.length) el.textContent = selMags.length + ' boutique(s) sélectionnée(s)';
   updatePreview();
 }
-
 function updatePreview() {
   const titre = document.getElementById('msg-titre').value || 'Titre...';
   const texte = document.getElementById('msg-texte').value || 'Message...';
@@ -440,7 +434,6 @@ function updatePreview() {
   document.getElementById('preview-text').innerHTML =
     '<strong>' + emoji + ' ' + titre + '</strong><br>' + texte + '<br><br><span style="font-size:11px;color:#9CA3AF">→ ' + cTxt + '</span>';
 }
-
 function remplir(titre, texte, em) {
   document.getElementById('msg-titre').value = titre;
   document.getElementById('msg-texte').value = texte;
@@ -452,7 +445,7 @@ function remplir(titre, texte, em) {
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
-// ── ENVOYER ───────────────────────────────────────────────────────────
+// ── ENVOYER ──
 async function envoyerMessage() {
   const titre = document.getElementById('msg-titre').value.trim();
   const texte = document.getElementById('msg-texte').value.trim();
@@ -470,7 +463,6 @@ async function envoyerMessage() {
     cible = selMags;
   }
 
-  // Désactiver le bouton
   const btn = document.getElementById('send-btn');
   btn.disabled = true;
   document.getElementById('send-icon').innerHTML = '<span class="spinner"></span>';
@@ -484,7 +476,6 @@ async function envoyerMessage() {
       messages.unshift(msg);
       showStatus('✓ Message envoyé ! Visible instantanément sur tous les QR codes ciblés.', 'ok');
       renderMessages();
-      // Reset form
       document.getElementById('msg-titre').value = '';
       document.getElementById('msg-texte').value = '';
       document.getElementById('preview-text').innerHTML = '<span style="color:#9CA3AF;font-style:italic">Remplissez le formulaire...</span>';
@@ -500,7 +491,7 @@ async function envoyerMessage() {
   document.getElementById('send-txt').textContent = 'Envoyer le message';
 }
 
-// ── MESSAGES ─────────────────────────────────────────────────────────
+// ── MESSAGES ──
 async function supprimerMessage(id) {
   showStatus('Suppression...', 'loading');
   const { error } = await sb.from('messages').delete().eq('id', id);
@@ -508,7 +499,6 @@ async function supprimerMessage(id) {
   else showStatus('Erreur suppression : ' + error.message, 'err');
   setTimeout(() => document.getElementById('status').style.display='none', 2000);
 }
-
 async function toggleActif(id) {
   const m = messages.find(m => m.id === id);
   if (m) {
@@ -520,7 +510,6 @@ async function toggleActif(id) {
     setTimeout(() => document.getElementById('status').style.display='none', 2000);
   }
 }
-
 function renderMessages() {
   const list = document.getElementById('msg-list');
   document.getElementById('msg-count').textContent = '(' + messages.length + ')';
@@ -550,7 +539,6 @@ function renderMessages() {
     </div>`;
   }).join('');
 }
-
 function showStatus(msg, type) {
   const el = document.getElementById('status');
   el.textContent = msg;
@@ -558,7 +546,7 @@ function showStatus(msg, type) {
   el.style.display = 'block';
 }
 
-// ── ENVOI MAIL (MODE TEST) ───────────────────────────────────────────
+// ── ENVOI MAIL (MODE TEST) ──
 function showMailStatus(msg, type) {
   const el = document.getElementById('mail-status');
   el.textContent = msg;
@@ -622,7 +610,7 @@ async function testMailBrief() {
   }
 }
 
-// ── ONGLETS + STATS D'USAGE ──────────────────────────────────────────
+// ── ONGLETS + STATS D'USAGE ──
 function switchTab(name){
   const isStats = name === 'stats';
   document.getElementById('view-messages').style.display = isStats ? 'none' : '';
@@ -667,7 +655,6 @@ async function loadStats(){
   else { const maxJ=Math.max.apply(null,days.map(function(d){return d[1];}).concat([1])); elJ.innerHTML=days.map(function(d){return d[1]>0?statBar(frDate(d[0]),d[1],maxJ):'';}).join(''); }
   sub.textContent='· 30 derniers jours';
 }
-document.getElementById('pwd').addEventListener('keypress', e => { if(e.key==='Enter') login(); });
 </script>
 <script>
 if ('serviceWorker' in navigator) {
