@@ -207,10 +207,10 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
 <div id="pin-gate">
   <div class="box">
     <div class="lg">IZ</div>
-    <h2>Dashboard météo</h2>
-    <p>Accès réservé au siège</p>
-    <input id="pin-in" type="password" inputmode="numeric" placeholder="Code PIN" onkeypress="if(event.key==='Enter')pinTry()">
-    <button onclick="pinTry()">Accéder →</button>
+    <h2>Météo</h2>
+    <p>Accès réservé — code PIN du siège.</p>
+    <input id="pin-in" type="password" inputmode="numeric" placeholder="••••" maxlength="12" onkeypress="if(event.key==='Enter')pinTry()">
+    <button onclick="pinTry()">Entrer</button>
     <div class="err" id="pin-err"></div>
   </div>
 </div>
