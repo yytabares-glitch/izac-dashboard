@@ -54,9 +54,14 @@
   .item{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:11px 14px;margin-top:8px}
   .item .lib{flex:1;font-size:14px}
   .item .warn{font-size:11px;color:var(--red);font-weight:600;margin-top:2px}
-  .item .qty{width:88px}
-  .item .qty input{width:100%;padding:9px;border:1px solid var(--line);border-radius:7px;font-size:15px;text-align:center;font-variant-numeric:tabular-nums}
-  .item .qty input:focus{outline:none;border-color:var(--navy)}
+  .item .qty{width:auto;display:flex;align-items:center;gap:0}
+  .item .qty input{width:54px;padding:9px 4px;border:1px solid var(--line);border-radius:0;font-size:16px;text-align:center;font-variant-numeric:tabular-nums;border-left:none;border-right:none}
+  .item .qty input:focus{outline:none;border-color:var(--navy);position:relative;z-index:1}
+  .item .qty .step{width:36px;height:38px;border:1px solid var(--line);background:var(--line2);color:var(--navy);font-size:20px;font-weight:700;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;user-select:none}
+  .item .qty .step:hover{background:#dde3ee}
+  .item .qty .step:disabled{opacity:.4;cursor:default}
+  .item .qty .minus{border-radius:8px 0 0 8px}
+  .item .qty .plus{border-radius:0 8px 8px 0}
   .item.filled{border-color:var(--navy);background:#f7faff}
   .footer-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:0 -4px 20px rgba(13,39,80,.06)}
   .footer-bar .recap{font-size:13px;color:var(--ink2)}
@@ -272,7 +277,11 @@ function renderCatalogue(){
       const indispo=!isSiege && !a.gencod;
       html+=`<div class="item" data-id="${a.id}">
         <div class="lib">${a.libelle}${indispo?'<div class="warn">référence non configurée — indisponible</div>':''}</div>
-        <div class="qty"><input type="number" min="0" inputmode="numeric" data-id="${a.id}" ${indispo?'disabled':''} placeholder="0"></div>
+        <div class="qty">
+          <button class="step minus" data-step="-1" data-id="${a.id}" ${indispo?'disabled':''} tabindex="-1">−</button>
+          <input type="text" inputmode="numeric" pattern="[0-9]*" data-id="${a.id}" ${indispo?'disabled':''} placeholder="0">
+          <button class="step plus" data-step="1" data-id="${a.id}" ${indispo?'disabled':''} tabindex="-1">+</button>
+        </div>
       </div>`;
     });
     html+='</div>';
@@ -285,9 +294,26 @@ function renderCatalogue(){
     const cont=document.getElementById('catalogue'); cont.insertBefore(ro, cont.firstChild);
     document.getElementById('reorderBtn').addEventListener('click',applyLastOrder);
   }
-  document.getElementById('catalogue').querySelectorAll('input[type=number]').forEach(inp=>{
+  const cont=document.getElementById('catalogue');
+  // saisie clavier : on ne garde que les chiffres
+  cont.querySelectorAll('.qty input').forEach(inp=>{
     inp.addEventListener('input',()=>{
-      const id=inp.dataset.id, v=parseInt(inp.value,10);
+      let clean=inp.value.replace(/[^0-9]/g,'');
+      if(clean!==inp.value) inp.value=clean;
+      const id=inp.dataset.id, v=parseInt(clean,10);
+      if(v>0) qty[id]=v; else delete qty[id];
+      inp.closest('.item').classList.toggle('filled',v>0);
+      updateRecap();
+    });
+  });
+  // boutons - / +
+  cont.querySelectorAll('.qty .step').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const id=btn.dataset.id, delta=parseInt(btn.dataset.step,10);
+      const inp=cont.querySelector(`.qty input[data-id="${id}"]`); if(!inp) return;
+      let v=(parseInt(inp.value,10)||0)+delta;
+      if(v<0) v=0;
+      inp.value=v>0?v:'';
       if(v>0) qty[id]=v; else delete qty[id];
       inp.closest('.item').classList.toggle('filled',v>0);
       updateRecap();
@@ -301,7 +327,7 @@ function applyLastOrder(){
   if(!lastOrder) return;
   lastOrder.forEach(l=>{
     if(l.article_id==null) return;
-    const inp=document.querySelector(`#catalogue input[data-id="${l.article_id}"]`);
+    const inp=document.querySelector(`#catalogue .qty input[data-id="${l.article_id}"]`);
     if(inp && !inp.disabled){ inp.value=l.quantite; qty[l.article_id]=l.quantite; inp.closest('.item').classList.add('filled'); }
   });
   updateRecap();
