@@ -23,8 +23,9 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opa
 .top .mark{color:#fff}
 .sep{width:1px;height:20px;background:rgba(255,255,255,.22)}
 .brand .sub{font-size:13px;color:rgba(255,255,255,.74);font-weight:600}
+.back-hub{font-size:12.5px;color:rgba(255,255,255,.74);text-decoration:none;font-weight:600;margin-right:4px}
+.back-hub:hover{color:#fff}
 .foot-log{font-size:12.5px;color:rgba(255,255,255,.74)} .foot-log a{color:#fff;cursor:pointer;font-weight:600;text-decoration:underline}
-/* vue réseau */
 .overview{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:14px;box-shadow:0 5px 18px rgba(38,49,69,.06);animation:rise .55s .05s cubic-bezier(.2,.75,.2,1) both}
 .ov-top{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
 .ov-ring{position:relative;width:74px;height:74px;border-radius:50%;flex-shrink:0;background:conic-gradient(var(--green) calc(var(--p,0)*3.6deg), #e7ebf2 0);transition:background .6s cubic-bezier(.2,.7,.2,1)}
@@ -84,7 +85,7 @@ tbody tr.lateRow{background:#fdf3f3} tbody tr.lateRow:hover{background:#fbe9e9}
 #login{max-width:370px;margin:11vh auto 0;box-shadow:0 16px 50px rgba(20,22,27,.08);border-radius:18px;text-align:center;padding:30px 26px}
 #login .mark{display:block;font-size:22px;margin-bottom:16px;letter-spacing:.2em}
 #login h2{justify-content:center;font-size:17px}
-#login input{text-align:center}
+#login input{text-align:center;letter-spacing:.3em;font-size:18px}
 .hide{display:none}
 .err{color:var(--red);font-size:12px;font-weight:600;margin-top:10px;min-height:14px}
 @media(prefers-reduced-motion:reduce){*{animation:none!important}}
@@ -98,15 +99,14 @@ tbody tr.lateRow{background:#fdf3f3} tbody tr.lateRow:hover{background:#fbe9e9}
 </head>
 <body>
 <div class="wrap">
-  <div class="top"><div class="brand"><span class="mark">IZAC</span><span class="sep"></span><span class="sub">Réception · Console siège</span></div>
+  <div class="top"><div class="brand"><span class="mark">IZAC</span><span class="sep"></span><span class="sub"><a href="index.html" class="back-hub">← Portail</a>Réception · Console siège</span></div>
     <div class="foot-log hide" id="footlog">Connecté · <a id="logout">se déconnecter</a></div></div>
 
   <div id="login" class="card">
     <span class="mark">IZAC</span>
     <h2>Connexion console</h2>
-    <div class="desc" style="text-align:center">Réservé au siège — accès par compte.</div>
-    <label style="text-align:left">Email</label><input id="email" type="email" autocomplete="username">
-    <label style="text-align:left">Mot de passe</label><input id="pwd" type="password" autocomplete="current-password">
+    <div class="desc" style="text-align:center">Réservé au siège — entre le code PIN.</div>
+    <label style="text-align:left">Code PIN</label><input id="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="••••">
     <div class="row" style="justify-content:center"><button class="btn" id="loginBtn">Se connecter</button></div>
     <div class="err" id="loginErr"></div>
   </div>
@@ -164,7 +164,7 @@ const SUPA_URL='https://imurxmsglmpgxdbavalk.supabase.co';
 const SUPA_KEY='sb_publishable_-FqQ5I6tx4rCUwUqmsf5DA_IFsfkUlQ';
 const MAG_NAMES={"1009": "Auber", "1010": "B. Epin", "1028": "Rue Ren", "1045": "Parinor", "1104": "Creteil", "1198": "Velizy", "1215": "St Quentin", "1254": "Auberv.", "1332": "St Laz.", "1339": "Fontai.", "1352": "Levallois", "1353": "Claye Souilly", "1449": "Aeroville", "1489": "Quartz", "1498": "Gonesse", "1552": "Val D'europe", "1568": "Carre Senart", "1575": "La Defense", "1604": "Rosny 2", "1655": "Parly 2", "1665": "Montparnasse", "1692": "Trading", "1696": "Forum Des Halles", "1748": "Beaugrenelle", "1756": "Boulogne", "1779": "Arcueil", "1782": "Corbeil", "1109": "St Denis", "1199": "Beziers", "1335": "Lille", "1350": "Perpignan Auchan", "1354": "Nancy", "1355": "Nantes Crebillons", "1377": "Ptstem", "1427": "Perpignan Claira", "1451": "Clermont", "1487": "Strasb.", "1543": "A13", "1563": "St Omer", "1566": "Beauv.", "1608": "Anglet", "1615": "N Creb", "1618": "Euralille", "1648": "Roubaix", "1651": "Pau", "1659": "Reims", "1667": "G. Var", "1668": "Noyelles", "1670": "Brest", "1672": "St Eti.", "1683": "Arras", "1721": "Bethune", "1729": "Lillenium", "1735": "Villefontaine", "1740": "Romans", "1785": "Gap", "1011": "Herriot", "1057": "Siege", "1074": "Blagnac", "1330": "Confluence", "1331": "Montpellier", "1334": "Rouen", "1426": "Begles", "1448": "Dijon", "1450": "R Alma", "1469": "Monta.", "1470": "Avignon", "1485": "Merignac", "1486": "Terrasses Du Port", "1488": "La Valentine", "1505": "Talang", "1513": "Part Dieu", "1518": "Ecouf.", "1526": "Niort", "1544": "Epagny", "1545": "Lormont", "1567": "Bord.", "1592": "Colmar", "1597": "Auxer.", "1598": "Bastia", "1603": "Fenouillet", "1609": "Nimes", "1621": "Aix", "1627": "Miramas", "1636": "Metz", "1637": "Ajacc.", "1654": "Prado", "1666": "Cap", "1669": "Voiron", "1671": "Andrezieux", "1694": "Mulhou.", "1704": "Blois", "1716": "Epinal", "1724": "Olonne", "1728": "Cannes", "1732": "Haguenau", "1737": "Bordeaux Lac", "1738": "Ecully", "1739": "Toulouse", "1742": "Thionville", "1743": "Mont De Marsan", "1749": "Aix En Provence", "1755": "Besancon", "1787": "La Rochelle", "1791": "Tours", "1792": "Grenoble", "1793": "Dijon Cv", "1801": "Rennes Cv", "1703": "Luxembourg", "1054": "T. D H. 72", "1055": "Tdh 61", "1070": "Côte Homme", "1204": "Marco Men", "1207": "Hopium", "1286": "Jasyl Sarl", "1289": "Manceau Eurl", "1305": "Aff D Homme", "1317": "Wilhelem Sa", "1349": "Bloom David", "142": "Brousseau", "1434": "Aumaclaire", "1461": "B. Engelyc", "1492": "Jack Mod", "1496": "Buxy", "1510": "Senso", "1511": "Boutik Homme", "1512": "Havane", "1581": "Vanni.O", "1643": "Rezland", "1645": "Show Room", "1661": "Langlais", "1678": "H. Dhomme", "1708": "Les Galeries Sas Du Grand Baza", "1710": "Boutique Mr", "1711": "Coupin", "1715": "Boutique Raphael", "1722": "O Masculin", "1758": "We Are Select / Was", "1760": "Les Sables", "1769": "Boy And Girl", "1773": "Xavier Men'S Wear", "1780": "Boutique Monsieur", "1783": "G3M Diffusion / Printemps Le H", "1794": "Will'S", "1799": "Printemps Caen / Jel Diffusion", "1805": "Driver", "318": "Espace Griff", "380": "Gentlemen", "437": "Hors Ligne", "507": "Labau", "532": "Le Gendre Ideal", "566": "Matco Sarl", "576": "La Maison", "61": "Arvet Sarl", "717": "Penaud", "724": "Pinel", "835": "Cap Code / Sngd", "851": "Sporlux", "954": "Verso Sarl", "997": "Jld Diff.", "1224": "As St Etienne Att. Valerie Sem", "1318": "G. Lemoine", "1457": "Boz Couture", "1557": "Abv Service", "1623": "Cote Homm", "1641": "Mhb / Benjamin Terme", "1650": "E. Griffe", "1675": "Losc", "1699": "Place Aux Hommes", "1700": "We Are Select W.A.S.", "1718": "Escale", "1726": "Cloane Square", "1766": "Iconik Store Chez We Are Selec", "1775": "Oscar", "1776": "Ol Sasu / Att Florence Dams Et", "1781": "Rennes Alma", "1784": "Griffe Rouge", "1800": "Sas Racing Club De Lens / Arth", "1808": "Sas Racing Club De Strasbourg", "1812": "Affaire D'Homme", "216": "Cosmopolite", "626": "Mickelson", "647": "Morence", "1411": "Lol By L.", "1795": "Hotel Le Grand Mazarin / Att.", "1814": "My Comm", "206": "Mossis J. - Sarl Come Back", "268": "Donald Bout.", "479": "Js Trading", "559": "M.C.S. Sarl", "1527": "Fashion R.", "1546": "Rackstore M.", "1629": "Mkm -", "1646": "Basile Boutique", "1830": "Neyrpic", "1835": "Orleans", "1831": "Strasbourg Centre Ville", "1828": "Caen", "1818": "Sarl Roy", "1549": "Firex", "1578": "Pretty Women", "1701": "Mon Vestaire", "1768": "Abc", "1807": "Pont Ste Marie", "1820": "Le 18 Sarl", "1823": "Dress Code", "1833": "Le 10 Coffy Distribution", "1834": "Tarantola", "1841": "Montal Sarl", "1815": "Sas Expentour", "1837": "Chabe", "1843": "Deauville", "1777": "Boutique Hom", "1839": "Clothing Distributions", "1845": "Showroom Formen", "952": "Vente Privee.Com", "1291": "Somajy", "1840": "Cabries", "1844": "Polygone", "1842": "Le Mans", "1851": "Sas Baron", "1850": "Sas Rc Strasbourg", "1852": "Bey First 2", "1865": "Giverny", "1862": "Chambery", "1861": "Jump Atelier"};
 let sb=null; const CHUNK=800;
-let SUIVI=[], ACC=[], COLIS_ALL=[]; let suiviLate=false, NET_CAT='all'; let REF_CACHE=null; // caches + filtres
+let SUIVI=[], ACC=[], COLIS_ALL=[]; let suiviLate=false, NET_CAT='all'; let REF_CACHE=null;
 function esc(s){return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 const storeBase=location.href.replace(/[^/]*$/,'reception.html').split('#')[0].split('?')[0];
 function log(m){const e=document.getElementById('log');e.style.display='block';e.textContent+=m+'\n';e.scrollTop=e.scrollHeight;}
@@ -255,7 +255,7 @@ async function fetchReception(){
   return data||[];
 }
 async function loadSuivi(){
-  REF_CACHE=null;   // les données de recherche seront rechargées au prochain « Rechercher »
+  REF_CACHE=null;
   const today0=new Date(); today0.setHours(0,0,0,0);
   const {data:colis}=await sb.from('colis').select('code,magasin,cde,pieces,created_at');
   const recs=await fetchReception();
@@ -346,7 +346,6 @@ function renderSuivi(){
   el.innerHTML=h+'</tbody></table></div>';
 }
 
-// ===== Recherche d'une référence à travers tous les magasins =====
 async function ensureRefData(){
   if(REF_CACHE) return REF_CACHE;
   let colis=[]; for(let from=0;;from+=1000){
@@ -456,17 +455,30 @@ function copyLink(code){const url=storeBase+'?mag='+code;
   try{navigator.clipboard.writeText(url);}catch(e){}
   alert('Lien copié :\n'+url+'\n\nDonne ce lien + le PIN au magasin '+code+'.');
 }
+
+// ── AUTH PAR PIN (même système que consommables / transport / météo) ──
 async function doLogin(){
-  const email=document.getElementById('email').value.trim(), pwd=document.getElementById('pwd').value;
-  const {error}=await sb.auth.signInWithPassword({email,password:pwd});
-  if(error){document.getElementById('loginErr').textContent='Identifiants incorrects.';return;}
-  showMain();
+  const pin=(document.getElementById('pin').value||'').trim();
+  const err=document.getElementById('loginErr');
+  if(!pin){err.textContent='Entre le code PIN.';return;}
+  try{
+    const hash=await sha256(pin);
+    const {data,error}=await sb.rpc('conso_login',{p_hash:hash});
+    if(error){err.textContent='Erreur de connexion.';return;}
+    if(data&&data.ok){ err.textContent=''; try{sessionStorage.setItem('izac_recep_unlocked','1');}catch(e){} showMain(); return; }
+    if(data&&data.locked) err.textContent='Trop d\'essais. Réessaie dans '+(data.wait||15)+' min.';
+    else if(data&&typeof data.left==='number') err.textContent='Code incorrect — '+data.left+' essai(s) restant(s).';
+    else err.textContent='Code incorrect.';
+    document.getElementById('pin').value='';
+  }catch(e){err.textContent='Erreur : '+(e.message||e);}
 }
 function showMain(){document.getElementById('login').classList.add('hide');document.getElementById('main').classList.remove('hide');document.getElementById('footlog').classList.remove('hide');loadCatStatus();loadSuivi();loadAcces();}
 async function init(){
   sb=supabase.createClient(SUPA_URL,SUPA_KEY);
-  const {data}=await sb.auth.getSession(); if(data&&data.session)showMain();
+  let unlocked=false; try{ unlocked=sessionStorage.getItem('izac_recep_unlocked')==='1'; }catch(e){}
+  if(unlocked) showMain();
   document.getElementById('loginBtn').addEventListener('click',doLogin);
+  document.getElementById('pin').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
   document.getElementById('importBtn').addEventListener('click',doImport);
   document.getElementById('refreshBtn').addEventListener('click',()=>{loadSuivi();loadAcces();});
   document.getElementById('cleanBtn').addEventListener('click',cleanupOld);
@@ -477,7 +489,7 @@ async function init(){
   document.getElementById('accFind').addEventListener('input',renderAcces);
   document.getElementById('refBtn').addEventListener('click',searchRef);
   document.getElementById('refFind').addEventListener('keydown',e=>{if(e.key==='Enter')searchRef();});
-  document.getElementById('logout').addEventListener('click',async e=>{e.preventDefault();await sb.auth.signOut();location.reload();});
+  document.getElementById('logout').addEventListener('click',e=>{e.preventDefault();try{sessionStorage.removeItem('izac_recep_unlocked');}catch(_){}location.reload();});
   Object.assign(window,{parseCatalogueText,parsePaq,enrich,parseCSVLine,setPin,copyLink,doImport,loadSuivi,loadAcces,renderSuivi,renderAcces,showNet,hideNet,exportNet,netCSV,relanceStore,relanceAllLate,relanceOne,relanceText});
 }
 window.addEventListener('DOMContentLoaded',init);
