@@ -65,6 +65,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
 .ic-recep{background:var(--ok-bg);color:var(--recep)}
 .ic-exped{background:#fbe9d8;color:var(--exped)}
 .ic-conso{background:var(--tint-2);color:var(--conso)}
+.ic-secu{background:#fdecea;color:var(--danger)}
 .foot{text-align:center;color:var(--ink-55);font-size:11.5px;margin-top:30px}
 .idle-warn{display:none;align-items:center;justify-content:center;gap:16px;background:var(--warn-bg);border:1px solid #e8d9a8;color:#7a5400;border-radius:12px;padding:12px 20px;margin-bottom:18px;font-size:13.5px;font-weight:600}
 .idle-warn.show{display:flex}
@@ -142,6 +143,16 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
       <a class="tile" href="consommables-admin.html">
         <div class="tile-top"><div><h3>Consommables</h3><div class="desc">Catalogue, validation des références et suivi des commandes.</div></div><div class="tile-ic ic-conso">🧾</div></div>
         <div class="stat loading" id="statConso"><span class="n">…</span><span class="l">chargement</span></div>
+        <span class="go">Ouvrir →</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="grp">
+    <div class="section-lab">Administration</div>
+    <div class="grid">
+      <a class="tile" href="securite.html">
+        <div class="tile-top"><div><h3>Sécurité</h3><div class="desc">Code PIN, accès magasins, historique des connexions et réglages.</div></div><div class="tile-ic ic-secu">🔐</div></div>
         <span class="go">Ouvrir →</span>
       </a>
     </div>
