@@ -3,235 +3,219 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IZAC — Portail outils</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>IZAC — Portail</title>
+<meta name="theme-color" content="#263145">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --navy:#0D2750; --navy2:#0C447C; --bg:#EDEFF3; --card:#fff; --line:#E5E9F2; --line2:#EEF1F6;
-    --ink:#263145; --ink2:#5b647a; --ink3:#828a9c; --green:#1f9d57; --greenbg:#e6f6ed;
-    --warn:#b8860b; --warnbg:#f7efd6; --red:#D64545;
-    --meteo:#0C447C; --msg:#7a4ba8; --recep:#1f9d57; --exped:#c2610f; --conso:#0D2750;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.4}
-  .wrap{max-width:1080px;margin:0 auto;padding:24px 20px 80px}
-  .hidden{display:none!important}
+:root{
+  --ink:#263145;--ink-2:#36425a;--ink-70:#5b647a;--ink-55:#828a9c;
+  --line:rgba(38,49,69,.10);--line-2:rgba(38,49,69,.055);
+  --tint:rgba(38,49,69,.045);--tint-2:rgba(38,49,69,.075);
+  --bg:#EDEFF3;--card:#FFFFFF;
+  --shadow:0 1px 2px rgba(38,49,69,.04), 0 22px 48px -30px rgba(38,49,69,.45);
+  --serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+  --ok:#1f7a44;--ok-bg:#e8f4ec;--ok-bd:#c3e2d0;
+  --warn:#9a6a00;--warn-bg:#f7efd6;
+  --danger:#b42318;--danger-bg:#fdecea;--danger-bd:#f6cbc5;
+  --meteo:#0C447C;--msg:#7a4ba8;--recep:#1f7a44;--exped:#c2610f;--conso:#263145;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased;letter-spacing:.01em}
 
-  /* ===== LOGIN ===== */
-  .gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-  .login{max-width:370px;width:100%;background:#fff;border:1px solid var(--line);border-radius:18px;padding:38px 30px 30px;text-align:center;box-shadow:0 16px 56px rgba(13,39,80,.12)}
-  .login .lg{width:50px;height:50px;background:var(--navy);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;margin:0 auto 18px}
-  .login h1{font-weight:800;font-size:19px;margin:0 0 5px;color:var(--navy)}
-  .login p{color:var(--ink3);font-size:12.5px;margin:0 0 22px}
-  .login input{width:100%;border:1px solid var(--line);border-radius:12px;padding:14px 15px;font-size:19px;outline:none;text-align:center;letter-spacing:.3em}
-  .login input:focus{border-color:var(--navy)}
-  .login .btn{width:100%;margin-top:18px;padding:14px;background:var(--navy);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer}
-  .login .err{color:var(--red);font-size:12px;font-weight:600;margin-top:13px;min-height:14px}
+/* LOGIN */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.login-box{background:var(--card);border:1px solid var(--line-2);border-radius:20px;padding:44px 40px;width:390px;text-align:center;box-shadow:var(--shadow)}
+.login-logo{width:62px;height:62px;background:var(--ink);border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:24px;font-weight:600;color:#fff;letter-spacing:.04em;margin:0 auto 18px}
+.login-title{font-family:var(--serif);font-size:23px;font-weight:600;color:var(--ink);margin-bottom:6px}
+.login-sub{font-size:12px;color:var(--ink-70);margin-bottom:26px}
+.form-input{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:10px;font-family:var(--sans);font-size:14px;margin-bottom:12px;background:#fff;color:var(--ink)}
+.form-input:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(38,49,69,.08)}
+.btn-primary{width:100%;padding:12px;background:var(--ink);color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;letter-spacing:.02em;transition:opacity .2s}
+.btn-primary:hover{opacity:.88}
+.login-err{font-size:12px;color:var(--danger);margin-top:8px;display:none}
 
-  /* ===== HEADER ===== */
-  .hero{background:linear-gradient(135deg,#0D2750,#0C447C);border-radius:16px;padding:30px 32px;margin-bottom:26px;color:#fff;position:relative;overflow:hidden}
-  .hero::after{content:"";position:absolute;right:-40px;top:-40px;width:200px;height:200px;background:rgba(255,255,255,.05);border-radius:50%}
-  .hero .lg{width:44px;height:44px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;margin-bottom:16px}
-  .hero h1{font-size:26px;font-weight:800;letter-spacing:-.01em}
-  .hero .sub{font-size:14px;color:rgba(255,255,255,.75);margin-top:4px;font-weight:500}
-  .hero .date{position:absolute;top:30px;right:32px;font-size:12.5px;color:rgba(255,255,255,.7);font-weight:600}
-  .hero .logout{position:absolute;bottom:26px;right:32px;background:rgba(255,255,255,.12);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer}
-  .hero .logout:hover{background:rgba(255,255,255,.22)}
+/* HUB */
+.hub-wrap{display:none;max-width:1080px;margin:0 auto;padding:24px 22px 60px}
+.hero{background:var(--ink);border-radius:18px;padding:30px 32px;margin-bottom:26px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.hero::after{content:"";position:absolute;inset:0;background:radial-gradient(130% 200% at 100% -20%,rgba(255,255,255,.08),transparent 55%);pointer-events:none}
+.hero-logo{font-family:var(--serif);font-size:30px;font-weight:600;color:#fff;letter-spacing:.05em;line-height:1;position:relative;z-index:1}
+.hero h1{font-family:var(--serif);color:#fff;font-size:25px;font-weight:600;margin-top:14px;position:relative;z-index:1}
+.hero .sub{color:rgba(255,255,255,.6);font-size:13.5px;margin-top:5px;position:relative;z-index:1}
+.hero .date{position:absolute;top:30px;right:32px;font-size:12px;color:rgba(255,255,255,.6);font-weight:500;z-index:1}
+.hero .logout{position:absolute;bottom:28px;right:32px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:8px 15px;font-size:12px;font-weight:600;cursor:pointer;z-index:1;font-family:var(--sans)}
+.hero .logout:hover{background:rgba(255,255,255,.18)}
 
-  .section-lab{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);font-weight:700;margin:0 4px 12px}
+.section-lab{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-55);font-weight:700;margin:0 4px 12px}
+.grp{margin-bottom:26px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.tile{background:var(--card);border:1px solid var(--line-2);border-radius:16px;padding:22px;cursor:pointer;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:13px;transition:.15s;position:relative;box-shadow:var(--shadow);min-height:150px}
+.tile:hover{transform:translateY(-2px);box-shadow:0 1px 2px rgba(38,49,69,.04),0 28px 56px -28px rgba(38,49,69,.5)}
+.tile-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.tile-ic{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0}
+.tile h3{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink);margin-bottom:3px}
+.tile .desc{font-size:12.5px;color:var(--ink-70);line-height:1.45}
+.tile .stat{margin-top:auto;display:flex;align-items:baseline;gap:7px;padding-top:8px}
+.tile .stat .n{font-family:var(--serif);font-size:25px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1}
+.tile .stat .l{font-size:12px;color:var(--ink-55);font-weight:500}
+.tile .stat.loading .n{color:var(--ink-55);font-size:13px;font-family:var(--sans)}
+.tile .go{position:absolute;right:20px;bottom:18px;font-size:13px;color:var(--ink-55);font-weight:600}
+.tile:hover .go{color:var(--ink)}
+.ic-meteo{background:#e6eefb;color:var(--meteo)}
+.ic-msg{background:#ede4f7;color:var(--msg)}
+.ic-recep{background:var(--ok-bg);color:var(--recep)}
+.ic-exped{background:#fbe9d8;color:var(--exped)}
+.ic-conso{background:var(--tint-2);color:var(--conso)}
+.foot{text-align:center;color:var(--ink-55);font-size:11.5px;margin-top:30px}
 
-  /* ===== TUILES ===== */
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-  .tile{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 22px 20px;cursor:pointer;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:14px;transition:.15s;position:relative;overflow:hidden}
-  .tile:hover{border-color:var(--navy);box-shadow:0 8px 26px rgba(13,39,80,.12);transform:translateY(-2px)}
-  .tile-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-  .tile-ic{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
-  .tile h3{font-size:17px;font-weight:800;color:var(--navy);margin-bottom:3px}
-  .tile .desc{font-size:13px;color:var(--ink2);line-height:1.45}
-  .tile .stat{margin-top:auto;display:flex;align-items:baseline;gap:7px;padding-top:6px}
-  .tile .stat .n{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
-  .tile .stat .l{font-size:12px;color:var(--ink3);font-weight:600}
-  .tile .stat.loading .n{color:var(--ink3);font-size:14px;font-weight:600}
-  .tile .go{position:absolute;right:18px;bottom:16px;font-size:13px;color:var(--ink3);font-weight:700}
-  .tile:hover .go{color:var(--navy)}
-  .badge-alert{background:var(--warnbg);color:var(--warn)}
-  .badge-ok{background:var(--greenbg);color:var(--green)}
-
-  .ic-meteo{background:#e6eefb;color:var(--meteo)}
-  .ic-msg{background:#ede4f7;color:var(--msg)}
-  .ic-recep{background:var(--greenbg);color:var(--recep)}
-  .ic-exped{background:#fbe9d8;color:var(--exped)}
-  .ic-conso{background:#dde4ef;color:var(--conso)}
-
-  .grp{margin-bottom:26px}
-  .foot{text-align:center;color:var(--ink3);font-size:12px;margin-top:30px}
+@media (max-width:760px){
+  .hub-wrap{padding:16px 13px 40px}
+  .hero{padding:22px 20px}
+  .hero .date{position:static;margin-bottom:8px}
+  .hero .logout{position:static;margin-top:16px;display:inline-block}
+  .grid{grid-template-columns:1fr}
+  .login-box{width:100%;max-width:390px;padding:34px 24px}
+}
 </style>
 </head>
 <body>
 
 <!-- LOGIN -->
-<div id="gate" class="gate">
-  <div class="login">
-    <div class="lg">IZ</div>
-    <h1>Portail IZAC</h1>
-    <p>Accès réservé — siège. Entre ton code PIN.</p>
-    <input id="pin-in" type="password" inputmode="numeric" placeholder="••••" maxlength="12">
-    <button class="btn" id="loginBtn">Entrer</button>
-    <div class="err" id="loginErr"></div>
+<div class="login-wrap" id="login-wrap">
+  <div class="login-box">
+    <div class="login-logo">IZ</div>
+    <div class="login-title">Portail IZAC</div>
+    <div class="login-sub">Accès réservé au siège</div>
+    <input type="email" class="form-input" id="email" placeholder="Email" autocomplete="username">
+    <input type="password" class="form-input" id="pwd" placeholder="Mot de passe" autocomplete="current-password">
+    <button class="btn-primary" onclick="login()">Accéder →</button>
+    <div class="login-err" id="login-err">Email ou mot de passe incorrect</div>
   </div>
 </div>
 
 <!-- HUB -->
-<div class="wrap hidden" id="app">
+<div class="hub-wrap" id="hub-wrap">
   <div class="hero">
-    <div class="lg">IZ</div>
-    <h1>Portail outils IZAC</h1>
+    <div class="hero-logo">IZ</div>
+    <h1>Portail outils</h1>
     <div class="sub">Tous les outils du siège, au même endroit.</div>
     <div class="date" id="today"></div>
-    <button class="logout" id="logoutBtn">Se déconnecter</button>
+    <button class="logout" onclick="logout()">Déconnexion</button>
   </div>
 
   <div class="grp">
     <div class="section-lab">Pilotage réseau</div>
     <div class="grid">
-
       <a class="tile" href="meteo.html">
-        <div class="tile-top">
-          <div><h3>Météo réseau</h3><div class="desc">Météo par boutique et par région, prévisionnel 10 jours.</div></div>
-          <div class="tile-ic ic-meteo">🌤️</div>
-        </div>
+        <div class="tile-top"><div><h3>Météo réseau</h3><div class="desc">Météo par boutique et région, prévisionnel 10 jours.</div></div><div class="tile-ic ic-meteo">🌤️</div></div>
         <div class="stat"><span class="n">7</span><span class="l">régions suivies</span></div>
         <span class="go">Ouvrir →</span>
       </a>
-
       <a class="tile" href="IZAC_Admin.html">
-        <div class="tile-top">
-          <div><h3>Messages direction</h3><div class="desc">Diffuser et piloter les messages affichés en boutique.</div></div>
-          <div class="tile-ic ic-msg">📣</div>
-        </div>
-        <div class="stat loading" id="statMsg"><span class="n">—</span><span class="l">chargement…</span></div>
+        <div class="tile-top"><div><h3>Messages direction</h3><div class="desc">Diffuser et piloter les messages affichés en boutique.</div></div><div class="tile-ic ic-msg">📣</div></div>
+        <div class="stat loading" id="statMsg"><span class="n">…</span><span class="l">chargement</span></div>
         <span class="go">Ouvrir →</span>
       </a>
-
     </div>
   </div>
 
   <div class="grp">
     <div class="section-lab">Opérations</div>
     <div class="grid">
-
       <a class="tile" href="reception-admin.html">
-        <div class="tile-top">
-          <div><h3>Réception</h3><div class="desc">Suivi des réceptions et dépôt des fichiers de préparation.</div></div>
-          <div class="tile-ic ic-recep">📦</div>
-        </div>
-        <div class="stat loading" id="statRecep"><span class="n">—</span><span class="l">chargement…</span></div>
+        <div class="tile-top"><div><h3>Réception</h3><div class="desc">Suivi des réceptions et dépôt des fichiers de préparation.</div></div><div class="tile-ic ic-recep">📦</div></div>
+        <div class="stat"><span class="n">›</span><span class="l">ouvrir le suivi</span></div>
         <span class="go">Ouvrir →</span>
       </a>
-
       <a class="tile" href="transport-admin.html">
-        <div class="tile-top">
-          <div><h3>Expéditions</h3><div class="desc">Analyse des expéditions — dépôt de l'export Excel.</div></div>
-          <div class="tile-ic ic-exped">🚚</div>
-        </div>
-        <div class="stat loading" id="statExped"><span class="n">—</span><span class="l">chargement…</span></div>
+        <div class="tile-top"><div><h3>Expéditions</h3><div class="desc">Analyse des expéditions — dépôt de l'export Excel.</div></div><div class="tile-ic ic-exped">🚚</div></div>
+        <div class="stat loading" id="statExped"><span class="n">…</span><span class="l">chargement</span></div>
         <span class="go">Ouvrir →</span>
       </a>
-
       <a class="tile" href="consommables-admin.html">
-        <div class="tile-top">
-          <div><h3>Consommables</h3><div class="desc">Catalogue, validation des références et suivi des commandes.</div></div>
-          <div class="tile-ic ic-conso">🧾</div>
-        </div>
-        <div class="stat loading" id="statConso"><span class="n">—</span><span class="l">chargement…</span></div>
+        <div class="tile-top"><div><h3>Consommables</h3><div class="desc">Catalogue, validation des références et suivi des commandes.</div></div><div class="tile-ic ic-conso">🧾</div></div>
+        <div class="stat loading" id="statConso"><span class="n">…</span><span class="l">chargement</span></div>
         <span class="go">Ouvrir →</span>
       </a>
-
     </div>
   </div>
 
   <div class="foot">Portail interne IZAC — réservé au siège.</div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL='https://imurxmsglmpgxdbavalk.supabase.co';
-const SUPABASE_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltdXJ4bXNnbG1wZ3hkYmF2YWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNDg5NDMsImV4cCI6MjA5NTgyNDk0M30.GdmfOH-bG0ivzz8rFr83pZTBOjZecPgX_WXepAiuYo8';
-const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON);
+const SUPA_URL = 'https://imurxmsglmpgxdbavalk.supabase.co';
+const SUPA_KEY = 'sb_publishable_-FqQ5I6tx4rCUwUqmsf5DA_IFsfkUlQ';
+const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 
-// ===== LOGIN (PIN, même mécanisme que les autres outils) =====
-const SESSION_KEY='izac_hub_session';
-async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
-async function doLogin(){
-  const pin=(document.getElementById('pin-in').value||'').trim();
-  const err=document.getElementById('loginErr');
-  if(!pin){err.textContent='Entre le code PIN.';return;}
-  const btn=document.getElementById('loginBtn'); btn.disabled=true; err.textContent='';
-  try{
-    const hash=await sha256(pin);
-    const {data,error}=await sb.rpc('conso_login',{p_hash:hash});
-    if(error){err.textContent='Erreur de connexion.';btn.disabled=false;return;}
-    if(data&&data.ok){
-      try{ sessionStorage.setItem(SESSION_KEY,'1'); }catch(e){}
-      enterHub(); return;
-    }
-    if(data&&data.locked)err.textContent='Trop d\'essais. Réessaie dans '+(data.wait||15)+' min.';
-    else if(data&&typeof data.left==='number')err.textContent='PIN incorrect — '+data.left+' essai(s) restant(s).';
-    else err.textContent='PIN incorrect.';
-    btn.disabled=false;
-  }catch(e){err.textContent='Erreur : '+(e.message||e);btn.disabled=false;}
+// ── AUTH (même mécanisme que la page Messages) ──
+async function login(){
+  const email=document.getElementById('email').value.trim();
+  const pwd=document.getElementById('pwd').value;
+  const {error}=await sb.auth.signInWithPassword({email,password:pwd});
+  if(error){
+    document.getElementById('login-err').style.display='block';
+    document.getElementById('pwd').value='';
+    return;
+  }
+  document.getElementById('login-err').style.display='none';
+  enterHub();
 }
-document.getElementById('loginBtn').addEventListener('click',doLogin);
-document.getElementById('pin-in').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-
+function logout(){
+  sb.auth.signOut();
+  document.getElementById('hub-wrap').style.display='none';
+  document.getElementById('login-wrap').style.display='flex';
+}
 function enterHub(){
-  document.getElementById('gate').style.display='none';
-  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('login-wrap').style.display='none';
+  document.getElementById('hub-wrap').style.display='block';
   const d=new Date();
   document.getElementById('today').textContent=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   loadStats();
 }
-document.getElementById('logoutBtn').addEventListener('click',()=>{
-  try{ sessionStorage.removeItem(SESSION_KEY); }catch(e){}
-  location.reload();
-});
+document.getElementById('pwd').addEventListener('keypress',e=>{if(e.key==='Enter')login();});
+document.getElementById('email').addEventListener('keypress',e=>{if(e.key==='Enter')login();});
 
-// déjà connecté dans cette session ?
-let already=false; try{ already=sessionStorage.getItem(SESSION_KEY)==='1'; }catch(e){}
-if(already){ enterHub(); } else { document.getElementById('pin-in').focus(); }
+// déjà connecté ? (session Supabase persistante)
+(async()=>{
+  try{ const {data}=await sb.auth.getSession(); if(data&&data.session){ enterHub(); } }catch(e){}
+})();
 
-// ===== APERÇUS CHIFFRÉS EN DIRECT =====
+// ── APERÇUS CHIFFRÉS ──
 async function loadStats(){
-  // CONSOMMABLES : commandes à traiter
+  // Consommables : commandes à traiter
   try{
     const {data,error}=await sb.from('conso_commandes').select('statut');
-    if(!error && data){
+    if(!error&&data){
       const todo=data.filter(c=>(c.statut||'a_traiter')!=='termine').length;
-      setStat('statConso', todo, todo>0?'commande(s) à traiter':'tout est à jour', todo>0?'alert':'ok');
-    } else setStatErr('statConso');
-  }catch(e){ setStatErr('statConso'); }
+      setStat('statConso',todo,todo>0?'commande(s) à traiter':'tout est à jour',todo>0?'warn':'ok');
+    } else setStat('statConso','—','indisponible','');
+  }catch(e){ setStat('statConso','—','indisponible',''); }
 
-  // EXPÉDITIONS : nombre de lignes transport chargées
+  // Expéditions : lignes transport
   try{
     const {count,error}=await sb.from('transport_ls').select('*',{count:'exact',head:true});
-    if(!error && count!=null) setStat('statExped', count.toLocaleString('fr-FR'), 'expéditions analysées','');
-    else setStatErr('statExped');
-  }catch(e){ setStatErr('statExped'); }
+    if(!error&&count!=null) setStat('statExped',count.toLocaleString('fr-FR'),'expéditions analysées','');
+    else setStat('statExped','—','indisponible','');
+  }catch(e){ setStat('statExped','—','indisponible',''); }
 
-  // RÉCEPTION & MESSAGES : tables inconnues ici -> on affiche un état neutre
-  setStat('statRecep', '›', 'ouvrir le suivi','');
-  setStat('statMsg', '›', 'gérer les messages','');
+  // Messages direction : messages actifs
+  try{
+    const today=new Date().toISOString().split('T')[0];
+    const {data,error}=await sb.from('messages').select('actif,debut,fin');
+    if(!error&&data){
+      const actifs=data.filter(m=>m.actif&&(!m.fin||m.fin>=today)&&(!m.debut||m.debut<=today)).length;
+      setStat('statMsg',actifs,'message(s) actif(s)','');
+    } else setStat('statMsg','—','indisponible','');
+  }catch(e){ setStat('statMsg','—','indisponible',''); }
 }
 function setStat(id,n,label,kind){
   const el=document.getElementById(id); if(!el) return;
   el.classList.remove('loading');
   el.innerHTML=`<span class="n">${n}</span><span class="l">${label}</span>`;
-  if(kind==='alert'){ el.querySelector('.n').style.color='var(--warn)'; }
-  else if(kind==='ok'){ el.querySelector('.n').style.color='var(--green)'; }
-}
-function setStatErr(id){
-  const el=document.getElementById(id); if(!el) return;
-  el.classList.remove('loading');
-  el.innerHTML=`<span class="n" style="font-size:14px;color:var(--ink3)">—</span><span class="l">indisponible</span>`;
+  const nEl=el.querySelector('.n');
+  if(kind==='warn') nEl.style.color='var(--warn)';
+  else if(kind==='ok') nEl.style.color='var(--ok)';
 }
 </script>
 </body>
