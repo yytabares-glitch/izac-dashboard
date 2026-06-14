@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IZAC — Import transport</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#15161a; --paper:#f6f4ef; --card:#fffefb; --line:#e2ddd2;
@@ -48,16 +49,41 @@
   .stat{margin-top:24px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 20px;font-size:13px}
   .stat b{font-variant-numeric:tabular-nums}
   code{background:#efeadf;padding:1px 5px;border-radius:4px;font-size:12px}
+
+  /* ---- login PIN (charte navy + Fraunces, identique au hub) ---- */
+  #pin-gate{position:fixed;inset:0;background:#EDEFF3;display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;font-family:'Hanken Grotesk',system-ui,sans-serif}
+  #pin-gate .box{background:#fff;border:1px solid rgba(38,49,69,.06);border-radius:20px;padding:44px 40px;width:360px;text-align:center;box-shadow:0 16px 56px rgba(38,49,69,.12)}
+  #pin-gate .lg{width:62px;height:62px;background:#263145;border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',Georgia,serif;font-size:24px;font-weight:600;color:#fff;letter-spacing:.04em;margin:0 auto 18px}
+  #pin-gate h2{font-family:'Fraunces',Georgia,serif;font-size:22px;font-weight:600;color:#263145;margin-bottom:6px}
+  #pin-gate p{font-size:12px;color:#5b647a;margin-bottom:26px}
+  #pin-gate input{width:100%;padding:13px 15px;border:1px solid rgba(38,49,69,.10);border-radius:11px;font-size:18px;text-align:center;letter-spacing:.3em;outline:none;font-family:'Hanken Grotesk',system-ui,sans-serif}
+  #pin-gate input:focus{border-color:#263145;box-shadow:0 0 0 3px rgba(38,49,69,.08)}
+  #pin-gate button{width:100%;margin-top:16px;padding:13px;background:#263145;color:#fff;border:none;border-radius:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Hanken Grotesk',system-ui,sans-serif;letter-spacing:.02em}
+  #pin-gate button:hover{opacity:.88}
+  #pin-gate .err{color:#b42318;font-size:12px;font-weight:600;margin-top:12px;min-height:14px}
 </style>
 </head>
 <body>
-<div class="wrap">
+
+<!-- ===== GATE PIN ===== -->
+<div id="pin-gate">
+  <div class="box">
+    <div class="lg">IZ</div>
+    <h2>Transport</h2>
+    <p>Accès réservé — code PIN du siège.</p>
+    <input id="pin-in" type="password" inputmode="numeric" placeholder="••••" maxlength="12">
+    <button id="pin-btn">Entrer</button>
+    <div class="err" id="pin-err"></div>
+  </div>
+</div>
+
+<div class="wrap" id="app" style="display:none">
   <header>
     <div class="brand">IZA<span class="x">C</span> · IMPORT TRANSPORT</div>
     <h1>Import hebdomadaire</h1>
     <p class="lead">Glisse l'export FastMag <code>Export_ls.csv</code>. Les lignes s'ajoutent à l'historique —
       les expéditions déjà présentes (même <code>ID_LS</code>) sont ignorées, pas de doublon.</p>
-    <p style="margin-top:10px"><a class="back" href="transport.html">← Aller au dashboard de consultation</a></p>
+    <p style="margin-top:10px"><a class="back" href="index.html">← Portail</a> &nbsp;·&nbsp; <a class="back" href="transport.html">Dashboard de consultation</a></p>
   </header>
 
   <div class="stat" id="stat">Connexion à la base…</div>
@@ -84,6 +110,40 @@ const SUPABASE_URL = 'https://imurxmsglmpgxdbavalk.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltdXJ4bXNnbG1wZ3hkYmF2YWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNDg5NDMsImV4cCI6MjA5NTgyNDk0M30.GdmfOH-bG0ivzz8rFr83pZTBOjZecPgX_WXepAiuYo8';
 const TABLE = 'transport_ls';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ===== GATE PIN =====
+async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+async function pinLogin(){
+  const pin=(document.getElementById('pin-in').value||'').trim();
+  const err=document.getElementById('pin-err');
+  if(!pin){err.textContent='Entre le code PIN.';return;}
+  const btn=document.getElementById('pin-btn'); btn.disabled=true; err.textContent='';
+  try{
+    const hash=await sha256(pin);
+    const {data,error}=await sb.rpc('conso_login',{p_hash:hash});
+    if(error){err.textContent='Erreur de connexion.';btn.disabled=false;return;}
+    if(data&&data.ok){
+      document.getElementById('pin-gate').style.display='none';
+      document.getElementById('app').style.display='';
+      sessionStorage.setItem('izac_transport_unlocked','1');
+      refreshStat();
+      return;
+    }
+    if(data&&data.locked)err.textContent='Trop d\'essais. Réessaie dans '+(data.wait||15)+' min.';
+    else if(data&&typeof data.left==='number')err.textContent='PIN incorrect — '+data.left+' essai(s) restant(s).';
+    else err.textContent='PIN incorrect.';
+    btn.disabled=false;
+  }catch(e){err.textContent='Erreur : '+(e.message||e);btn.disabled=false;}
+}
+document.getElementById('pin-btn').addEventListener('click',pinLogin);
+document.getElementById('pin-in').addEventListener('keydown',e=>{if(e.key==='Enter')pinLogin();});
+// déverrouillage mémorisé le temps de la session
+if(sessionStorage.getItem('izac_transport_unlocked')==='1'){
+  document.getElementById('pin-gate').style.display='none';
+  document.getElementById('app').style.display='';
+}else{
+  document.getElementById('pin-in').focus();
+}
 
 // ---- date FastMag -> ISO ----
 function frToISODate(s){ // "02/06/2026 09:10:25" -> "2026-06-02"
@@ -218,8 +278,6 @@ function handle(f){
   };
   reader.readAsText(f,'utf-8');
 }
-
-refreshStat();
 </script>
 </body>
 </html>
