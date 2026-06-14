@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IZAC — Sécurité</title>
+<meta name="theme-color" content="#263145">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#263145;--ink-70:#5b647a;--ink-55:#828a9c;
+  --line:rgba(38,49,69,.10);--line-2:rgba(38,49,69,.055);--tint:rgba(38,49,69,.045);
+  --bg:#EDEFF3;--card:#FFFFFF;
+  --shadow:0 1px 2px rgba(38,49,69,.04), 0 22px 48px -30px rgba(38,49,69,.45);
+  --serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+  --ok:#1f7a44;--ok-bg:#e8f4ec;--ok-bd:#c3e2d0;
+  --warn:#9a6a00;--warn-bg:#f7efd6;
+  --danger:#b42318;--danger-bg:#fdecea;--danger-bd:#f6cbc5;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased;letter-spacing:.01em}
+
+/* LOGIN */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.login-box{background:var(--card);border:1px solid var(--line-2);border-radius:20px;padding:44px 40px;width:360px;text-align:center;box-shadow:var(--shadow)}
+.login-logo{width:62px;height:62px;background:var(--ink);border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:24px;font-weight:600;color:#fff;letter-spacing:.04em;margin:0 auto 18px}
+.login-title{font-family:var(--serif);font-size:22px;font-weight:600;color:var(--ink);margin-bottom:6px}
+.login-sub{font-size:12px;color:var(--ink-70);margin-bottom:26px}
+.form-input{width:100%;padding:13px 15px;border:1px solid var(--line);border-radius:11px;font-family:var(--sans);font-size:18px;text-align:center;letter-spacing:.3em;background:#fff;color:var(--ink)}
+.form-input:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(38,49,69,.08)}
+.btn-primary{width:100%;margin-top:16px;padding:13px;background:var(--ink);color:#fff;border:none;border-radius:11px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;letter-spacing:.02em;transition:opacity .2s}
+.btn-primary:hover{opacity:.88}
+.login-err{font-size:12px;color:var(--danger);margin-top:12px;min-height:14px;font-weight:600}
+
+/* APP */
+.app{display:none;max-width:900px;margin:0 auto;padding:24px 22px 60px}
+.hero{background:var(--ink);border-radius:18px;padding:28px 30px;margin-bottom:24px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.hero::after{content:"";position:absolute;inset:0;background:radial-gradient(130% 200% at 100% -20%,rgba(255,255,255,.08),transparent 55%);pointer-events:none}
+.hero-top{display:flex;align-items:center;gap:14px;position:relative;z-index:1}
+.hero-logo{width:52px;height:52px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:21px;font-weight:600;color:#fff;letter-spacing:.04em}
+.hero-eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.6);font-weight:600}
+.hero h1{font-family:var(--serif);color:#fff;font-size:24px;font-weight:600;line-height:1.1}
+.hero .back{position:absolute;top:28px;right:30px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:8px 15px;font-size:12px;font-weight:600;text-decoration:none;z-index:1}
+.hero .back:hover{background:rgba(255,255,255,.18)}
+
+.card{background:var(--card);border:1px solid var(--line-2);border-radius:16px;padding:24px;margin-bottom:18px;box-shadow:var(--shadow)}
+.card h2{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink);margin-bottom:4px;display:flex;align-items:center;gap:9px}
+.card .hint{font-size:12.5px;color:var(--ink-70);margin-bottom:18px;line-height:1.45}
+.ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ic-pin{background:var(--tint);color:var(--ink)}
+.ic-mag{background:var(--ok-bg);color:var(--ok)}
+.ic-his{background:#e6eefb;color:#0C447C}
+.ic-cfg{background:#ede4f7;color:#7a4ba8}
+
+.field{margin-bottom:13px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--ink-70);margin-bottom:5px}
+.field input,.field textarea{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-family:var(--sans);font-size:14px;background:#fff;color:var(--ink)}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(38,49,69,.08)}
+.field.pin input{text-align:center;letter-spacing:.3em;font-size:17px}
+.btn{padding:10px 18px;background:var(--ink);color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-size:13.5px;font-weight:600;cursor:pointer}
+.btn:hover{opacity:.9}
+.btn.sec{background:var(--tint);color:var(--ink)}
+.btn.sm{padding:7px 13px;font-size:12.5px}
+.btn-row{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:4px}
+.msg{font-size:12.5px;font-weight:600;margin-left:4px}
+.msg.ok{color:var(--ok)} .msg.err{color:var(--danger)}
+
+.tbl{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+.tbl th,.tbl td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line-2)}
+.tbl th{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-55);font-weight:700}
+.tbl td.num{text-align:right;font-variant-numeric:tabular-nums}
+.scrollbox{max-height:340px;overflow:auto;border:1px solid var(--line-2);border-radius:10px;margin-top:6px}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:99px}
+.pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.no{background:var(--danger-bg);color:var(--danger)}
+.mag-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line-2)}
+.mag-row .nom{flex:1;min-width:160px;font-weight:600;font-size:13.5px}
+.mag-row .code{font-size:12px;color:var(--ink-55);font-variant-numeric:tabular-nums}
+.mag-row input{width:120px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;text-align:center;letter-spacing:.2em}
+.mag-find{width:100%;padding:10px 13px;border:1px solid var(--line);border-radius:10px;font-size:13.5px;margin-bottom:10px}
+@media(max-width:680px){.hero .back{position:static;display:inline-block;margin-top:14px}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login">
+  <div class="login-box">
+    <div class="login-logo">IZ</div>
+    <h1 class="login-title">Sécurité</h1>
+    <div class="login-sub">Accès réservé — code PIN du siège.</div>
+    <input type="password" inputmode="numeric" class="form-input" id="pin" placeholder="••••" maxlength="12" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn-primary" onclick="doLogin()">Entrer</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <div class="hero">
+    <div class="hero-top">
+      <div class="hero-logo">IZ</div>
+      <div>
+        <div class="hero-eyebrow">IZAC · Administration</div>
+        <h1>Sécurité &amp; réglages</h1>
+      </div>
+    </div>
+    <a class="back" href="index.html">← Portail</a>
+  </div>
+
+  <!-- 1. PIN SIÈGE -->
+  <div class="card">
+    <h2><span class="ic ic-pin">🔑</span> Code PIN du siège</h2>
+    <div class="hint">Ce code déverrouille tous les outils internes (messages, réception, météo, consommables, transport). Le changer ici le met à jour partout, sans rien réuploader.</div>
+    <div class="field pin"><label>PIN actuel</label><input id="pinOld" type="password" inputmode="numeric" placeholder="••••" maxlength="12"></div>
+    <div class="field pin"><label>Nouveau PIN</label><input id="pinNew" type="password" inputmode="numeric" placeholder="nouveau code" maxlength="12"></div>
+    <div class="field pin"><label>Confirmer le nouveau PIN</label><input id="pinNew2" type="password" inputmode="numeric" placeholder="re-saisir" maxlength="12"></div>
+    <div class="btn-row"><button class="btn" onclick="changePin()">Changer le PIN</button><span class="msg" id="pinMsg"></span></div>
+  </div>
+
+  <!-- 2. PIN MAGASINS -->
+  <div class="card">
+    <h2><span class="ic ic-mag">🏬</span> Codes PIN des magasins</h2>
+    <div class="hint">Chaque magasin a son propre code pour sa page de réception. Définis ou modifie un code, puis « OK ». Laisse vide et « OK » pour retirer l'accès.</div>
+    <input class="mag-find" id="magFind" placeholder="Filtrer un magasin (nom ou code)…">
+    <div id="magList"><div style="color:var(--ink-55);font-size:13px;padding:8px">Chargement…</div></div>
+  </div>
+
+  <!-- 3. HISTORIQUE -->
+  <div class="card">
+    <h2><span class="ic ic-his">🕑</span> Historique des connexions</h2>
+    <div class="hint">Dernières tentatives de connexion (siège et magasins), réussies ou non.</div>
+    <div class="btn-row" style="margin-bottom:6px">
+      <button class="btn sec sm" onclick="loadHistory()">Rafraîchir</button>
+      <button class="btn sec sm" onclick="resetLock('siege')">Débloquer le siège</button>
+      <button class="btn sec sm" onclick="resetLock('transport')">Débloquer transport</button>
+      <button class="btn sec sm" onclick="resetLock('magasins')">Débloquer magasins</button>
+      <span class="msg" id="lockMsg"></span>
+    </div>
+    <div class="scrollbox"><table class="tbl"><thead><tr><th>Quand</th><th>Outil</th><th class="num">Résultat</th></tr></thead><tbody id="histBody"><tr><td colspan="3" style="color:var(--ink-55);padding:14px">—</td></tr></tbody></table></div>
+  </div>
+
+  <!-- 4. RÉGLAGES PARTAGÉS -->
+  <div class="card">
+    <h2><span class="ic ic-cfg">⚙️</span> Réglages partagés</h2>
+    <div class="hint">Valeurs lues directement par les outils. Modifie et « Enregistrer » — effet immédiat, sans réupload.</div>
+    <div class="field"><label>Message direction (météo)</label><textarea id="cfg_meteo" rows="2" placeholder="Message affiché aux magasins sur la météo"></textarea></div>
+    <div class="field"><label>Délai de relance réception (jours)</label><input id="cfg_relance" type="number" min="0" placeholder="3"></div>
+    <div class="btn-row"><button class="btn" onclick="saveConfig()">Enregistrer les réglages</button><span class="msg" id="cfgMsg"></span></div>
+  </div>
+
+  <div style="text-align:center;color:var(--ink-55);font-size:11.5px;margin-top:14px">IZAC · Administration interne</div>
+</div>
+
+<script>
+const SUPABASE_URL='https://imurxmsglmpgxdbavalk.supabase.co';
+const SUPABASE_KEY='sb_publishable_-FqQ5I6tx4rCUwUqmsf5DA_IFsfkUlQ';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+let SESSION_HASH=null; // hash du PIN siège saisi, gardé en mémoire pour les appels admin
+
+async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+
+// ---- LOGIN ----
+async function doLogin(){
+  const pin=(document.getElementById('pin').value||'').trim();
+  const err=document.getElementById('loginErr');
+  if(!pin){err.textContent='Entre le code PIN.';return;}
+  err.textContent='';
+  try{
+    const hash=await sha256(pin);
+    const {data,error}=await sb.rpc('conso_login',{p_hash:hash});
+    if(error){err.textContent='Erreur de connexion.';return;}
+    if(data&&data.ok){
+      SESSION_HASH=hash;
+      document.getElementById('login').style.display='none';
+      document.getElementById('app').style.display='block';
+      loadMagasins(); loadHistory(); loadConfig();
+      return;
+    }
+    if(data&&data.locked)err.textContent='Trop d\'essais. Réessaie dans '+(data.wait||15)+' min.';
+    else if(data&&typeof data.left==='number')err.textContent='PIN incorrect — '+data.left+' essai(s) restant(s).';
+    else err.textContent='PIN incorrect.';
+  }catch(e){err.textContent='Erreur : '+(e.message||e);}
+}
+
+// ---- 1. CHANGER LE PIN ----
+async function changePin(){
+  const old=(document.getElementById('pinOld').value||'').trim();
+  const n1=(document.getElementById('pinNew').value||'').trim();
+  const n2=(document.getElementById('pinNew2').value||'').trim();
+  const msg=document.getElementById('pinMsg'); msg.className='msg'; msg.textContent='';
+  if(!old||!n1){msg.classList.add('err');msg.textContent='Remplis tous les champs.';return;}
+  if(n1!==n2){msg.classList.add('err');msg.textContent='Les deux nouveaux PIN ne correspondent pas.';return;}
+  if(n1.length<4){msg.classList.add('err');msg.textContent='Choisis au moins 4 chiffres.';return;}
+  try{
+    const oldH=await sha256(old), newH=await sha256(n1);
+    const {data,error}=await sb.rpc('admin_set_pin_siege',{p_old_hash:oldH,p_new_hash:newH});
+    if(error){msg.classList.add('err');msg.textContent='Erreur : '+error.message;return;}
+    if(data&&data.ok){
+      msg.classList.add('ok');msg.textContent='PIN changé ✓ Il est actif partout.';
+      SESSION_HASH=newH;
+      document.getElementById('pinOld').value='';document.getElementById('pinNew').value='';document.getElementById('pinNew2').value='';
+    }else{msg.classList.add('err');msg.textContent=(data&&data.err)||'Échec.';}
+  }catch(e){msg.classList.add('err');msg.textContent='Erreur : '+(e.message||e);}
+}
+
+// ---- 2. PIN MAGASINS ----
+let MAGS=[];
+async function loadMagasins(){
+  const box=document.getElementById('magList');
+  // on liste les magasins depuis conso_magasins (référentiel), + état d'accès depuis magasins
+  const [m,acc]=await Promise.all([
+    sb.from('conso_magasins').select('code,nom,type').order('nom'),
+    sb.from('magasins').select('code,nom')
+  ]);
+  if(m.error){box.innerHTML='<div style="color:var(--danger);font-size:13px;padding:8px">Erreur : '+m.error.message+'</div>';return;}
+  const hasAccess=new Set((acc.data||[]).map(r=>r.code));
+  MAGS=(m.data||[]).map(r=>({...r,actif:hasAccess.has(r.code)}));
+  renderMags();
+}
+function renderMags(){
+  const q=(document.getElementById('magFind').value||'').toLowerCase().trim();
+  const list=MAGS.filter(m=>!q||(m.nom+' '+m.code).toLowerCase().includes(q));
+  const box=document.getElementById('magList');
+  if(!list.length){box.innerHTML='<div style="color:var(--ink-55);font-size:13px;padding:8px">Aucun magasin.</div>';return;}
+  box.innerHTML=list.slice(0,80).map(m=>`
+    <div class="mag-row">
+      <span class="nom">${m.nom||m.code}</span>
+      <span class="code">${m.code}</span>
+      <span class="pill ${m.actif?'ok':'no'}">${m.actif?'accès actif':'pas de code'}</span>
+      <input type="text" inputmode="numeric" id="mp-${m.code}" placeholder="nouveau code">
+      <button class="btn sm" onclick="setMagPin('${m.code}')">OK</button>
+    </div>`).join('') + (list.length>80?`<div style="color:var(--ink-55);font-size:12px;padding:8px">… affine la recherche pour voir les ${list.length-80} autres.</div>`:'');
+}
+document.getElementById('magFind')?.addEventListener('input',renderMags);
+async function setMagPin(code){
+  const inp=document.getElementById('mp-'+code);
+  const pin=(inp.value||'').trim();
+  const mag=MAGS.find(m=>m.code===code);
+  const nom=(mag&&mag.nom)?mag.nom:code;
+  try{
+    const hash=pin?await sha256(pin):null;
+    // mag_set_pin(p_code, p_nom, p_hash) : hash null => retire l'accès
+    const {error}=await sb.rpc('mag_set_pin',{p_code:code,p_nom:nom,p_hash:hash});
+    if(error){alert('Erreur : '+error.message);return;}
+    inp.value='';
+    loadMagasins();
+  }catch(e){alert('Erreur : '+(e.message||e));}
+}
+
+// ---- 3. HISTORIQUE ----
+async function loadHistory(){
+  const body=document.getElementById('histBody');
+  if(!SESSION_HASH)return;
+  const {data,error}=await sb.rpc('admin_login_history',{p_hash:SESSION_HASH,p_limit:150});
+  if(error){body.innerHTML='<tr><td colspan="3" style="color:var(--danger);padding:14px">Erreur : '+error.message+'</td></tr>';return;}
+  if(!data||!data.ok){body.innerHTML='<tr><td colspan="3" style="padding:14px">Accès refusé.</td></tr>';return;}
+  const rows=data.rows||[];
+  if(!rows.length){body.innerHTML='<tr><td colspan="3" style="color:var(--ink-55);padding:14px">Aucune connexion enregistrée pour l\'instant.</td></tr>';return;}
+  body.innerHTML=rows.map(r=>{
+    const d=new Date(r.created_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+    const outil=r.outil==='siege'?'Siège':(r.outil||'—');
+    return `<tr><td>${d}</td><td>${outil}</td><td class="num"><span class="pill ${r.ok?'ok':'no'}">${r.ok?'réussi':'échoué'}</span></td></tr>`;
+  }).join('');
+}
+async function resetLock(cible){
+  const msg=document.getElementById('lockMsg'); msg.className='msg'; msg.textContent='';
+  if(!SESSION_HASH)return;
+  const {data,error}=await sb.rpc('admin_reset_lock',{p_hash:SESSION_HASH,p_cible:cible});
+  if(error){msg.classList.add('err');msg.textContent='Erreur : '+error.message;return;}
+  if(data&&data.ok){msg.classList.add('ok');msg.textContent='Blocage levé ✓';}
+  else{msg.classList.add('err');msg.textContent=(data&&data.err)||'Échec.';}
+}
+
+// ---- 4. RÉGLAGES ----
+async function loadConfig(){
+  const {data,error}=await sb.from('app_config').select('cle,valeur');
+  if(error)return;
+  const map={}; (data||[]).forEach(r=>map[r.cle]=r.valeur);
+  if(map.meteo_message_direction!=null)document.getElementById('cfg_meteo').value=map.meteo_message_direction;
+  if(map.reception_relance_jours!=null)document.getElementById('cfg_relance').value=map.reception_relance_jours;
+}
+async function saveConfig(){
+  const msg=document.getElementById('cfgMsg'); msg.className='msg'; msg.textContent='';
+  const rows=[
+    {cle:'meteo_message_direction',valeur:document.getElementById('cfg_meteo').value,updated_at:new Date().toISOString()},
+    {cle:'reception_relance_jours',valeur:String(document.getElementById('cfg_relance').value||'').trim(),updated_at:new Date().toISOString()}
+  ];
+  const {error}=await sb.from('app_config').upsert(rows,{onConflict:'cle'});
+  if(error){msg.classList.add('err');msg.textContent='Erreur : '+error.message;return;}
+  msg.classList.add('ok');msg.textContent='Réglages enregistrés ✓';
+}
+
+document.getElementById('pin').focus();
+</script>
+</body>
+</html>
