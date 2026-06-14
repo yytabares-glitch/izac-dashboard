@@ -66,6 +66,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
 .ic-exped{background:#fbe9d8;color:var(--exped)}
 .ic-conso{background:var(--tint-2);color:var(--conso)}
 .foot{text-align:center;color:var(--ink-55);font-size:11.5px;margin-top:30px}
+.idle-warn{display:none;align-items:center;justify-content:center;gap:16px;background:var(--warn-bg);border:1px solid #e8d9a8;color:#7a5400;border-radius:12px;padding:12px 20px;margin-bottom:18px;font-size:13.5px;font-weight:600}
+.idle-warn.show{display:flex}
+.idle-warn button{background:var(--ink);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--sans)}
+.idle-warn b{font-variant-numeric:tabular-nums}
 
 @media (max-width:760px){
   .hub-wrap{padding:16px 13px 40px}
@@ -94,6 +98,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
 
 <!-- HUB -->
 <div class="hub-wrap" id="hub-wrap">
+  <div class="idle-warn" id="idleWarn">
+    <span>Tu vas être déconnectée dans <b id="idleCount">5:00</b> pour inactivité.</span>
+    <button onclick="stayConnected()">Rester connectée</button>
+  </div>
   <div class="hero">
     <div class="hero-logo">IZ</div>
     <h1>Portail outils</h1>
@@ -162,16 +170,61 @@ async function login(){
   enterHub();
 }
 function logout(){
+  stopIdleTimer();
   sb.auth.signOut();
   document.getElementById('hub-wrap').style.display='none';
   document.getElementById('login-wrap').style.display='flex';
 }
+
+// ── DÉCONNEXION AUTO PAR INACTIVITÉ (1h, avertissement à 5 min) ──
+const IDLE_LIMIT = 60*60*1000;   // 1h
+const IDLE_WARN  = 5*60*1000;    // avertir 5 min avant
+let idleTimer=null, warnTimer=null, countdownTimer=null, lastActivity=0;
+function startIdleTimer(){
+  ['mousemove','mousedown','keydown','scroll','touchstart','click'].forEach(ev=>
+    document.addEventListener(ev, onActivity, {passive:true}));
+  resetIdle();
+}
+function stopIdleTimer(){
+  ['mousemove','mousedown','keydown','scroll','touchstart','click'].forEach(ev=>
+    document.removeEventListener(ev, onActivity));
+  clearTimeout(idleTimer); clearTimeout(warnTimer); clearInterval(countdownTimer);
+  document.getElementById('idleWarn').classList.remove('show');
+}
+function onActivity(){
+  // ne pas réinitialiser juste à cause du tic-tac : on réinitialise sur vraie activité
+  const warnVisible=document.getElementById('idleWarn').classList.contains('show');
+  if(!warnVisible) resetIdle();  // pendant l'avertissement, il faut cliquer "rester connectée"
+}
+function resetIdle(){
+  lastActivity=Date.now();
+  clearTimeout(idleTimer); clearTimeout(warnTimer); clearInterval(countdownTimer);
+  document.getElementById('idleWarn').classList.remove('show');
+  warnTimer=setTimeout(showIdleWarn, IDLE_LIMIT - IDLE_WARN);
+  idleTimer=setTimeout(()=>{ logout(); }, IDLE_LIMIT);
+}
+function showIdleWarn(){
+  const warn=document.getElementById('idleWarn'); warn.classList.add('show');
+  let remaining=IDLE_WARN;
+  updateCount(remaining);
+  countdownTimer=setInterval(()=>{
+    remaining-=1000;
+    if(remaining<=0){ clearInterval(countdownTimer); return; }
+    updateCount(remaining);
+  },1000);
+}
+function updateCount(ms){
+  const m=Math.floor(ms/60000), s=Math.floor((ms%60000)/1000);
+  document.getElementById('idleCount').textContent=m+':'+String(s).padStart(2,'0');
+}
+function stayConnected(){ resetIdle(); }
 function enterHub(){
   document.getElementById('login-wrap').style.display='none';
   document.getElementById('hub-wrap').style.display='block';
   const d=new Date();
   document.getElementById('today').textContent=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   loadStats();
+  startIdleTimer();
 }
 document.getElementById('pwd').addEventListener('keypress',e=>{if(e.key==='Enter')login();});
 document.getElementById('email').addEventListener('keypress',e=>{if(e.key==='Enter')login();});
