@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin consommables — IZAC</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --navy:#0D2750; --navy2:#0C447C; --bg:#EDEFF3; --card:#fff; --line:#E5E9F2; --line2:#EEF1F6;
@@ -23,15 +24,16 @@
   .hidden{display:none!important}
 
   /* login */
-  .gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-  .login{max-width:360px;width:100%;background:#fff;border:1px solid var(--line);border-radius:18px;padding:34px 28px 28px;text-align:center;box-shadow:0 14px 50px rgba(13,39,80,.1)}
-  .login .lg{width:46px;height:46px;background:var(--navy);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin:0 auto 18px}
-  .login h1{font-weight:800;font-size:18px;margin:0 0 5px;color:var(--navy)}
-  .login p{color:var(--ink3);font-size:12.5px;margin:0 0 20px}
-  .login input{width:100%;border:1px solid var(--line);border-radius:12px;padding:13px 15px;font-size:18px;outline:none;text-align:center;letter-spacing:.3em}
-  .login input:focus{border-color:var(--navy)}
-  .login .btn{width:100%;margin-top:18px;padding:13px;background:var(--navy);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer}
-  .login .err{color:var(--red);font-size:12px;font-weight:600;margin-top:13px;min-height:14px}
+  .gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#EDEFF3;font-family:'Hanken Grotesk',system-ui,sans-serif}
+  .login{max-width:360px;width:100%;background:#fff;border:1px solid rgba(38,49,69,.06);border-radius:20px;padding:44px 40px;text-align:center;box-shadow:0 16px 56px rgba(38,49,69,.12)}
+  .login .lg{width:62px;height:62px;background:#263145;border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',Georgia,serif;font-size:24px;font-weight:600;color:#fff;letter-spacing:.04em;margin:0 auto 18px}
+  .login h1{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:22px;margin:0 0 6px;color:#263145}
+  .login p{color:#5b647a;font-size:12px;margin:0 0 26px}
+  .login input{width:100%;border:1px solid rgba(38,49,69,.10);border-radius:11px;padding:13px 15px;font-size:18px;outline:none;text-align:center;letter-spacing:.3em;font-family:'Hanken Grotesk',system-ui,sans-serif}
+  .login input:focus{border-color:#263145;box-shadow:0 0 0 3px rgba(38,49,69,.08)}
+  .login .btn{width:100%;margin-top:16px;padding:13px;background:#263145;color:#fff;border:none;border-radius:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Hanken Grotesk',system-ui,sans-serif;letter-spacing:.02em}
+  .login .btn:hover{opacity:.88}
+  .login .err{color:#b42318;font-size:12px;font-weight:600;margin-top:12px;min-height:14px}
 
   .summary{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
   .pill{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 16px;font-size:13px}
