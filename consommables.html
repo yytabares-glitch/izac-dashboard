@@ -427,17 +427,9 @@ document.getElementById('confirmBtn').addEventListener('click',async()=>{
     if(e2) throw e2;
   }catch(e){ err.textContent='Erreur enregistrement : '+e.message; btn.disabled=false; return; }
 
-  // TXT dépôt
-  if(depot.length){
-    const lines=depot.map(a=>`${a.gencod}\t${qty[a.id]}\t\t`);
-    const txt=lines.join('\r\n')+'\r\n';
-    const fname=curMag.fastmag.replace(/[^A-Za-z0-9_-]/g,'_')+'.txt';
-    const blob=new Blob([txt],{type:'text/plain;charset=utf-8'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a'); a.href=url; a.download=fname; a.click();
-    URL.revokeObjectURL(url);
-  }
-  // mail siège
+  // (Le TXT n'est PLUS généré côté magasin : il est produit au siège, dans l'admin.)
+
+  // mail siège (partie préparée manuellement au siège)
   if(siege.length){
     const today=new Date().toLocaleDateString('fr-FR');
     const subject=`Commande consommables (siège) — ${curMag.nom} — ${today}`;
@@ -446,7 +438,7 @@ document.getElementById('confirmBtn').addEventListener('click',async()=>{
     if(justification) body+=`\nJustification : ${justification}\n`;
     body+=`\nMerci.`;
     const mailto=`mailto:${encodeURIComponent(EMAIL_SIEGE)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    setTimeout(()=>{ window.location.href=mailto; }, depot.length?600:0);
+    setTimeout(()=>{ window.location.href=mailto; }, 0);
   }
 
   // mail d'alerte au siège si quantités inhabituelles
@@ -457,7 +449,7 @@ document.getElementById('confirmBtn').addEventListener('click',async()=>{
     overQty.forEach(o=>{ body+=`- ${o.lib} : ${o.q} (${o.raison})\n`; });
     body+=`\nJustification du magasin : ${justification||'(aucune)'}\n`;
     const mailto=`mailto:${encodeURIComponent(EMAIL_ALERTE)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    setTimeout(()=>{ window.location.href=mailto; }, (depot.length?600:0)+(siege.length?1200:600));
+    setTimeout(()=>{ window.location.href=mailto; }, siege.length?1200:0);
   }
 
   // fermer + réinitialiser (on garde le magasin sélectionné)
@@ -465,17 +457,17 @@ document.getElementById('confirmBtn').addEventListener('click',async()=>{
   showDone(depot.length, siege.length, numero);
   qty={}; document.getElementById('fNom').value=''; document.getElementById('fPrenom').value=''; document.getElementById('fCheck').checked=false;
   document.getElementById('fJust').value=''; overQty=[];
-  lastOrder=null; await loadHistory(curMag.code); // recharge l'historique (la nouvelle commande devient la dernière)
-  renderCatalogue();  // ré-affiche le catalogue vidé pour le même magasin
+  lastOrder=null; await loadHistory(curMag.code);
+  renderCatalogue();
 });
 
 function showDone(nDepot,nSiege,numero){
   const parts=[];
-  if(nDepot) parts.push(`fichier dépôt téléchargé (${nDepot} article·s)`);
-  if(nSiege) parts.push(`email siège préparé (${nSiege} article·s)`);
+  if(nDepot) parts.push(`${nDepot} article·s dépôt (préparés au siège)`);
+  if(nSiege){ parts.push(`${nSiege} article·s siège — email à envoyer`); }
   let msg=document.getElementById('doneMsg');
   if(!msg){ msg=document.createElement('div'); msg.id='doneMsg'; msg.style.cssText='position:fixed;bottom:74px;left:0;right:0;text-align:center;font-size:13px;color:var(--green);font-weight:700;z-index:55;padding:0 16px'; document.body.appendChild(msg); }
-  msg.innerHTML=`✓ Commande <b>${numero||''}</b> enregistrée — `+parts.join(' · ');
+  msg.innerHTML=`✓ Commande <b>${numero||''}</b> envoyée — `+parts.join(' · ');
   setTimeout(()=>{ if(msg) msg.textContent=''; }, 8000);
 }
 
