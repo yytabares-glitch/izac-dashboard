@@ -8,59 +8,65 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#15161a; --paper:#f6f4ef; --card:#fffefb; --line:#e2ddd2;
-    --muted:#7d7869; --accent:#d4512e; --accent-soft:#f3d9cf;
-    --good:#2f7d4f; --bad:#b3402c;
+    --ink:#263145; --bg:#EDEFF3; --card:#FFFFFF; --line:rgba(38,49,69,.10); --line-2:rgba(38,49,69,.06);
+    --ink-70:#5b647a; --ink-55:#828a9c;
+    --serif:'Fraunces',Georgia,serif; --sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+    --shadow:0 16px 56px rgba(38,49,69,.12);
+    --good:#1f9d57; --good-bg:#e6f6ed; --bad:#b42318; --bad-bg:#fdeceb;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;background:var(--paper);color:var(--ink);
-    -webkit-font-smoothing:antialiased;line-height:1.45}
-  .wrap{max-width:760px;margin:0 auto;padding:32px 20px 80px}
-  header{border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:8px}
-  .brand{font-weight:800;font-size:13px;letter-spacing:.22em;text-transform:uppercase}
-  .brand .x{color:var(--accent)}
-  h1{font-size:25px;font-weight:800;letter-spacing:-.01em;margin-top:4px}
-  .lead{color:var(--muted);font-size:14px;margin-top:6px}
-  a.back{font-size:13px;color:var(--accent);text-decoration:none;font-weight:600}
-  a.back:hover{text-decoration:underline}
+  body{font-family:var(--sans);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.45;letter-spacing:.01em}
+  .wrap{max-width:760px;margin:0 auto;padding:28px 20px 80px}
 
-  .drop{margin-top:26px;border:1.5px dashed var(--line);border-radius:10px;background:var(--card);
-    padding:48px 24px;text-align:center;transition:.15s;cursor:pointer}
-  .drop:hover,.drop.over{border-color:var(--accent);background:#fffaf7}
-  .drop h2{font-size:17px;font-weight:700;margin-bottom:6px}
-  .drop p{color:var(--muted);font-size:13px}
+  /* en-tête navy facon hub */
+  .hero{background:var(--ink);border-radius:18px;padding:28px 30px;margin-bottom:24px;position:relative;box-shadow:var(--shadow)}
+  .hero-top{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+  .hero-logo{width:52px;height:52px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:21px;font-weight:600;color:#fff;letter-spacing:.04em}
+  .hero-eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.6);font-weight:600}
+  .hero h1{font-family:var(--serif);color:#fff;font-size:24px;font-weight:600;line-height:1.1}
+  .hero p{color:rgba(255,255,255,.72);font-size:13.5px;margin-top:10px;max-width:560px}
+  .hero code{background:rgba(255,255,255,.12);color:#fff;padding:1px 6px;border-radius:5px;font-size:12px}
+  .hero .links{margin-top:16px;display:flex;gap:18px}
+  .hero .links a{font-size:13px;color:#fff;text-decoration:none;font-weight:600;opacity:.85}
+  .hero .links a:hover{opacity:1;text-decoration:underline}
+
+  .stat{background:var(--card);border:1px solid var(--line-2);border-radius:14px;padding:16px 20px;font-size:13.5px;box-shadow:var(--shadow);color:var(--ink-70)}
+  .stat b{font-variant-numeric:tabular-nums;color:var(--ink);font-family:var(--serif)}
+
+  .drop{margin-top:20px;border:1.5px dashed var(--line);border-radius:16px;background:var(--card);
+    padding:48px 24px;text-align:center;transition:.15s;cursor:pointer;box-shadow:var(--shadow)}
+  .drop:hover,.drop.over{border-color:var(--ink);background:#fbfcfd}
+  .drop h2{font-family:var(--serif);font-size:19px;font-weight:600;margin-bottom:6px;color:var(--ink)}
+  .drop p{color:var(--ink-55);font-size:13px}
   .drop .pill{display:inline-block;margin-top:14px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
-    color:var(--accent);border:1px solid var(--accent-soft);border-radius:99px;padding:5px 12px}
+    color:var(--ink);border:1px solid var(--line);border-radius:99px;padding:5px 12px;background:var(--bg)}
   input[type=file]{display:none}
 
-  .log{margin-top:24px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;
-    font-size:13px;display:none}
+  .log{margin-top:20px;background:var(--card);border:1px solid var(--line-2);border-radius:16px;padding:20px 22px;
+    font-size:13px;display:none;box-shadow:var(--shadow)}
   .log.show{display:block}
-  .log h3{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
-    border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:12px}
-  .row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0ece3}
+  .log h3{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--ink);
+    border-bottom:1px solid var(--line-2);padding-bottom:12px;margin-bottom:12px}
+  .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line-2)}
   .row:last-child{border-bottom:none}
   .row .v{font-weight:700;font-variant-numeric:tabular-nums}
   .v.good{color:var(--good)} .v.bad{color:var(--bad)}
-  .bar{height:8px;background:#eee6d8;border-radius:4px;overflow:hidden;margin-top:14px}
-  .bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
-  .status{margin-top:12px;font-size:13px;color:var(--muted)}
+  .bar{height:8px;background:var(--bg);border-radius:4px;overflow:hidden;margin-top:14px}
+  .bar i{display:block;height:100%;background:var(--ink);width:0;transition:width .2s}
+  .status{margin-top:12px;font-size:13px;color:var(--ink-55)}
   .status.err{color:var(--bad)} .status.ok{color:var(--good);font-weight:600}
-  .stat{margin-top:24px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 20px;font-size:13px}
-  .stat b{font-variant-numeric:tabular-nums}
-  code{background:#efeadf;padding:1px 5px;border-radius:4px;font-size:12px}
 
-  /* ---- login PIN (charte navy + Fraunces, identique au hub) ---- */
-  #pin-gate{position:fixed;inset:0;background:#EDEFF3;display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;font-family:'Hanken Grotesk',system-ui,sans-serif}
-  #pin-gate .box{background:#fff;border:1px solid rgba(38,49,69,.06);border-radius:20px;padding:44px 40px;width:360px;text-align:center;box-shadow:0 16px 56px rgba(38,49,69,.12)}
-  #pin-gate .lg{width:62px;height:62px;background:#263145;border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',Georgia,serif;font-size:24px;font-weight:600;color:#fff;letter-spacing:.04em;margin:0 auto 18px}
-  #pin-gate h2{font-family:'Fraunces',Georgia,serif;font-size:22px;font-weight:600;color:#263145;margin-bottom:6px}
-  #pin-gate p{font-size:12px;color:#5b647a;margin-bottom:26px}
-  #pin-gate input{width:100%;padding:13px 15px;border:1px solid rgba(38,49,69,.10);border-radius:11px;font-size:18px;text-align:center;letter-spacing:.3em;outline:none;font-family:'Hanken Grotesk',system-ui,sans-serif}
-  #pin-gate input:focus{border-color:#263145;box-shadow:0 0 0 3px rgba(38,49,69,.08)}
-  #pin-gate button{width:100%;margin-top:16px;padding:13px;background:#263145;color:#fff;border:none;border-radius:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Hanken Grotesk',system-ui,sans-serif;letter-spacing:.02em}
+  /* ---- login PIN (identique au hub) ---- */
+  #pin-gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;font-family:var(--sans)}
+  #pin-gate .box{background:#fff;border:1px solid var(--line-2);border-radius:20px;padding:44px 40px;width:360px;text-align:center;box-shadow:var(--shadow)}
+  #pin-gate .lg{width:62px;height:62px;background:var(--ink);border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:24px;font-weight:600;color:#fff;letter-spacing:.04em;margin:0 auto 18px}
+  #pin-gate h2{font-family:var(--serif);font-size:22px;font-weight:600;color:var(--ink);margin-bottom:6px}
+  #pin-gate p{font-size:12px;color:var(--ink-70);margin-bottom:26px}
+  #pin-gate input{width:100%;padding:13px 15px;border:1px solid var(--line);border-radius:11px;font-size:18px;text-align:center;letter-spacing:.3em;outline:none;font-family:var(--sans)}
+  #pin-gate input:focus{border-color:var(--ink);box-shadow:0 0 0 3px rgba(38,49,69,.08)}
+  #pin-gate button{width:100%;margin-top:16px;padding:13px;background:var(--ink);color:#fff;border:none;border-radius:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans);letter-spacing:.02em}
   #pin-gate button:hover{opacity:.88}
-  #pin-gate .err{color:#b42318;font-size:12px;font-weight:600;margin-top:12px;min-height:14px}
+  #pin-gate .err{color:var(--bad);font-size:12px;font-weight:600;margin-top:12px;min-height:14px}
 </style>
 </head>
 <body>
@@ -78,13 +84,20 @@
 </div>
 
 <div class="wrap" id="app" style="display:none">
-  <header>
-    <div class="brand">IZA<span class="x">C</span> · IMPORT TRANSPORT</div>
-    <h1>Import hebdomadaire</h1>
-    <p class="lead">Glisse l'export FastMag <code>Export_ls.csv</code>. Les lignes s'ajoutent à l'historique —
-      les expéditions déjà présentes (même <code>ID_LS</code>) sont ignorées, pas de doublon.</p>
-    <p style="margin-top:10px"><a class="back" href="index.html">← Portail</a> &nbsp;·&nbsp; <a class="back" href="transport.html">Dashboard de consultation</a></p>
-  </header>
+  <div class="hero">
+    <div class="hero-top">
+      <div class="hero-logo">IZ</div>
+      <div>
+        <div class="hero-eyebrow">IZAC · Import transport</div>
+        <h1>Import hebdomadaire</h1>
+      </div>
+    </div>
+    <p>Glisse l'export FastMag <code>Export_ls.csv</code>. Les lignes s'ajoutent à l'historique — les expéditions déjà présentes (même <code>ID_LS</code>) sont ignorées, pas de doublon.</p>
+    <div class="links">
+      <a href="index.html">← Portail</a>
+      <a href="transport.html">Dashboard de consultation →</a>
+    </div>
+  </div>
 
   <div class="stat" id="stat">Connexion à la base…</div>
 
@@ -137,21 +150,21 @@ async function pinLogin(){
 }
 document.getElementById('pin-btn').addEventListener('click',pinLogin);
 document.getElementById('pin-in').addEventListener('keydown',e=>{if(e.key==='Enter')pinLogin();});
-// déverrouillage mémorisé le temps de la session
 if(sessionStorage.getItem('izac_transport_unlocked')==='1'){
   document.getElementById('pin-gate').style.display='none';
   document.getElementById('app').style.display='';
+  refreshStat();
 }else{
   document.getElementById('pin-in').focus();
 }
 
 // ---- date FastMag -> ISO ----
-function frToISODate(s){ // "02/06/2026 09:10:25" -> "2026-06-02"
+function frToISODate(s){
   if(!s) return null;
   const m = s.trim().match(/(\d{2})\/(\d{2})\/(\d{4})/);
   return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
 }
-function frToISOTimestamp(s){ // -> "2026-06-02T09:10:25"
+function frToISOTimestamp(s){
   if(!s) return null;
   const m = s.trim().match(/(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}):(\d{2}))?/);
   if(!m) return null;
@@ -199,7 +212,6 @@ async function refreshStat(){
   try{
     const { count, error } = await sb.from(TABLE).select('id_ls',{count:'exact',head:true});
     if(error) throw error;
-    // bornes de dates
     const { data: minD } = await sb.from(TABLE).select('dt_exp').order('dt_exp',{ascending:true}).limit(1);
     const { data: maxD } = await sb.from(TABLE).select('dt_exp').order('dt_exp',{ascending:false}).limit(1);
     let period = '';
@@ -221,7 +233,6 @@ async function upload(rows){
   const status = document.getElementById('status');
   status.className = 'status'; status.textContent = 'Comparaison avec la base…';
 
-  // compte avant
   const before = (await sb.from(TABLE).select('id_ls',{count:'exact',head:true})).count || 0;
 
   const CHUNK = 500;
@@ -243,7 +254,6 @@ async function upload(rows){
     return;
   }
 
-  // compte après -> nouvelles lignes réelles
   const after = (await sb.from(TABLE).select('id_ls',{count:'exact',head:true})).count || 0;
   const added = after - before;
   const dupes = rows.length - added;
