@@ -125,6 +125,8 @@
   .cmd-card.done{border-left:3px solid var(--green);opacity:.82}
   .cmd-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--line2)}
   .cmd-actions .btn-dl{background:var(--navy);color:#fff;border:none;border-radius:7px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer}
+  .cmd-actions .btn-print{background:#fff;color:var(--ink);border:1.5px solid var(--ink);border-radius:7px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer}
+  .cmd-actions .btn-print:hover{background:var(--line2)}
   .cmd-actions .btn-dl:hover{background:var(--navy2)}
   .cmd-actions .btn-redo{background:var(--line2);color:var(--ink2);border:none;border-radius:7px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer}
   .cmd-actions .chk{font-size:13px;color:var(--ink2);font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer}
@@ -133,6 +135,14 @@
   .cmd-statut.todo{background:var(--warnbg);color:var(--warn)}
   .cmd-statut.done{background:var(--greenbg);color:var(--green)}
   .badge-siege{font-size:10px;background:#ede4f7;color:#7a4ba8;padding:1px 7px;border-radius:99px;margin-left:6px;font-weight:700}
+  .suivi-banner{display:flex;align-items:center;justify-content:space-between;background:var(--navy);border-radius:10px;padding:14px 20px;margin-bottom:14px;color:#fff}
+  .suivi-banner .sb-left{display:flex;align-items:baseline;gap:10px}
+  .suivi-banner .sb-n{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+  .suivi-banner .sb-lab{font-size:13px;font-weight:600;color:rgba(255,255,255,.8)}
+  .suivi-banner.zero{background:var(--green)}
+  .suivi-banner .sb-live{font-size:11px;font-weight:600;color:rgba(255,255,255,.7)}
+  .suivi-banner .sb-live.flash{color:#fff;animation:sbflash .9s ease}
+  @keyframes sbflash{0%{opacity:.3}100%{opacity:1}}
 </style>
 </head>
 <body>
@@ -196,6 +206,10 @@
   </div>
 
   <div id="tab-suivi" class="hidden">
+    <div class="suivi-banner" id="suiviBanner">
+      <div class="sb-left"><span class="sb-n" id="sbN">0</span><span class="sb-lab">commande(s) à traiter</span></div>
+      <div class="sb-right"><span class="sb-live" id="sbLive">● actualisation auto</span></div>
+    </div>
     <div class="suivi-controls">
       <button class="vchip active" data-vue="atraiter">📋 À traiter <span class="cnt" id="cntAtraiter"></span></button>
       <button class="vchip" data-vue="termine">✓ Terminées <span class="cnt" id="cntTermine"></span></button>
@@ -428,34 +442,62 @@ document.getElementById('groupbar').addEventListener('click',e=>{
 
 // ===== Onglets =====
 let CMDS=null, CMDLIGNES=null, MAGS_ALL=[];
+let suiviTimer=null;
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===t));
   const tab=t.dataset.tab;
   document.getElementById('tab-refs').classList.toggle('hidden',tab!=='refs');
   document.getElementById('tab-suivi').classList.toggle('hidden',tab!=='suivi');
-  if(tab==='suivi' && CMDS===null) loadSuivi();
+  if(tab==='suivi'){
+    if(CMDS===null) loadSuivi();
+    startSuiviAutoRefresh();
+  } else {
+    stopSuiviAutoRefresh();
+  }
 }));
 
-async function loadSuivi(){
-  document.getElementById('suiviContent').innerHTML='<div class="suivi-empty">Chargement des commandes…</div>';
+function startSuiviAutoRefresh(){
+  if(suiviTimer) return;
+  suiviTimer=setInterval(()=>{ loadSuivi(true); }, 30000); // 30 s, silencieux
+}
+function stopSuiviAutoRefresh(){ if(suiviTimer){ clearInterval(suiviTimer); suiviTimer=null; } }
+
+async function loadSuivi(silent){
+  if(!silent) document.getElementById('suiviContent').innerHTML='<div class="suivi-empty">Chargement des commandes…</div>';
   try{
     const [c,l]=await Promise.all([
       sb.from('conso_commandes').select('*').order('created_at',{ascending:false}),
       sb.from('conso_commande_lignes').select('*')
     ]);
     if(c.error) throw c.error; if(l.error) throw l.error;
+    const prevTodo = CMDS ? CMDS.filter(x=>(x.statut||'a_traiter')!=='termine').length : null;
     CMDS=c.data; CMDLIGNES=l.data;
     if(!MAGS_ALL.length){ const m=await sb.from('conso_magasins').select('*'); if(!m.error) MAGS_ALL=m.data; }
     document.getElementById('suiviInfo').textContent=`${CMDS.length} commande(s) au total`;
     updateSuiviCounts();
-    renderSuivi('atraiter');
-  }catch(e){ document.getElementById('suiviContent').innerHTML='<div class="suivi-empty">Erreur : '+e.message+'</div>'; }
+    // si nouvelle(s) commande(s) arrivée(s) pendant un refresh silencieux, on fait flasher le bandeau
+    const nowTodo=CMDS.filter(x=>(x.statut||'a_traiter')!=='termine').length;
+    if(silent && prevTodo!=null && nowTodo>prevTodo){
+      const live=document.getElementById('sbLive');
+      if(live){ live.classList.remove('flash'); void live.offsetWidth; live.classList.add('flash'); live.textContent='● nouvelle commande !'; setTimeout(()=>{ live.textContent='● actualisation auto'; },4000); }
+    }
+    // on ne ré-affiche la liste que si on est sur une vue "liste" pour ne pas gêner l'assistant
+    if(silent){
+      if(suiviVue==='atraiter'||suiviVue==='termine'||suiviVue==='tout') renderSuivi(suiviVue);
+    } else {
+      renderSuivi('atraiter');
+    }
+  }catch(e){ if(!silent) document.getElementById('suiviContent').innerHTML='<div class="suivi-empty">Erreur : '+e.message+'</div>'; }
 }
 function updateSuiviCounts(){
   const todo=CMDS.filter(c=>(c.statut||'a_traiter')!=='termine').length;
   const done=CMDS.length-todo;
   const a=document.getElementById('cntAtraiter'), t=document.getElementById('cntTermine');
   if(a) a.textContent=todo; if(t) t.textContent=done;
+  // bandeau
+  const sbN=document.getElementById('sbN'), banner=document.getElementById('suiviBanner');
+  if(sbN) sbN.textContent=todo;
+  if(banner) banner.classList.toggle('zero',todo===0);
 }
 let suiviVue='atraiter';
 document.querySelector('.suivi-controls').addEventListener('click',e=>{
@@ -488,6 +530,7 @@ function linesOf(cmdId){ return CMDLIGNES.filter(l=>String(l.commande_id)===Stri
 // ---- actions du poste de travail assistant ----
 document.getElementById('suiviContent').addEventListener('click',async e=>{
   const dl=e.target.closest('[data-dl]'); if(dl){ downloadTxt(dl.dataset.dl); return; }
+  const pr=e.target.closest('[data-print]'); if(pr){ printBon(pr.dataset.print); return; }
   const dn=e.target.closest('[data-done]'); if(dn){ await setStatut(dn.dataset.done,'termine'); return; }
   const ro=e.target.closest('[data-redo]'); if(ro){ await setStatut(ro.dataset.redo,'a_traiter'); return; }
 });
@@ -505,6 +548,82 @@ function downloadTxt(cid){
   const a=document.createElement('a'); a.href=url; a.download=fname; a.click(); URL.revokeObjectURL(url);
   // télécharger marque la commande comme terminée
   setStatut(cid,'termine');
+}
+
+// ---- Bon de préparation imprimable (sobre N&B, dépôt + siège, cases à cocher) ----
+function printBon(cid){
+  const c=CMDS.find(x=>String(x.id)===String(cid)); if(!c) return;
+  const ls=linesOf(cid);
+  if(!ls.length){ alert('Cette commande ne contient aucune ligne.'); return; }
+  const TL={R:'Réseau',O:'Outlet',A:'Affilié'};
+  const d=new Date(c.created_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const today=new Date().toLocaleDateString('fr-FR');
+  const depot=ls.filter(l=>l.circuit!=='siege');
+  const siege=ls.filter(l=>l.circuit==='siege');
+  const esc=s=>String(s==null?'':s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+  const rows=arr=>arr.map(l=>`<tr>
+      <td class="ck"></td>
+      <td class="lib">${esc(l.libelle)}</td>
+      <td class="gc">${esc(l.gencod||'—')}</td>
+      <td class="q">${esc(l.quantite)}</td>
+    </tr>`).join('');
+  const section=(titre,arr)=> arr.length ? `
+    <div class="sec-title">${titre} <span class="sec-n">${arr.length} référence${arr.length>1?'s':''}</span></div>
+    <table class="bon">
+      <thead><tr><th class="ck">✓</th><th class="lib">Article</th><th class="gc">Gencod</th><th class="q">Qté</th></tr></thead>
+      <tbody>${rows(arr)}</tbody>
+    </table>` : '';
+  const totalQ=ls.reduce((s,l)=>s+(l.quantite||0),0);
+
+  const html=`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Bon ${esc(c.numero||'')}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,Helvetica,sans-serif;color:#000;padding:24px 28px;font-size:13px;line-height:1.4}
+    .head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #000;padding-bottom:12px;margin-bottom:16px}
+    .brand{font-size:20px;font-weight:800;letter-spacing:.05em}
+    .brand small{display:block;font-size:10px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;margin-top:2px}
+    .doc{text-align:right;font-size:12px}
+    .doc .t{font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+    .meta{width:100%;border-collapse:collapse;margin-bottom:18px;font-size:12.5px}
+    .meta td{padding:4px 8px;border:1px solid #000;vertical-align:top}
+    .meta .lab{font-weight:700;background:#f0f0f0;width:120px;text-transform:uppercase;font-size:10.5px;letter-spacing:.04em}
+    .just{border:1px solid #000;padding:8px 10px;margin-bottom:18px;font-size:12px}
+    .just b{text-transform:uppercase;font-size:10.5px;letter-spacing:.04em}
+    .sec-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin:16px 0 6px;border-bottom:1.5px solid #000;padding-bottom:4px}
+    .sec-title .sec-n{float:right;font-weight:600;font-size:11px;text-transform:none;letter-spacing:0}
+    table.bon{width:100%;border-collapse:collapse;margin-bottom:8px}
+    table.bon th,table.bon td{border:1px solid #000;padding:7px 8px;text-align:left}
+    table.bon th{background:#f0f0f0;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em}
+    table.bon .ck{width:34px;text-align:center}
+    table.bon td.ck{height:26px}
+    table.bon .gc{width:150px;font-family:"Courier New",monospace;font-size:12px}
+    table.bon .q{width:54px;text-align:right;font-weight:700;font-size:15px}
+    .foot{margin-top:22px;display:flex;justify-content:space-between;font-size:11px;border-top:1px solid #000;padding-top:10px}
+    .sign{margin-top:30px;font-size:11.5px}
+    .sign .line{display:inline-block;border-bottom:1px solid #000;width:200px;margin-left:8px}
+    @media print{ body{padding:0} @page{margin:14mm} }
+  </style></head><body>
+    <div class="head">
+      <div class="brand">IZAC<small>Préparation consommables</small></div>
+      <div class="doc"><div class="t">Bon de préparation</div>N° ${esc(c.numero||'—')}<br>Imprimé le ${esc(today)}</div>
+    </div>
+    <table class="meta">
+      <tr><td class="lab">Magasin</td><td><b>${esc(c.mag_nom)}</b> — ${esc(TL[c.mag_type]||c.mag_type)} (${esc(c.mag_code)})</td>
+          <td class="lab">Commandé le</td><td>${esc(d)}</td></tr>
+      <tr><td class="lab">Demandeur</td><td>${esc((c.demandeur_prenom||'')+' '+(c.demandeur_nom||''))}</td>
+          <td class="lab">Total pièces</td><td><b>${totalQ}</b> sur ${ls.length} référence${ls.length>1?'s':''}</td></tr>
+    </table>
+    ${c.justification?`<div class="just"><b>Justification du magasin :</b><br>${esc(c.justification)}</div>`:''}
+    ${section('À préparer — Dépôt', depot)}
+    ${section('À préparer — Siège (niveau −2)', siege)}
+    <div class="sign">Préparé par : <span class="line"></span> &nbsp;&nbsp; Date : <span class="line" style="width:120px"></span></div>
+    <div class="foot"><span>IZAC · usage interne</span><span>Bon ${esc(c.numero||'')}</span></div>
+    <script>window.onload=function(){window.print();}<\/script>
+  </body></html>`;
+
+  const w=window.open('','_blank');
+  if(!w){ alert('Autorise les fenêtres pop-up pour imprimer le bon.'); return; }
+  w.document.open(); w.document.write(html); w.document.close();
 }
 async function setStatut(cid,statut){
   const patch={statut}; if(statut==='termine') patch.traite_at=new Date().toISOString();
@@ -525,7 +644,7 @@ function renderSuivi(vue){
 
   if(vue==='atraiter' || vue==='termine' || vue==='tout'){
     let list=CMDS;
-    if(vue==='atraiter') list=CMDS.filter(c=>(c.statut||'a_traiter')!=='termine');
+    if(vue==='atraiter') list=CMDS.filter(c=>(c.statut||'a_traiter')!=='termine').slice().sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
     else if(vue==='termine') list=CMDS.filter(c=>(c.statut||'a_traiter')==='termine');
     if(!list.length){ box.innerHTML='<div class="suivi-empty">'+(vue==='atraiter'?'🎉 Rien à traiter, tout est à jour !':'Aucune commande ici.')+'</div>'; return; }
     box.innerHTML=list.map(c=>{
@@ -542,6 +661,7 @@ function renderSuivi(vue){
         ${ls.map(l=>`<div class="cmd-line"><span>${l.libelle}${l.circuit==='siege'?'<span class="badge-siege">siège</span>':''}</span><span class="q">${l.quantite}</span></div>`).join('')}
         ${c.justification?`<div class="cmd-line" style="color:var(--warn)"><span>⚠️ Justification : ${c.justification}</span></div>`:''}
         <div class="cmd-actions">
+          <button class="btn-print" data-print="${c.id}">🖨️ Imprimer le bon</button>
           ${hasDepot?`<button class="btn-dl" data-dl="${c.id}">⬇ Télécharger TXT (dépôt)</button>`:'<span class="cmd-meta">— pas de partie dépôt —</span>'}
           ${hasSiege?`<label class="chk"><input type="checkbox" data-siegepret="${c.id}" ${c.siege_pret?'checked':''}> siège préparé</label>`:''}
           ${done?`<button class="btn-redo" data-redo="${c.id}">↩ rouvrir</button>`:`<button class="btn-redo" data-done="${c.id}">✓ marquer terminé</button>`}

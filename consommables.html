@@ -97,7 +97,17 @@
   .btn-close{background:var(--line2);color:var(--ink2)}
   .btn-close:hover{background:var(--line)}
   .btn:disabled{opacity:.4;cursor:default}
-</style>
+  /* historique 10 dernières commandes du magasin */
+  .histbox{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+  .histbox h4{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+  .histrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line2);font-size:13px}
+  .histrow:last-child{border-bottom:none}
+  .histrow .hd{font-weight:700;color:var(--ink);min-width:120px}
+  .histrow .ha{color:var(--ink2);flex:1}
+  .histrow .hs{font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;white-space:nowrap}
+  .histrow .hs.sent{background:#e6eefb;color:var(--navy2)}
+  .histrow .hs.done{background:var(--greenbg);color:var(--green)}
+  .histbox .hempty{color:var(--ink3);font-size:13px;padding:6px 0}</style>
 </head>
 <body>
 <div class="wrap">
@@ -123,6 +133,7 @@
 
   <!-- étape catalogue -->
   <div id="step-cat" class="hidden">
+    <div id="histBox" class="histbox hidden"></div>
     <div id="loading" class="loading hidden"><div class="sp"></div>Chargement…</div>
     <div id="catalogue"></div>
   </div>
@@ -230,6 +241,7 @@ function showSelect(){
 }
 let lastOrder=null;       // dernière commande du magasin (pour recommander)
 let avgByArticle={};      // moyenne historique qté par article pour ce magasin
+let recentOrders=[];      // 10 dernières commandes (affichage historique magasin)
 
 async function selectMag(mag,remember){
   curMag=mag; qty={};
@@ -244,9 +256,9 @@ async function selectMag(mag,remember){
 }
 
 async function loadHistory(code){
-  lastOrder=null; avgByArticle={};
+  lastOrder=null; avgByArticle={}; recentOrders=[];
   try{
-    const {data:cmds}=await sb.from('conso_commandes').select('id,created_at').eq('mag_code',code).order('created_at',{ascending:false});
+    const {data:cmds}=await sb.from('conso_commandes').select('id,created_at,numero,statut').eq('mag_code',code).order('created_at',{ascending:false});
     if(cmds && cmds.length){
       const ids=cmds.map(c=>c.id);
       const {data:lignes}=await sb.from('conso_commande_lignes').select('*').in('commande_id',ids);
@@ -258,11 +270,35 @@ async function loadHistory(code){
         const sums={}, counts={};
         lignes.forEach(l=>{ if(l.article_id==null)return; sums[l.article_id]=(sums[l.article_id]||0)+l.quantite; counts[l.article_id]=(counts[l.article_id]||0)+1; });
         Object.keys(sums).forEach(id=>{ avgByArticle[id]=sums[id]/counts[id]; });
-        // nb de commandes total pour décider si la moyenne est fiable (>=4)
         avgByArticle.__n=cmds.length;
+        // 10 dernières commandes : nb d'articles + statut
+        const nbByCmd={};
+        lignes.forEach(l=>{ nbByCmd[l.commande_id]=(nbByCmd[l.commande_id]||0)+1; });
+        recentOrders=cmds.slice(0,10).map(c=>({
+          numero:c.numero, created_at:c.created_at,
+          nb:nbByCmd[c.id]||0,
+          done:(c.statut||'a_traiter')==='termine'
+        }));
       }
     }
   }catch(e){ /* silencieux : pas bloquant */ }
+  renderHistory();
+}
+
+function renderHistory(){
+  const box=document.getElementById('histBox'); if(!box) return;
+  if(!recentOrders.length){ box.classList.add('hidden'); box.innerHTML=''; return; }
+  const rows=recentOrders.map(o=>{
+    const d=new Date(o.created_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit'});
+    const h=new Date(o.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="histrow">
+      <span class="hd">${d} · ${h}</span>
+      <span class="ha">${o.nb} article${o.nb>1?'s':''}</span>
+      <span class="hs ${o.done?'done':'sent'}">${o.done?'✓ traitée par le siège':'envoyée'}</span>
+    </div>`;
+  }).join('');
+  box.innerHTML=`<h4>📋 Mes dernières commandes envoyées</h4>${rows}`;
+  box.classList.remove('hidden');
 }
 
 function renderCatalogue(){
@@ -337,11 +373,6 @@ function updateRecap(){
   document.getElementById('recapN').textContent=n;
   document.getElementById('genBtn').disabled=n===0;
 }
-
-// adresse mail destinataire des commandes préparées au siège (à remplacer)
-const EMAIL_SIEGE='ADRESSE_A_DEFINIR@izac.fr';
-// adresse mail destinataire des alertes de dépassement (à remplacer)
-const EMAIL_ALERTE='ADRESSE_ALERTE_A_DEFINIR@izac.fr';
 
 // Étape 1 : ouvrir le récap
 document.getElementById('genBtn').addEventListener('click',()=>{
@@ -429,28 +460,8 @@ document.getElementById('confirmBtn').addEventListener('click',async()=>{
 
   // (Le TXT n'est PLUS généré côté magasin : il est produit au siège, dans l'admin.)
 
-  // mail siège (partie préparée manuellement au siège)
-  if(siege.length){
-    const today=new Date().toLocaleDateString('fr-FR');
-    const subject=`Commande consommables (siège) — ${curMag.nom} — ${today}`;
-    let body=`N° commande : ${numero}\nMagasin : ${curMag.nom} (${TYPE_LABEL[curMag.type]})\nCode : ${curMag.code}\nDemandeur : ${prenom} ${nom}\nDate : ${today}\n\nArticles à préparer au siège :\n`;
-    siege.forEach(a=>{ body+=`- ${a.libelle} : ${qty[a.id]}\n`; });
-    if(justification) body+=`\nJustification : ${justification}\n`;
-    body+=`\nMerci.`;
-    const mailto=`mailto:${encodeURIComponent(EMAIL_SIEGE)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    setTimeout(()=>{ window.location.href=mailto; }, 0);
-  }
-
-  // mail d'alerte au siège si quantités inhabituelles
-  if(overQty.length){
-    const today=new Date().toLocaleDateString('fr-FR');
-    const subject=`⚠️ ALERTE quantités — ${curMag.nom} — ${today}`;
-    let body=`Alerte : quantités inhabituelles sur la commande ${numero}.\n\nMagasin : ${curMag.nom} (${TYPE_LABEL[curMag.type]})\nDemandeur : ${prenom} ${nom}\nDate : ${today}\n\nArticles concernés :\n`;
-    overQty.forEach(o=>{ body+=`- ${o.lib} : ${o.q} (${o.raison})\n`; });
-    body+=`\nJustification du magasin : ${justification||'(aucune)'}\n`;
-    const mailto=`mailto:${encodeURIComponent(EMAIL_ALERTE)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    setTimeout(()=>{ window.location.href=mailto; }, siege.length?1200:0);
-  }
+  // (Plus d'email : la commande est enregistrée dans Supabase et suivie au siège
+  //  via le dashboard consommables. La partie siège est imprimée là-bas.)
 
   // fermer + réinitialiser (on garde le magasin sélectionné)
   document.getElementById('overlay').classList.remove('show');
@@ -462,13 +473,60 @@ document.getElementById('confirmBtn').addEventListener('click',async()=>{
 });
 
 function showDone(nDepot,nSiege,numero){
+  // overlay plein écran : grande coche verte + confettis
+  let ov=document.getElementById('doneOverlay');
+  if(!ov){
+    ov=document.createElement('div'); ov.id='doneOverlay';
+    ov.style.cssText='position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;background:rgba(13,39,80,.55);opacity:0;transition:opacity .25s';
+    ov.innerHTML=`<canvas id="confettiCv" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas>
+      <div id="doneCard" style="position:relative;background:#fff;border-radius:18px;padding:38px 34px;max-width:380px;width:90%;text-align:center;box-shadow:0 24px 70px rgba(13,39,80,.4);transform:scale(.85);transition:transform .3s cubic-bezier(.2,.9,.3,1.4)">
+        <div style="width:84px;height:84px;border-radius:50%;background:var(--greenbg);display:flex;align-items:center;justify-content:center;margin:0 auto 18px">
+          <svg width="46" height="46" viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6.5" stroke="#1f9d57" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div style="font-size:21px;font-weight:800;color:var(--navy);margin-bottom:8px">Commande envoyée !</div>
+        <div id="doneSub" style="font-size:14px;color:var(--ink2);line-height:1.5;margin-bottom:6px"></div>
+        <div id="doneNum" style="font-size:12px;color:var(--ink3);font-weight:600;margin-bottom:22px"></div>
+        <button id="doneOk" style="background:var(--navy);color:#fff;border:none;border-radius:10px;padding:12px 30px;font-size:14px;font-weight:700;cursor:pointer">Parfait</button>
+      </div>`;
+    document.body.appendChild(ov);
+    ov.addEventListener('click',e=>{ if(e.target===ov||e.target.id==='doneOk') hideDone(); });
+  }
   const parts=[];
-  if(nDepot) parts.push(`${nDepot} article·s dépôt (préparés au siège)`);
-  if(nSiege){ parts.push(`${nSiege} article·s siège — email à envoyer`); }
-  let msg=document.getElementById('doneMsg');
-  if(!msg){ msg=document.createElement('div'); msg.id='doneMsg'; msg.style.cssText='position:fixed;bottom:74px;left:0;right:0;text-align:center;font-size:13px;color:var(--green);font-weight:700;z-index:55;padding:0 16px'; document.body.appendChild(msg); }
-  msg.innerHTML=`✓ Commande <b>${numero||''}</b> envoyée — `+parts.join(' · ');
-  setTimeout(()=>{ if(msg) msg.textContent=''; }, 8000);
+  if(nDepot) parts.push(`${nDepot} article${nDepot>1?'s':''} en dépôt`);
+  if(nSiege) parts.push(`${nSiege} article${nSiege>1?'s':''} au siège`);
+  document.getElementById('doneSub').innerHTML='Ta commande est bien enregistrée et transmise au siège.'+(parts.length?'<br>'+parts.join(' · '):'');
+  document.getElementById('doneNum').textContent=numero?('N° '+numero):'';
+  ov.style.display='flex';
+  requestAnimationFrame(()=>{ ov.style.opacity='1'; document.getElementById('doneCard').style.transform='scale(1)'; });
+  fireConfetti();
+}
+function hideDone(){
+  const ov=document.getElementById('doneOverlay'); if(!ov) return;
+  ov.style.opacity='0'; const c=document.getElementById('doneCard'); if(c)c.style.transform='scale(.85)';
+  setTimeout(()=>{ ov.style.display='none'; },250);
+}
+function fireConfetti(){
+  const cv=document.getElementById('confettiCv'); if(!cv) return;
+  const ctx=cv.getContext('2d'); const W=cv.width=cv.offsetWidth, H=cv.height=cv.offsetHeight;
+  const cols=['#1f9d57','#27c06b','#8fe0ad','#0D2750','#1E4D9B','#ffffff'];
+  const N=140, parts=[];
+  for(let i=0;i<N;i++){
+    parts.push({x:W/2+(Math.random()-.5)*120, y:H/2-40, vx:(Math.random()-.5)*11, vy:Math.random()*-11-4,
+      g:.32+Math.random()*.15, s:5+Math.random()*6, c:cols[i%cols.length], rot:Math.random()*6.28, vr:(Math.random()-.5)*.4, life:0});
+  }
+  let frame=0;
+  (function loop(){
+    frame++; ctx.clearRect(0,0,W,H);
+    let alive=false;
+    parts.forEach(p=>{
+      p.vy+=p.g; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr; p.life++;
+      if(p.y<H+20){ alive=true; }
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+      ctx.fillStyle=p.c; ctx.globalAlpha=Math.max(0,1-p.life/110);
+      ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6); ctx.restore();
+    });
+    if(alive && frame<160) requestAnimationFrame(loop); else ctx.clearRect(0,0,W,H);
+  })();
 }
 
 init();
