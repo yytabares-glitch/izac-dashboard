@@ -250,6 +250,11 @@ async function init(){
     if(m.error) throw m.error; if(a.error) throw a.error;
     MAGS=m.data; ARTS=a.data;
     renderMagCards('');
+    // pré-sélection via URL (?mag=CODE) — ex. clic depuis le hub
+    try{
+      const pmag=new URLSearchParams(location.search).get('mag');
+      if(pmag){ const mag=MAGS.find(x=>x.code===pmag); if(mag){ selectMag(mag,true); return; } }
+    }catch(e){}
     // magasin mémorisé ?
     let saved=null; try{ saved=localStorage.getItem(LS_KEY); }catch(e){}
     if(saved){ const mag=MAGS.find(x=>x.code===saved); if(mag){ selectMag(mag,false); return; } }

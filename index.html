@@ -66,6 +66,22 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
 .ic-exped{background:#fbe9d8;color:var(--exped)}
 .ic-conso{background:var(--tint-2);color:var(--conso)}
 .ic-secu{background:#fdecea;color:var(--danger)}
+/* volet pages magasin sous une tuile */
+.tile-wrap{display:flex;flex-direction:column}
+.magvolet-btn{margin-top:6px;align-self:flex-start;background:var(--tint);border:1px solid var(--line-2);color:var(--ink-70);border-radius:9px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);display:inline-flex;align-items:center;gap:6px;transition:.12s}
+.magvolet-btn:hover{background:rgba(38,49,69,.08);color:var(--ink)}
+.magvolet-btn .chev{transition:transform .2s}
+.magvolet-btn.open .chev{transform:rotate(180deg)}
+.magvolet{display:none;margin-top:8px;background:var(--card);border:1px solid var(--line-2);border-radius:13px;padding:12px;box-shadow:var(--shadow)}
+.magvolet.open{display:block;animation:volet-in .18s ease}
+@keyframes volet-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.magvolet .mv-search{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:9px;font-size:13px;font-family:var(--sans);margin-bottom:10px;background:#fff;color:var(--ink)}
+.magvolet .mv-search:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(38,49,69,.08)}
+.magvolet .mv-list{max-height:230px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px}
+.magvolet .mv-item{text-align:left;background:var(--tint);border:1px solid transparent;border-radius:8px;padding:8px 10px;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;text-decoration:none;transition:.1s;line-height:1.25}
+.magvolet .mv-item:hover{border-color:var(--ink);background:#fff}
+.magvolet .mv-item .mv-code{display:block;font-size:10.5px;color:var(--ink-55);font-weight:500;margin-top:1px}
+.magvolet .mv-empty{color:var(--ink-55);font-size:12.5px;padding:8px;grid-column:1/-1;text-align:center}
 .foot{text-align:center;color:var(--ink-55);font-size:11.5px;margin-top:30px}
 .idle-warn{display:none;align-items:center;justify-content:center;gap:16px;background:var(--warn-bg);border:1px solid #e8d9a8;color:#7a5400;border-radius:12px;padding:12px 20px;margin-bottom:18px;font-size:13.5px;font-weight:600}
 .idle-warn.show{display:flex}
@@ -114,11 +130,18 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
   <div class="grp">
     <div class="section-lab">Pilotage réseau</div>
     <div class="grid">
-      <a class="tile" href="meteo.html">
-        <div class="tile-top"><div><h3>Météo réseau</h3><div class="desc">Météo par boutique et région, prévisionnel 10 jours.</div></div><div class="tile-ic ic-meteo">🌤️</div></div>
-        <div class="stat"><span class="n">7</span><span class="l">régions suivies</span></div>
-        <span class="go">Ouvrir →</span>
-      </a>
+      <div class="tile-wrap">
+        <a class="tile" href="meteo.html">
+          <div class="tile-top"><div><h3>Météo réseau</h3><div class="desc">Météo par boutique et région, prévisionnel 10 jours.</div></div><div class="tile-ic ic-meteo">🌤️</div></div>
+          <div class="stat"><span class="n">7</span><span class="l">régions suivies</span></div>
+          <span class="go">Ouvrir →</span>
+        </a>
+        <button class="magvolet-btn" data-volet="meteo"><span class="chev">▾</span> Pages boutique (météo + message)</button>
+        <div class="magvolet" id="volet-meteo">
+          <input type="text" class="mv-search" placeholder="🔍 Chercher une boutique…" data-search="meteo">
+          <div class="mv-list" id="list-meteo"></div>
+        </div>
+      </div>
       <a class="tile" href="IZAC_Admin.html">
         <div class="tile-top"><div><h3>Messages direction</h3><div class="desc">Diffuser et piloter les messages affichés en boutique.</div></div><div class="tile-ic ic-msg">📣</div></div>
         <div class="stat loading" id="statMsg"><span class="n">…</span><span class="l">chargement</span></div>
@@ -130,21 +153,35 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
   <div class="grp">
     <div class="section-lab">Opérations</div>
     <div class="grid">
-      <a class="tile" href="reception-admin.html">
-        <div class="tile-top"><div><h3>Réception</h3><div class="desc">Suivi des réceptions et dépôt des fichiers de préparation.</div></div><div class="tile-ic ic-recep">📦</div></div>
-        <div class="stat"><span class="n">›</span><span class="l">ouvrir le suivi</span></div>
-        <span class="go">Ouvrir →</span>
-      </a>
+      <div class="tile-wrap">
+        <a class="tile" href="reception-admin.html">
+          <div class="tile-top"><div><h3>Réception</h3><div class="desc">Suivi des réceptions et dépôt des fichiers de préparation.</div></div><div class="tile-ic ic-recep">📦</div></div>
+          <div class="stat"><span class="n">›</span><span class="l">ouvrir le suivi</span></div>
+          <span class="go">Ouvrir →</span>
+        </a>
+        <button class="magvolet-btn" data-volet="recep"><span class="chev">▾</span> Pages boutique (réception)</button>
+        <div class="magvolet" id="volet-recep">
+          <input type="text" class="mv-search" placeholder="🔍 Chercher un magasin…" data-search="recep">
+          <div class="mv-list" id="list-recep"><div class="mv-empty">Chargement…</div></div>
+        </div>
+      </div>
       <a class="tile" href="transport-admin.html">
         <div class="tile-top"><div><h3>Expéditions</h3><div class="desc">Analyse des expéditions — dépôt de l'export Excel.</div></div><div class="tile-ic ic-exped">🚚</div></div>
         <div class="stat loading" id="statExped"><span class="n">…</span><span class="l">chargement</span></div>
         <span class="go">Ouvrir →</span>
       </a>
-      <a class="tile" href="consommables-admin.html">
-        <div class="tile-top"><div><h3>Consommables</h3><div class="desc">Catalogue, validation des références et suivi des commandes.</div></div><div class="tile-ic ic-conso">🧾</div></div>
-        <div class="stat loading" id="statConso"><span class="n">…</span><span class="l">chargement</span></div>
-        <span class="go">Ouvrir →</span>
-      </a>
+      <div class="tile-wrap">
+        <a class="tile" href="consommables-admin.html">
+          <div class="tile-top"><div><h3>Consommables</h3><div class="desc">Catalogue, validation des références et suivi des commandes.</div></div><div class="tile-ic ic-conso">🧾</div></div>
+          <div class="stat loading" id="statConso"><span class="n">…</span><span class="l">chargement</span></div>
+          <span class="go">Ouvrir →</span>
+        </a>
+        <button class="magvolet-btn" data-volet="conso"><span class="chev">▾</span> Page boutique (commande conso)</button>
+        <div class="magvolet" id="volet-conso">
+          <input type="text" class="mv-search" placeholder="🔍 Chercher un magasin…" data-search="conso">
+          <div class="mv-list" id="list-conso"><div class="mv-empty">Chargement…</div></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -281,6 +318,62 @@ function setStat(id,n,label,kind){
   if(kind==='warn') nEl.style.color='var(--warn)';
   else if(kind==='ok') nEl.style.color='var(--ok)';
 }
+
+/* ===== Volets « pages magasin » sous les tuiles ===== */
+// Boutiques météo (recopiées depuis le référentiel REGIONS de meteo.html)
+const METEO_BOUTIQUES=["A13","AEROVILLE","AIX EN PROVENCE","ANGERS","ANGLET","AUBER","BEAUGRENELLE","BEGLES","BELLE EPINE","BEZIERS","BLAGNAC","BORDEAUX","BORDEAUX LAC","CABRIES","CAEN","CANNES","CAP 3000","CARRE SENART","CLAYE SOUILLY","CLERMONT","CONFLUENCE","CORBEIL","CRETEIL","DEAUVILLE","DIJON","DIJON CV","ECULLY","EPAGNY","EURALILLE","FENOUILLET","FORUM DES HALLES","GIVERNY","GONESSE","GRAND VAR","GRENOBLE","HERRIOT","LA DEFENSE","LA ROCHELLE","LA VALENTINE","LE MANS","LES SABLES","LEVALLOIS","LILLE","LILLENIUM","LORMONT","LUXEMBOURG","MERIGNAC","MIRAMAS","MONTPARNASSE","MONTPELLIER","NANCY","NANTES ATLANTIS","NANTES CREBILLONS","NEYRPIC","NIMES","NOYELLES","ORLEANS","PARINOR","PARLY 2","PART DIEU","PERPIGNAN AUCHAN","PERPIGNAN CLAIRA","POLYGONE","PONT STE MARIE","PRADO","RENNES ALMA","RENNES CV","ROMANS","ROSNY 2","ROUBAIX","ROUEN","RUE DE RENNES","ST DENIS","ST QUENTIN","ST TROPEZ","STRASBOURG","STRASBOURG CV","TERRASSES DU PORT","TOULOUSE","TOURS","VAL D'EUROPE","VELIZY","VILLEFONTAINE","VILLENEUVE"];
+
+let MAGS_BASE=null;          // magasins depuis conso_magasins (réception + conso)
+const voletLoaded={};        // pour ne charger qu'une fois
+
+async function loadMagsBase(){
+  if(MAGS_BASE!==null) return MAGS_BASE;
+  try{
+    const {data,error}=await sb.from('conso_magasins').select('code,nom,fastmag').order('nom');
+    MAGS_BASE = error? [] : (data||[]);
+  }catch(e){ MAGS_BASE=[]; }
+  return MAGS_BASE;
+}
+
+function renderVolet(which, filter){
+  const f=(filter||'').trim().toLowerCase();
+  const box=document.getElementById('list-'+which);
+  if(!box) return;
+  if(which==='meteo'){
+    let list=METEO_BOUTIQUES;
+    if(f) list=list.filter(n=>n.toLowerCase().includes(f));
+    if(!list.length){ box.innerHTML='<div class="mv-empty">Aucune boutique.</div>'; return; }
+    box.innerHTML=list.map(n=>`<a class="mv-item" target="_blank" rel="noopener" href="meteo.html?boutique=${encodeURIComponent(n)}">${n}</a>`).join('');
+  } else {
+    const mags=MAGS_BASE||[];
+    let list=mags;
+    if(f) list=mags.filter(m=>(m.nom||'').toLowerCase().includes(f)||(m.code||'').toLowerCase().includes(f)||(m.fastmag||'').toLowerCase().includes(f));
+    if(!list.length){ box.innerHTML='<div class="mv-empty">Aucun magasin.</div>'; return; }
+    const url=(m)=> which==='recep'
+      ? `reception.html?mag=${encodeURIComponent(m.code)}`
+      : `consommables.html?mag=${encodeURIComponent(m.code)}`;
+    box.innerHTML=list.map(m=>`<a class="mv-item" target="_blank" rel="noopener" href="${url(m)}">${m.nom||m.code}<span class="mv-code">${m.code}</span></a>`).join('');
+  }
+}
+
+// ouvrir / fermer un volet
+document.querySelectorAll('.magvolet-btn').forEach(btn=>{
+  btn.addEventListener('click', async ()=>{
+    const which=btn.dataset.volet;
+    const volet=document.getElementById('volet-'+which);
+    const open=volet.classList.toggle('open');
+    btn.classList.toggle('open',open);
+    if(open && !voletLoaded[which]){
+      voletLoaded[which]=true;
+      if(which!=='meteo'){ await loadMagsBase(); }
+      renderVolet(which,'');
+    }
+  });
+});
+// recherche dans un volet
+document.querySelectorAll('.mv-search').forEach(inp=>{
+  inp.addEventListener('input',()=>renderVolet(inp.dataset.search, inp.value));
+});
 </script>
 </body>
 </html>
