@@ -105,6 +105,8 @@
   .vchip.active{background:var(--navy);color:#fff;border-color:var(--navy)}
   .vexport{background:var(--greenbg);color:var(--green);border-color:var(--greenline)}
   .vexport:hover{background:#d5f0e0;color:var(--green);border-color:var(--green)}
+  .vrecap{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .vrecap:hover{background:var(--navy2);color:#fff;border-color:var(--navy2)}
   .suivi-info{font-size:12px;color:var(--ink3);margin-left:auto}
   .suivi-empty{text-align:center;color:var(--ink3);padding:40px;font-size:14px}
   .stbl{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
@@ -221,6 +223,7 @@
       <button class="vchip" data-vue="abus">Alertes</button>
       <button class="vchip" data-vue="rythme">Rythme</button>
       <button class="vchip vexport" id="exportBtn">⬇ Export Excel</button>
+      <button class="vchip vrecap" id="recapBtn">🖨️ Récap hebdo (à traiter)</button>
       <span class="suivi-info" id="suiviInfo"></span>
     </div>
     <div id="suiviContent"><div class="suivi-empty">Chargement…</div></div>
@@ -509,6 +512,7 @@ document.querySelector('.suivi-controls').addEventListener('click',e=>{
   renderSuivi(suiviVue);
 });
 document.getElementById('exportBtn').addEventListener('click',exportExcel);
+document.getElementById('recapBtn').addEventListener('click',printRecap);
 function exportExcel(){
   if(!CMDS||!CMDS.length){ alert('Aucune commande à exporter.'); return; }
   const rows=[['N° commande','Date','Magasin','Type','Demandeur','Article','Circuit','Quantité','Gencod','Justification']];
@@ -528,6 +532,144 @@ function exportExcel(){
   URL.revokeObjectURL(url);
 }
 function linesOf(cmdId){ return CMDLIGNES.filter(l=>String(l.commande_id)===String(cmdId)); }
+
+// ===== RÉCAP HEBDO : vue agrégée (préparer) + fiches colis par magasin (Chronopost) =====
+function printRecap(){
+  if(!CMDS||!CMDS.length){ alert('Aucune commande.'); return; }
+  const todo=CMDS.filter(c=>(c.statut||'a_traiter')!=='termine');
+  if(!todo.length){ alert('Aucune commande à traiter pour le moment.'); return; }
+  const TL={R:'Réseau',O:'Outlet',A:'Affilié'};
+  const esc=s=>String(s==null?'':s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+  const today=new Date().toLocaleDateString('fr-FR');
+
+  // --- 1) agrégat par article : total + ventilation par magasin ---
+  // clé article = libelle + gencod (pour distinguer dépôt/siège on garde le circuit)
+  const agg={};
+  todo.forEach(c=>{
+    linesOf(c.id).forEach(l=>{
+      const key=(l.libelle||'')+'|||'+(l.gencod||'')+'|||'+(l.circuit||'depot');
+      if(!agg[key]) agg[key]={libelle:l.libelle,gencod:l.gencod||'',circuit:l.circuit||'depot',total:0,parMag:{}};
+      agg[key].total+=l.quantite||0;
+      const mk=c.mag_nom||c.mag_code;
+      agg[key].parMag[mk]=(agg[key].parMag[mk]||0)+(l.quantite||0);
+    });
+  });
+  const aggList=Object.values(agg).sort((a,b)=>{
+    if(a.circuit!==b.circuit) return a.circuit==='siege'?1:-1; // dépôt d'abord
+    return a.libelle.localeCompare(b.libelle);
+  });
+  const depotAgg=aggList.filter(a=>a.circuit!=='siege');
+  const siegeAgg=aggList.filter(a=>a.circuit==='siege');
+
+  const aggRows=arr=>arr.map(a=>{
+    const vent=Object.entries(a.parMag).sort((x,y)=>y[1]-x[1])
+      .map(([m,q])=>`${esc(m)} <b>${q}</b>`).join(' · ');
+    return `<tr>
+      <td class="lib">${esc(a.libelle)}</td>
+      <td class="gc">${esc(a.gencod||'—')}</td>
+      <td class="tot">${a.total}</td>
+      <td class="vent">${vent}</td>
+    </tr>`;
+  }).join('');
+  const aggSection=(titre,arr)=> arr.length?`
+    <div class="sec">${titre}</div>
+    <table class="agg">
+      <thead><tr><th class="lib">Article</th><th class="gc">Gencod</th><th class="tot">Total</th><th class="vent">Ventilation par magasin</th></tr></thead>
+      <tbody>${aggRows(arr)}</tbody>
+    </table>`:'';
+
+  // --- 2) une fiche colis par magasin ---
+  const byMag={};
+  todo.forEach(c=>{
+    const k=c.mag_code||c.mag_nom;
+    if(!byMag[k]) byMag[k]={nom:c.mag_nom,code:c.mag_code,fastmag:'',type:c.mag_type,lignes:[],justifs:[]};
+    linesOf(c.id).forEach(l=>byMag[k].lignes.push(l));
+    if(c.justification) byMag[k].justifs.push(c.justification);
+  });
+  // récupérer le code FastMag depuis MAGS_ALL si dispo
+  (MAGS_ALL||[]).forEach(m=>{ if(byMag[m.code]) byMag[m.code].fastmag=m.fastmag||''; });
+
+  const magKeys=Object.keys(byMag).sort((a,b)=>(byMag[a].nom||'').localeCompare(byMag[b].nom||''));
+  const fiches=magKeys.map(k=>{
+    const m=byMag[k];
+    const totalQ=m.lignes.reduce((s,l)=>s+(l.quantite||0),0);
+    const rows=m.lignes.map(l=>`<tr>
+        <td class="ck"></td>
+        <td class="lib">${esc(l.libelle)}${l.circuit==='siege'?' <span class="bs">siège</span>':''}</td>
+        <td class="gc">${esc(l.gencod||'—')}</td>
+        <td class="q">${l.quantite}</td>
+      </tr>`).join('');
+    return `<div class="fiche">
+      <div class="fiche-hd">
+        <div class="fmag">${esc(m.nom||m.code)}</div>
+        <div class="fcode">Code FastMag : <b>${esc(m.fastmag||m.code||'—')}</b> · ${esc(TL[m.type]||m.type||'')}</div>
+      </div>
+      <div class="fmeta">Colis Chronopost · ${m.lignes.length} référence${m.lignes.length>1?'s':''} · <b>${totalQ}</b> pièce${totalQ>1?'s':''} · ${esc(today)}</div>
+      <table class="agg fiche-tbl">
+        <thead><tr><th class="ck">✓</th><th class="lib">Article</th><th class="gc">Gencod</th><th class="q">Qté</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      ${m.justifs.length?`<div class="fjust"><b>Justification :</b> ${esc(m.justifs.join(' · '))}</div>`:''}
+      <div class="fsign">Préparé ☐ &nbsp;&nbsp; Colis fermé ☐ &nbsp;&nbsp; Étiquette posée ☐</div>
+    </div>`;
+  }).join('');
+
+  const totalCmd=todo.length, totalMag=magKeys.length;
+  const totalPieces=todo.reduce((s,c)=>s+linesOf(c.id).reduce((ss,l)=>ss+(l.quantite||0),0),0);
+
+  const html=`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Récap hebdo consommables</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,Helvetica,sans-serif;color:#000;padding:24px 26px;font-size:12.5px;line-height:1.4}
+    .head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #000;padding-bottom:12px;margin-bottom:14px}
+    .brand{font-size:20px;font-weight:800;letter-spacing:.05em}
+    .brand small{display:block;font-size:10px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;margin-top:2px}
+    .doc{text-align:right;font-size:12px}
+    .doc .t{font-size:15px;font-weight:800;text-transform:uppercase}
+    .summary{background:#f0f0f0;border:1px solid #000;padding:8px 12px;margin-bottom:16px;font-size:12.5px;font-weight:700}
+    .sec{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;margin:16px 0 6px;border-bottom:1.5px solid #000;padding-bottom:3px}
+    table.agg{width:100%;border-collapse:collapse;margin-bottom:10px}
+    table.agg th,table.agg td{border:1px solid #000;padding:6px 8px;text-align:left;vertical-align:top}
+    table.agg th{background:#f0f0f0;font-size:10px;text-transform:uppercase;letter-spacing:.03em}
+    table.agg .gc{width:140px;font-family:"Courier New",monospace;font-size:11.5px}
+    table.agg .tot{width:54px;text-align:right;font-weight:800;font-size:15px}
+    table.agg .vent{font-size:11.5px}
+    table.agg .vent b{font-variant-numeric:tabular-nums}
+    .pagebreak{page-break-before:always}
+    .fiche{border:2px solid #000;border-radius:6px;padding:14px 16px;margin-bottom:14px;page-break-inside:avoid}
+    .fiche-hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:8px}
+    .fmag{font-size:24px;font-weight:800;text-transform:uppercase;letter-spacing:.02em}
+    .fcode{font-size:12px;text-align:right}
+    .fmeta{font-size:11.5px;margin-bottom:8px}
+    .fiche-tbl .ck{width:30px;text-align:center}
+    .fiche-tbl td.ck{height:24px}
+    .fiche-tbl .q{width:50px;text-align:right;font-weight:800;font-size:15px}
+    .bs{font-size:9px;background:#000;color:#fff;padding:1px 5px;border-radius:3px;vertical-align:middle}
+    .fjust{font-size:11px;border:1px solid #000;padding:6px 8px;margin:6px 0}
+    .fsign{font-size:12px;font-weight:700;margin-top:8px}
+    @media print{ body{padding:0} @page{margin:12mm} }
+  </style></head><body>
+    <div class="head">
+      <div class="brand">IZAC<small>Récap hebdomadaire consommables</small></div>
+      <div class="doc"><div class="t">Préparation</div>Édité le ${esc(today)}</div>
+    </div>
+    <div class="summary">${totalCmd} commande(s) · ${totalMag} magasin(s) · ${totalPieces} pièce(s) au total à préparer</div>
+
+    <div class="sec">1 · À préparer en gros (descente −2)</div>
+    ${aggSection('Dépôt', depotAgg)}
+    ${aggSection('Siège', siegeAgg)}
+
+    <div class="pagebreak"></div>
+    <div class="sec">2 · Fiches colis — un carton Chronopost par magasin</div>
+    ${fiches}
+
+    <script>window.onload=function(){window.print();}<\/script>
+  </body></html>`;
+
+  const w=window.open('','_blank');
+  if(!w){ alert('Autorise les fenêtres pop-up pour imprimer le récap.'); return; }
+  w.document.open(); w.document.write(html); w.document.close();
+}
 
 // ---- actions du poste de travail assistant ----
 document.getElementById('suiviContent').addEventListener('click',async e=>{
