@@ -143,6 +143,8 @@
   .suivi-banner .sb-live{font-size:11px;font-weight:600;color:rgba(255,255,255,.7)}
   .suivi-banner .sb-live.flash{color:#fff;animation:sbflash .9s ease}
   @keyframes sbflash{0%{opacity:.3}100%{opacity:1}}
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:12px 22px;border-radius:10px;font-size:14px;font-weight:700;box-shadow:0 10px 30px rgba(13,39,80,.3);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:200}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
@@ -531,8 +533,8 @@ function linesOf(cmdId){ return CMDLIGNES.filter(l=>String(l.commande_id)===Stri
 document.getElementById('suiviContent').addEventListener('click',async e=>{
   const dl=e.target.closest('[data-dl]'); if(dl){ downloadTxt(dl.dataset.dl); return; }
   const pr=e.target.closest('[data-print]'); if(pr){ printBon(pr.dataset.print); return; }
-  const dn=e.target.closest('[data-done]'); if(dn){ await setStatut(dn.dataset.done,'termine'); return; }
-  const ro=e.target.closest('[data-redo]'); if(ro){ await setStatut(ro.dataset.redo,'a_traiter'); return; }
+  const dn=e.target.closest('[data-done]'); if(dn){ dn.disabled=true; dn.textContent='✓ enregistré…'; dn.style.background='var(--greenbg)'; dn.style.color='var(--green)'; await setStatut(dn.dataset.done,'termine'); return; }
+  const ro=e.target.closest('[data-redo]'); if(ro){ ro.disabled=true; ro.textContent='…'; await setStatut(ro.dataset.redo,'a_traiter'); return; }
 });
 document.getElementById('suiviContent').addEventListener('change',async e=>{
   const cb=e.target.closest('[data-siegepret]'); if(cb){ await setSiegePret(cb.dataset.siegepret, cb.checked); }
@@ -631,6 +633,15 @@ async function setStatut(cid,statut){
   if(error){ alert('Erreur : '+error.message); return; }
   const c=CMDS.find(x=>String(x.id)===String(cid)); if(c){c.statut=statut; if(statut==='termine')c.traite_at=patch.traite_at;}
   updateSuiviCounts(); renderSuivi(suiviVue);
+  showToast(statut==='termine'?'✓ Commande marquée terminée':'↩ Commande rouverte');
+}
+function showToast(txt){
+  let t=document.getElementById('toast');
+  if(!t){ t=document.createElement('div'); t.id='toast'; document.body.appendChild(t); }
+  t.textContent=txt;
+  t.className='show';
+  clearTimeout(showToast._t);
+  showToast._t=setTimeout(()=>{ t.className=''; }, 2200);
 }
 async function setSiegePret(cid,val){
   const {error}=await sb.from('conso_commandes').update({siege_pret:val}).eq('id',cid);
