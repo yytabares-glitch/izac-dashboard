@@ -167,11 +167,11 @@
   </div>
 
   <div class="tabs">
-    <button class="tab active" data-tab="refs">Références</button>
-    <button class="tab" data-tab="suivi">Suivi des commandes</button>
+    <button class="tab active" data-tab="suivi">Suivi des commandes</button>
+    <button class="tab" data-tab="refs">Références</button>
   </div>
 
-  <div id="tab-refs">
+  <div id="tab-refs" class="hidden">
   <div class="summary">
     <div class="pill ok">Validés <b id="nOk">0</b></div>
     <div class="pill ck">À vérifier <b id="nCheck">0</b></div>
@@ -207,7 +207,7 @@
   <div id="list"></div>
   </div>
 
-  <div id="tab-suivi" class="hidden">
+  <div id="tab-suivi">
     <div class="suivi-banner" id="suiviBanner">
       <div class="sb-left"><span class="sb-n" id="sbN">0</span><span class="sb-lab">commande(s) à traiter</span></div>
       <div class="sb-right"><span class="sb-live" id="sbLive">● actualisation auto</span></div>
@@ -245,7 +245,7 @@ async function doLogin(){
     const hash=await sha256(pin);
     const {data,error}=await sb.rpc('conso_login',{p_hash:hash});
     if(error){err.textContent='Erreur de connexion.';btn.disabled=false;return;}
-    if(data&&data.ok){document.getElementById('gate').style.display='none';document.getElementById('app').classList.remove('hidden');loadArts();return;}
+    if(data&&data.ok){document.getElementById('gate').style.display='none';document.getElementById('app').classList.remove('hidden');loadArts();loadSuivi();startSuiviAutoRefresh();return;}
     if(data&&data.locked)err.textContent='Trop d\'essais. Réessaie dans '+(data.wait||15)+' min.';
     else if(data&&typeof data.left==='number')err.textContent='PIN incorrect — '+data.left+' essai(s) restant(s).';
     else err.textContent='PIN incorrect.';
