@@ -49,7 +49,12 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
 .section-lab{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-55);font-weight:700;margin:0 4px 12px}
 .grp{margin-bottom:26px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;align-items:start}
-.tile{background:var(--card);border:1px solid var(--line-2);border-radius:16px;padding:22px;cursor:pointer;text-decoration:none;color:inherit;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s;position:relative;box-shadow:var(--shadow);height:158px;overflow:hidden}
+.lab-row{grid-column:1/-1;display:flex;align-items:center;gap:12px;margin:6px 2px 0}
+.lab-row:first-child{margin-top:0}
+.lab-row .lab{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-55);font-weight:700;white-space:nowrap}
+.lab-row::after{content:"";flex:1;height:1px;background:var(--line-2)}
+.tile{background:var(--card);border:1px solid var(--line-2);border-radius:16px;padding:22px;cursor:pointer;text-decoration:none;color:inherit;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s;position:relative;box-shadow:var(--shadow);height:158px;overflow:hidden;animation:tile-in .4s ease both}
+@keyframes tile-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .tile::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent,var(--ink));opacity:0;transition:opacity .18s}
 .tile:hover{transform:translateY(-2px);box-shadow:0 1px 2px rgba(38,49,69,.04),0 28px 56px -28px rgba(38,49,69,.5)}
 .tile:hover::before{opacity:1}
@@ -125,81 +130,71 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
   </div>
   <div class="hero">
     <div class="hero-logo">IZ</div>
-    <h1>Portail outils</h1>
-    <div class="sub">Tous les outils du siège, au même endroit.</div>
+    <h1>IZAC Hub</h1>
+    <div class="sub">Logistique · Réseau · Transport</div>
     <div class="date" id="today"></div>
     <button class="logout" onclick="logout()">Déconnexion</button>
   </div>
 
-  <div class="grp">
-    <div class="section-lab">Pilotage réseau</div>
-    <div class="grid">
-      <div class="tile-wrap">
-        <a class="tile" href="meteo.html" style="--accent:var(--meteo)">
-          <div class="tile-top"><div><h3>Météo réseau</h3><div class="desc">Météo par boutique et région, prévisionnel 10 jours.</div></div><div class="tile-ic ic-meteo"><i class="ti ti-cloud"></i></div></div>
-          <div class="stat"><span class="n">7</span><span class="l">régions suivies</span></div>
-          <span class="go">Ouvrir →</span>
-        </a>
-        <button class="magvolet-btn" data-volet="meteo"><i class="ti ti-chevron-down chev"></i> Pages boutique (météo + message)</button>
-        <div class="magvolet" id="volet-meteo">
-          <input type="text" class="mv-search" placeholder="🔍 Chercher une boutique…" data-search="meteo">
-          <div class="mv-list" id="list-meteo"></div>
-        </div>
-      </div>
-      <a class="tile" href="IZAC_Admin.html" style="--accent:var(--msg)">
-        <div class="tile-top"><div><h3>Messages direction</h3><div class="desc">Diffuser et piloter les messages affichés en boutique.</div></div><div class="tile-ic ic-msg"><i class="ti ti-speakerphone"></i></div></div>
-        <div class="stat loading" id="statMsg"><span class="n">…</span><span class="l">chargement</span></div>
+  <div class="grid">
+    <div class="lab-row"><span class="lab">Pilotage réseau</span></div>
+    <div class="tile-wrap">
+      <a class="tile" href="meteo.html" style="--accent:var(--meteo)">
+        <div class="tile-top"><div><h3>Météo réseau</h3><div class="desc">Météo par boutique et région, prévisionnel 10 jours.</div></div><div class="tile-ic ic-meteo"><i class="ti ti-cloud"></i></div></div>
+        <div class="stat"><span class="n">7</span><span class="l">régions suivies</span></div>
         <span class="go">Ouvrir →</span>
       </a>
-    </div>
-  </div>
-
-  <div class="grp">
-    <div class="section-lab">Opérations</div>
-    <div class="grid">
-      <div class="tile-wrap">
-        <a class="tile" href="reception-admin.html" style="--accent:var(--recep)">
-          <div class="tile-top"><div><h3>Réception</h3><div class="desc">Suivi des réceptions et dépôt des fichiers de préparation.</div></div><div class="tile-ic ic-recep"><i class="ti ti-package"></i></div></div>
-          <div class="stat"><span class="n">›</span><span class="l">ouvrir le suivi</span></div>
-          <span class="go">Ouvrir →</span>
-        </a>
-        <button class="magvolet-btn" data-volet="recep"><i class="ti ti-chevron-down chev"></i> Pages boutique (réception)</button>
-        <div class="magvolet" id="volet-recep">
-          <input type="text" class="mv-search" placeholder="🔍 Chercher un magasin…" data-search="recep">
-          <div class="mv-list" id="list-recep"><div class="mv-empty">Chargement…</div></div>
-        </div>
-      </div>
-      <a class="tile" href="transport-admin.html" style="--accent:var(--exped)">
-        <div class="tile-top"><div><h3>Expéditions</h3><div class="desc">Analyse des expéditions — dépôt de l'export Excel.</div></div><div class="tile-ic ic-exped"><i class="ti ti-truck"></i></div></div>
-        <div class="stat loading" id="statExped"><span class="n">…</span><span class="l">chargement</span></div>
-        <span class="go">Ouvrir →</span>
-      </a>
-      <div class="tile-wrap">
-        <a class="tile" href="consommables-admin.html" style="--accent:var(--conso)">
-          <div class="tile-top"><div><h3>Consommables</h3><div class="desc">Catalogue, validation des références et suivi des commandes.</div></div><div class="tile-ic ic-conso"><i class="ti ti-clipboard-list"></i></div></div>
-          <div class="stat loading" id="statConso"><span class="n">…</span><span class="l">chargement</span></div>
-          <span class="go">Ouvrir →</span>
-        </a>
-        <button class="magvolet-btn" data-volet="conso"><i class="ti ti-chevron-down chev"></i> Page boutique (commande conso)</button>
-        <div class="magvolet" id="volet-conso">
-          <input type="text" class="mv-search" placeholder="🔍 Chercher un magasin…" data-search="conso">
-          <div class="mv-list" id="list-conso"><div class="mv-empty">Chargement…</div></div>
-        </div>
+      <button class="magvolet-btn" data-volet="meteo"><i class="ti ti-chevron-down chev"></i> Pages boutique (météo + message)</button>
+      <div class="magvolet" id="volet-meteo">
+        <input type="text" class="mv-search" placeholder="🔍 Chercher une boutique…" data-search="meteo">
+        <div class="mv-list" id="list-meteo"></div>
       </div>
     </div>
-  </div>
+    <a class="tile" href="IZAC_Admin.html" style="--accent:var(--msg)">
+      <div class="tile-top"><div><h3>Messages direction</h3><div class="desc">Diffuser et piloter les messages affichés en boutique.</div></div><div class="tile-ic ic-msg"><i class="ti ti-speakerphone"></i></div></div>
+      <div class="stat loading" id="statMsg"><span class="n">…</span><span class="l">chargement</span></div>
+      <span class="go">Ouvrir →</span>
+    </a>
 
-  <div class="grp">
-    <div class="section-lab">Administration</div>
-    <div class="grid">
-      <a class="tile" href="securite.html" style="--accent:var(--danger)">
-        <div class="tile-top"><div><h3>Sécurité</h3><div class="desc">Code PIN, accès magasins, historique des connexions et réglages.</div></div><div class="tile-ic ic-secu"><i class="ti ti-lock"></i></div></div>
+    <div class="lab-row"><span class="lab">Opérations</span></div>
+    <div class="tile-wrap">
+      <a class="tile" href="reception-admin.html" style="--accent:var(--recep)">
+        <div class="tile-top"><div><h3>Réception</h3><div class="desc">Suivi des réceptions et dépôt des fichiers de préparation.</div></div><div class="tile-ic ic-recep"><i class="ti ti-package"></i></div></div>
+        <div class="stat"><span class="n">›</span><span class="l">ouvrir le suivi</span></div>
         <span class="go">Ouvrir →</span>
       </a>
+      <button class="magvolet-btn" data-volet="recep"><i class="ti ti-chevron-down chev"></i> Pages boutique (réception)</button>
+      <div class="magvolet" id="volet-recep">
+        <input type="text" class="mv-search" placeholder="🔍 Chercher un magasin…" data-search="recep">
+        <div class="mv-list" id="list-recep"><div class="mv-empty">Chargement…</div></div>
+      </div>
     </div>
+    <a class="tile" href="transport-admin.html" style="--accent:var(--exped)">
+      <div class="tile-top"><div><h3>Expéditions</h3><div class="desc">Analyse des expéditions — dépôt de l'export Excel.</div></div><div class="tile-ic ic-exped"><i class="ti ti-truck"></i></div></div>
+      <div class="stat loading" id="statExped"><span class="n">…</span><span class="l">chargement</span></div>
+      <span class="go">Ouvrir →</span>
+    </a>
+    <div class="tile-wrap">
+      <a class="tile" href="consommables-admin.html" style="--accent:var(--conso)">
+        <div class="tile-top"><div><h3>Consommables</h3><div class="desc">Catalogue, validation des références et suivi des commandes.</div></div><div class="tile-ic ic-conso"><i class="ti ti-clipboard-list"></i></div></div>
+        <div class="stat loading" id="statConso"><span class="n">…</span><span class="l">chargement</span></div>
+        <span class="go">Ouvrir →</span>
+      </a>
+      <button class="magvolet-btn" data-volet="conso"><i class="ti ti-chevron-down chev"></i> Page boutique (commande conso)</button>
+      <div class="magvolet" id="volet-conso">
+        <input type="text" class="mv-search" placeholder="🔍 Chercher un magasin…" data-search="conso">
+        <div class="mv-list" id="list-conso"><div class="mv-empty">Chargement…</div></div>
+      </div>
+    </div>
+
+    <div class="lab-row"><span class="lab">Administration</span></div>
+    <a class="tile" href="securite.html" style="--accent:var(--danger)">
+      <div class="tile-top"><div><h3>Sécurité</h3><div class="desc">Code PIN, accès magasins, historique des connexions et réglages.</div></div><div class="tile-ic ic-secu"><i class="ti ti-lock"></i></div></div>
+      <span class="go">Ouvrir →</span>
+    </a>
   </div>
 
-  <div class="foot">Portail interne IZAC — réservé au siège.</div>
+  <div class="foot">IZAC Hub — réservé au siège.</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -273,6 +268,7 @@ function stayConnected(){ resetIdle(); }
 function enterHub(){
   document.getElementById('login-wrap').style.display='none';
   document.getElementById('hub-wrap').style.display='block';
+  document.querySelectorAll('.tile').forEach((t,i)=>{ t.style.animationDelay=(i*55)+'ms'; });
   const d=new Date();
   document.getElementById('today').textContent=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   loadStats();
