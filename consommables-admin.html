@@ -656,8 +656,7 @@ function printRecap(){
     <div class="summary">${totalCmd} commande(s) · ${totalMag} magasin(s) · ${totalPieces} pièce(s) au total à préparer</div>
 
     <div class="sec">1 · À préparer en gros (descente −2)</div>
-    ${aggSection('Dépôt', depotAgg)}
-    ${aggSection('Siège', siegeAgg)}
+    ${siegeAgg.length?aggSection('Articles siège',siegeAgg):'<div style="font-size:12px;padding:6px 0">Aucun article siège à préparer cette semaine.</div>'}
 
     <div class="pagebreak"></div>
     <div class="sec">2 · Fiches colis — un carton Chronopost par magasin</div>
