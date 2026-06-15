@@ -17,7 +17,7 @@
   .hdr-logo{width:38px;height:38px;background:#1E4D9B;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff}
   .hdr h1{font-size:19px;font-weight:800;color:#fff}
   .hdr .sub{font-size:12px;color:rgba(255,255,255,.7);font-weight:600;margin-top:1px}
-  .note{background:#fff;border:1px solid var(--line);border-left:3px solid var(--navy);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--ink2);margin-bottom:16px}
+  .note{background:#e6eefb;border:1px solid #c5d6f5;border-left:3px solid var(--navy2);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--navy2);font-weight:600;margin-bottom:16px}
   .selectbar{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:16px}
   .searchmag{margin-bottom:16px}
   .searchmag input{width:100%;padding:14px 16px;border:1px solid var(--line);border-radius:10px;font-size:16px;background:#fff;color:var(--ink)}
@@ -470,16 +470,14 @@ document.getElementById('genBtn').addEventListener('click',()=>{
   document.getElementById('modalMag').textContent=`${curMag.nom} · ${TYPE_LABEL[curMag.type]} · ${new Date().toLocaleDateString('fr-FR')}`;
   document.getElementById('modalErr').textContent='';
 
-  // --- détection des dépassements (seuil fixe + moyenne 2x si historique fiable) ---
-  const fiable = (avgByArticle.__n||0) >= 4;
+  // --- détection des dépassements : UNIQUEMENT le plafond fixe défini par le siège ---
   overQty=[];
   ARTS.forEach(a=>{
     if(!qty[a.id]) return;
     const q=qty[a.id];
-    let raison=null;
-    if(a.seuil_alerte!=null && q>a.seuil_alerte) raison=`plafond ${a.seuil_alerte} dépassé`;
-    else if(fiable && avgByArticle[a.id] && q > 2*avgByArticle[a.id]) raison=`2× la moyenne habituelle (~${Math.round(avgByArticle[a.id])})`;
-    if(raison) overQty.push({lib:a.libelle, q, raison});
+    if(a.seuil_alerte!=null && q>a.seuil_alerte){
+      overQty.push({lib:a.libelle, q, raison:`plafond ${a.seuil_alerte} dépassé`});
+    }
   });
   const alertBox=document.getElementById('alertBox');
   const justWrap=document.getElementById('justWrap');
@@ -564,15 +562,13 @@ function showDone(nDepot,nSiege,numero){
         <div style="font-size:21px;font-weight:800;color:var(--navy);margin-bottom:8px">Commande envoyée !</div>
         <div id="doneSub" style="font-size:14px;color:var(--ink2);line-height:1.5;margin-bottom:6px"></div>
         <div id="doneNum" style="font-size:12px;color:var(--ink3);font-weight:600;margin-bottom:22px"></div>
-        <button id="doneOk" style="background:var(--navy);color:#fff;border:none;border-radius:10px;padding:12px 30px;font-size:14px;font-weight:700;cursor:pointer">Parfait</button>
+        <button id="doneOk" style="background:var(--navy);color:#fff;border:none;border-radius:10px;padding:12px 30px;font-size:14px;font-weight:700;cursor:pointer">OK</button>
       </div>`;
     document.body.appendChild(ov);
     ov.addEventListener('click',e=>{ if(e.target===ov||e.target.id==='doneOk') hideDone(); });
   }
   const parts=[];
-  if(nDepot) parts.push(`${nDepot} article${nDepot>1?'s':''} en dépôt`);
-  if(nSiege) parts.push(`${nSiege} article${nSiege>1?'s':''} au siège`);
-  document.getElementById('doneSub').innerHTML='Ta commande est bien enregistrée et transmise au siège.'+(parts.length?'<br>'+parts.join(' · '):'');
+  document.getElementById('doneSub').innerHTML='Ta commande est bien enregistrée et transmise au siège.';
   document.getElementById('doneNum').textContent=numero?('N° '+numero):'';
   ov.style.display='flex';
   requestAnimationFrame(()=>{ ov.style.opacity='1'; document.getElementById('doneCard').style.transform='scale(1)'; });
