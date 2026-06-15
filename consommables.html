@@ -97,17 +97,47 @@
   .btn-close{background:var(--line2);color:var(--ink2)}
   .btn-close:hover{background:var(--line)}
   .btn:disabled{opacity:.4;cursor:default}
-  /* historique 10 dernières commandes du magasin */
-  .histbox{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
-  .histbox h4{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:7px}
-  .histrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line2);font-size:13px}
-  .histrow:last-child{border-bottom:none}
-  .histrow .hd{font-weight:700;color:var(--ink);min-width:120px}
-  .histrow .ha{color:var(--ink2);flex:1}
-  .histrow .hs{font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;white-space:nowrap}
-  .histrow .hs.sent{background:#e6eefb;color:var(--navy2)}
-  .histrow .hs.done{background:var(--greenbg);color:var(--green)}
-  .histbox .hempty{color:var(--ink3);font-size:13px;padding:6px 0}</style>
+  /* layout catalogue + vignette historique à droite */
+  .cat-layout{display:flex;gap:18px;align-items:flex-start}
+  .cat-main{flex:1;min-width:0}
+  .cat-side{width:248px;flex-shrink:0;position:sticky;top:16px}
+  .histcard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 2px 10px rgba(13,39,80,.04)}
+  .histcard h4{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--navy);font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+  .histitem{display:block;width:100%;text-align:left;background:var(--line2);border:1px solid transparent;border-radius:9px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:.12s}
+  .histitem:last-child{margin-bottom:0}
+  .histitem:hover{border-color:var(--navy);background:#f7faff;transform:translateY(-1px)}
+  .histitem .hi-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .histitem .hi-date{font-size:13px;font-weight:800;color:var(--navy)}
+  .histitem .hi-q{font-size:12px;font-weight:700;color:var(--ink2);background:#fff;border-radius:99px;padding:2px 9px;white-space:nowrap}
+  .histitem .hi-nom{font-size:12px;color:var(--ink2);margin-top:3px}
+  .histitem .hi-status{font-size:10.5px;font-weight:700;margin-top:5px;display:inline-block;padding:2px 8px;border-radius:99px}
+  .histitem .hi-status.sent{background:#e6eefb;color:var(--navy2)}
+  .histitem .hi-status.done{background:var(--greenbg);color:var(--green)}
+  .histcard .hempty{color:var(--ink3);font-size:12.5px;line-height:1.5;text-align:center;padding:12px 4px}
+  .histcard .hempty .em{font-size:26px;display:block;margin-bottom:6px}
+  /* panneau glissant aperçu */
+  .peek-back{position:fixed;inset:0;background:rgba(13,39,80,.4);opacity:0;pointer-events:none;transition:opacity .25s;z-index:70}
+  .peek-back.show{opacity:1;pointer-events:auto}
+  .peek{position:fixed;top:0;right:0;height:100%;width:360px;max-width:90vw;background:#fff;box-shadow:-12px 0 40px rgba(13,39,80,.18);transform:translateX(100%);transition:transform .28s cubic-bezier(.3,.8,.3,1);z-index:71;display:flex;flex-direction:column}
+  .peek.show{transform:translateX(0)}
+  .peek-hd{background:var(--navy);color:#fff;padding:18px 20px;flex-shrink:0}
+  .peek-hd .pk-close{position:absolute;top:14px;right:16px;background:rgba(255,255,255,.18);border:none;color:#fff;width:30px;height:30px;border-radius:8px;font-size:18px;cursor:pointer;line-height:1}
+  .peek-hd .pk-date{font-size:12px;color:rgba(255,255,255,.7);font-weight:600}
+  .peek-hd .pk-mag{font-size:17px;font-weight:800;margin-top:2px}
+  .peek-hd .pk-num{font-size:11px;color:rgba(255,255,255,.6);margin-top:4px;font-weight:600}
+  .peek-body{padding:18px 20px;overflow:auto;flex:1}
+  .peek-meta{font-size:13px;color:var(--ink2);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+  .peek-meta b{color:var(--ink)}
+  .pk-cat{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);font-weight:700;margin:12px 0 5px}
+  .pk-line{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--line2);font-size:13.5px}
+  .pk-line .pq{font-weight:800;font-variant-numeric:tabular-nums;color:var(--navy)}
+  .pk-badge{font-size:10px;background:var(--warnbg);color:var(--warn);padding:1px 7px;border-radius:99px;margin-left:6px;font-weight:700}
+  @media(max-width:780px){
+    .cat-layout{flex-direction:column-reverse}
+    .cat-side{width:100%;position:static}
+    .histcard{margin-bottom:4px}
+    .peek{width:100%;max-width:100%}
+  }</style>
 </head>
 <body>
 <div class="wrap">
@@ -133,10 +163,29 @@
 
   <!-- étape catalogue -->
   <div id="step-cat" class="hidden">
-    <div id="histBox" class="histbox hidden"></div>
     <div id="loading" class="loading hidden"><div class="sp"></div>Chargement…</div>
-    <div id="catalogue"></div>
+    <div class="cat-layout">
+      <div class="cat-main"><div id="catalogue"></div></div>
+      <aside class="cat-side" id="catSide">
+        <div class="histcard">
+          <h4>🧾 Mes 5 dernières</h4>
+          <div id="histList"></div>
+        </div>
+      </aside>
+    </div>
   </div>
+</div>
+
+<!-- panneau glissant : aperçu d'une commande -->
+<div class="peek-back" id="peekBack"></div>
+<div class="peek" id="peek">
+  <div class="peek-hd">
+    <button class="pk-close" id="peekClose">×</button>
+    <div class="pk-date" id="pkDate">—</div>
+    <div class="pk-mag" id="pkMag">—</div>
+    <div class="pk-num" id="pkNum"></div>
+  </div>
+  <div class="peek-body" id="peekBody"></div>
 </div>
 
 <div class="footer-bar hidden" id="footerBar">
@@ -241,7 +290,7 @@ function showSelect(){
 }
 let lastOrder=null;       // dernière commande du magasin (pour recommander)
 let avgByArticle={};      // moyenne historique qté par article pour ce magasin
-let recentOrders=[];      // 10 dernières commandes (affichage historique magasin)
+let recentOrders=[];      // 5 dernières commandes (vignette historique + aperçu)
 
 async function selectMag(mag,remember){
   curMag=mag; qty={};
@@ -258,48 +307,77 @@ async function selectMag(mag,remember){
 async function loadHistory(code){
   lastOrder=null; avgByArticle={}; recentOrders=[];
   try{
-    const {data:cmds}=await sb.from('conso_commandes').select('id,created_at,numero,statut').eq('mag_code',code).order('created_at',{ascending:false});
+    const {data:cmds}=await sb.from('conso_commandes').select('id,created_at,numero,statut,demandeur_nom,demandeur_prenom,mag_nom,mag_type,justification').eq('mag_code',code).order('created_at',{ascending:false});
     if(cmds && cmds.length){
       const ids=cmds.map(c=>c.id);
       const {data:lignes}=await sb.from('conso_commande_lignes').select('*').in('commande_id',ids);
       if(lignes){
-        // dernière commande
         const lastId=cmds[0].id;
         lastOrder=lignes.filter(l=>String(l.commande_id)===String(lastId));
-        // moyenne par article (sur toutes les commandes)
         const sums={}, counts={};
         lignes.forEach(l=>{ if(l.article_id==null)return; sums[l.article_id]=(sums[l.article_id]||0)+l.quantite; counts[l.article_id]=(counts[l.article_id]||0)+1; });
         Object.keys(sums).forEach(id=>{ avgByArticle[id]=sums[id]/counts[id]; });
         avgByArticle.__n=cmds.length;
-        // 10 dernières commandes : nb d'articles + statut
-        const nbByCmd={};
-        lignes.forEach(l=>{ nbByCmd[l.commande_id]=(nbByCmd[l.commande_id]||0)+1; });
-        recentOrders=cmds.slice(0,10).map(c=>({
-          numero:c.numero, created_at:c.created_at,
-          nb:nbByCmd[c.id]||0,
-          done:(c.statut||'a_traiter')==='termine'
-        }));
+        // 5 dernières, avec leurs lignes pour l'aperçu
+        recentOrders=cmds.slice(0,5).map(c=>{
+          const ll=lignes.filter(l=>String(l.commande_id)===String(c.id));
+          const totalQ=ll.reduce((s,l)=>s+(l.quantite||0),0);
+          return {
+            id:c.id, numero:c.numero, created_at:c.created_at,
+            nom:`${c.demandeur_prenom||''} ${c.demandeur_nom||''}`.trim(),
+            mag_nom:c.mag_nom, justification:c.justification,
+            totalQ, lignes:ll,
+            done:(c.statut||'a_traiter')==='termine'
+          };
+        });
       }
     }
-  }catch(e){ /* silencieux : pas bloquant */ }
+  }catch(e){ /* silencieux */ }
   renderHistory();
 }
 
 function renderHistory(){
-  const box=document.getElementById('histBox'); if(!box) return;
-  if(!recentOrders.length){ box.classList.add('hidden'); box.innerHTML=''; return; }
-  const rows=recentOrders.map(o=>{
+  const box=document.getElementById('histList'); if(!box) return;
+  if(!recentOrders.length){
+    box.innerHTML='<div class="hempty"><span class="em">📦</span>Aucune commande pour l\'instant.<br>Ta première apparaîtra ici.</div>';
+    return;
+  }
+  box.innerHTML=recentOrders.map((o,i)=>{
     const d=new Date(o.created_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit'});
-    const h=new Date(o.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-    return `<div class="histrow">
-      <span class="hd">${d} · ${h}</span>
-      <span class="ha">${o.nb} article${o.nb>1?'s':''}</span>
-      <span class="hs ${o.done?'done':'sent'}">${o.done?'✓ traitée par le siège':'envoyée'}</span>
-    </div>`;
+    return `<button class="histitem" data-peek="${i}">
+      <div class="hi-top"><span class="hi-date">${d}</span><span class="hi-q">${o.totalQ} pc</span></div>
+      ${o.nom?`<div class="hi-nom">👤 ${o.nom}</div>`:''}
+      <span class="hi-status ${o.done?'done':'sent'}">${o.done?'✓ traitée':'envoyée'}</span>
+    </button>`;
   }).join('');
-  box.innerHTML=`<h4>📋 Mes dernières commandes envoyées</h4>${rows}`;
-  box.classList.remove('hidden');
 }
+
+// panneau glissant aperçu
+function openPeek(idx){
+  const o=recentOrders[idx]; if(!o) return;
+  const d=new Date(o.created_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('pkDate').textContent=d;
+  document.getElementById('pkMag').textContent=o.mag_nom||'';
+  document.getElementById('pkNum').textContent=(o.numero?('N° '+o.numero):'')+(o.done?' · ✓ traitée par le siège':' · envoyée');
+  const depot=o.lignes.filter(l=>l.circuit!=='siege');
+  const siege=o.lignes.filter(l=>l.circuit==='siege');
+  const sect=(t,arr)=>arr.length?`<div class="pk-cat">${t}</div>`+arr.map(l=>`<div class="pk-line"><span>${l.libelle}</span><span class="pq">${l.quantite}</span></div>`).join(''):'';
+  let body=`<div class="peek-meta">${o.nom?('Demandé par <b>'+o.nom+'</b><br>'):''}Total : <b>${o.totalQ} pièce${o.totalQ>1?'s':''}</b> · ${o.lignes.length} référence${o.lignes.length>1?'s':''}</div>`;
+  body+=sect('Articles en dépôt',depot);
+  body+=sect('Articles au siège',siege);
+  if(o.justification) body+=`<div class="pk-cat" style="color:var(--warn)">Justification</div><div style="font-size:13px;color:var(--ink2)">${o.justification}</div>`;
+  document.getElementById('peekBody').innerHTML=body;
+  document.getElementById('peekBack').classList.add('show');
+  document.getElementById('peek').classList.add('show');
+}
+function closePeek(){
+  document.getElementById('peekBack').classList.remove('show');
+  document.getElementById('peek').classList.remove('show');
+}
+document.addEventListener('click',e=>{
+  const it=e.target.closest('[data-peek]'); if(it){ openPeek(parseInt(it.dataset.peek,10)); return; }
+  if(e.target.id==='peekClose'||e.target.id==='peekBack') closePeek();
+});
 
 function renderCatalogue(){
   const arts=ARTS.filter(a=>a.actif!==false && a.profils.split(',').includes(curMag.type));
