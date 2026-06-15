@@ -6,6 +6,7 @@
 <title>IZAC — Portail</title>
 <meta name="theme-color" content="#263145">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
 <style>
 :root{
   --ink:#263145;--ink-2:#36425a;--ink-70:#5b647a;--ink-55:#828a9c;
@@ -47,14 +48,17 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
 
 .section-lab{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-55);font-weight:700;margin:0 4px 12px}
 .grp{margin-bottom:26px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-.tile{background:var(--card);border:1px solid var(--line-2);border-radius:16px;padding:22px;cursor:pointer;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:13px;transition:.15s;position:relative;box-shadow:var(--shadow);min-height:150px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;align-items:start}
+.tile{background:var(--card);border:1px solid var(--line-2);border-radius:16px;padding:22px;cursor:pointer;text-decoration:none;color:inherit;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s;position:relative;box-shadow:var(--shadow);height:158px;overflow:hidden}
+.tile::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent,var(--ink));opacity:0;transition:opacity .18s}
 .tile:hover{transform:translateY(-2px);box-shadow:0 1px 2px rgba(38,49,69,.04),0 28px 56px -28px rgba(38,49,69,.5)}
+.tile:hover::before{opacity:1}
 .tile-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-.tile-ic{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0}
+.tile-ic{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0}
+.tile-ic .ti{font-size:23px;line-height:1}
 .tile h3{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink);margin-bottom:3px}
-.tile .desc{font-size:12.5px;color:var(--ink-70);line-height:1.45}
-.tile .stat{margin-top:auto;display:flex;align-items:baseline;gap:7px;padding-top:8px}
+.tile .desc{font-size:12.5px;color:var(--ink-70);line-height:1.4}
+.tile .stat{margin-top:auto;display:flex;align-items:baseline;gap:7px;min-height:26px}
 .tile .stat .n{font-family:var(--serif);font-size:25px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1}
 .tile .stat .l{font-size:12px;color:var(--ink-55);font-weight:500}
 .tile .stat.loading .n{color:var(--ink-55);font-size:13px;font-family:var(--sans)}
@@ -66,18 +70,18 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
 .ic-exped{background:#fbe9d8;color:var(--exped)}
 .ic-conso{background:var(--tint-2);color:var(--conso)}
 .ic-secu{background:#fdecea;color:var(--danger)}
-/* volet pages magasin sous une tuile */
-.tile-wrap{display:flex;flex-direction:column}
-.magvolet-btn{margin-top:6px;align-self:flex-start;background:var(--tint);border:1px solid var(--line-2);color:var(--ink-70);border-radius:9px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);display:inline-flex;align-items:center;gap:6px;transition:.12s}
-.magvolet-btn:hover{background:rgba(38,49,69,.08);color:var(--ink)}
-.magvolet-btn .chev{transition:transform .2s}
+/* volet pages magasin — en superposition (ne décale pas la grille) */
+.tile-wrap{position:relative}
+.magvolet-btn{margin-top:8px;background:transparent;border:1px solid var(--line-2);color:var(--ink-70);border-radius:9px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);display:inline-flex;align-items:center;gap:6px;transition:.12s}
+.magvolet-btn:hover{background:var(--tint);color:var(--ink);border-color:var(--line)}
+.magvolet-btn .chev{transition:transform .2s;font-size:13px}
 .magvolet-btn.open .chev{transform:rotate(180deg)}
-.magvolet{display:none;margin-top:8px;background:var(--card);border:1px solid var(--line-2);border-radius:13px;padding:12px;box-shadow:var(--shadow)}
-.magvolet.open{display:block;animation:volet-in .18s ease}
-@keyframes volet-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.magvolet{display:none;position:absolute;top:calc(158px + 44px);left:0;right:0;z-index:30;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:12px;box-shadow:0 16px 44px -12px rgba(38,49,69,.4)}
+.magvolet.open{display:block;animation:volet-in .16s ease}
+@keyframes volet-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 .magvolet .mv-search{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:9px;font-size:13px;font-family:var(--sans);margin-bottom:10px;background:#fff;color:var(--ink)}
 .magvolet .mv-search:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(38,49,69,.08)}
-.magvolet .mv-list{max-height:230px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px}
+.magvolet .mv-list{max-height:240px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:6px}
 .magvolet .mv-item{text-align:left;background:var(--tint);border:1px solid transparent;border-radius:8px;padding:8px 10px;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;text-decoration:none;transition:.1s;line-height:1.25}
 .magvolet .mv-item:hover{border-color:var(--ink);background:#fff}
 .magvolet .mv-item .mv-code{display:block;font-size:10.5px;color:var(--ink-55);font-weight:500;margin-top:1px}
@@ -131,19 +135,19 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
     <div class="section-lab">Pilotage réseau</div>
     <div class="grid">
       <div class="tile-wrap">
-        <a class="tile" href="meteo.html">
-          <div class="tile-top"><div><h3>Météo réseau</h3><div class="desc">Météo par boutique et région, prévisionnel 10 jours.</div></div><div class="tile-ic ic-meteo">🌤️</div></div>
+        <a class="tile" href="meteo.html" style="--accent:var(--meteo)">
+          <div class="tile-top"><div><h3>Météo réseau</h3><div class="desc">Météo par boutique et région, prévisionnel 10 jours.</div></div><div class="tile-ic ic-meteo"><i class="ti ti-cloud"></i></div></div>
           <div class="stat"><span class="n">7</span><span class="l">régions suivies</span></div>
           <span class="go">Ouvrir →</span>
         </a>
-        <button class="magvolet-btn" data-volet="meteo"><span class="chev">▾</span> Pages boutique (météo + message)</button>
+        <button class="magvolet-btn" data-volet="meteo"><i class="ti ti-chevron-down chev"></i> Pages boutique (météo + message)</button>
         <div class="magvolet" id="volet-meteo">
           <input type="text" class="mv-search" placeholder="🔍 Chercher une boutique…" data-search="meteo">
           <div class="mv-list" id="list-meteo"></div>
         </div>
       </div>
-      <a class="tile" href="IZAC_Admin.html">
-        <div class="tile-top"><div><h3>Messages direction</h3><div class="desc">Diffuser et piloter les messages affichés en boutique.</div></div><div class="tile-ic ic-msg">📣</div></div>
+      <a class="tile" href="IZAC_Admin.html" style="--accent:var(--msg)">
+        <div class="tile-top"><div><h3>Messages direction</h3><div class="desc">Diffuser et piloter les messages affichés en boutique.</div></div><div class="tile-ic ic-msg"><i class="ti ti-speakerphone"></i></div></div>
         <div class="stat loading" id="statMsg"><span class="n">…</span><span class="l">chargement</span></div>
         <span class="go">Ouvrir →</span>
       </a>
@@ -154,29 +158,29 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
     <div class="section-lab">Opérations</div>
     <div class="grid">
       <div class="tile-wrap">
-        <a class="tile" href="reception-admin.html">
-          <div class="tile-top"><div><h3>Réception</h3><div class="desc">Suivi des réceptions et dépôt des fichiers de préparation.</div></div><div class="tile-ic ic-recep">📦</div></div>
+        <a class="tile" href="reception-admin.html" style="--accent:var(--recep)">
+          <div class="tile-top"><div><h3>Réception</h3><div class="desc">Suivi des réceptions et dépôt des fichiers de préparation.</div></div><div class="tile-ic ic-recep"><i class="ti ti-package"></i></div></div>
           <div class="stat"><span class="n">›</span><span class="l">ouvrir le suivi</span></div>
           <span class="go">Ouvrir →</span>
         </a>
-        <button class="magvolet-btn" data-volet="recep"><span class="chev">▾</span> Pages boutique (réception)</button>
+        <button class="magvolet-btn" data-volet="recep"><i class="ti ti-chevron-down chev"></i> Pages boutique (réception)</button>
         <div class="magvolet" id="volet-recep">
           <input type="text" class="mv-search" placeholder="🔍 Chercher un magasin…" data-search="recep">
           <div class="mv-list" id="list-recep"><div class="mv-empty">Chargement…</div></div>
         </div>
       </div>
-      <a class="tile" href="transport-admin.html">
-        <div class="tile-top"><div><h3>Expéditions</h3><div class="desc">Analyse des expéditions — dépôt de l'export Excel.</div></div><div class="tile-ic ic-exped">🚚</div></div>
+      <a class="tile" href="transport-admin.html" style="--accent:var(--exped)">
+        <div class="tile-top"><div><h3>Expéditions</h3><div class="desc">Analyse des expéditions — dépôt de l'export Excel.</div></div><div class="tile-ic ic-exped"><i class="ti ti-truck"></i></div></div>
         <div class="stat loading" id="statExped"><span class="n">…</span><span class="l">chargement</span></div>
         <span class="go">Ouvrir →</span>
       </a>
       <div class="tile-wrap">
-        <a class="tile" href="consommables-admin.html">
-          <div class="tile-top"><div><h3>Consommables</h3><div class="desc">Catalogue, validation des références et suivi des commandes.</div></div><div class="tile-ic ic-conso">🧾</div></div>
+        <a class="tile" href="consommables-admin.html" style="--accent:var(--conso)">
+          <div class="tile-top"><div><h3>Consommables</h3><div class="desc">Catalogue, validation des références et suivi des commandes.</div></div><div class="tile-ic ic-conso"><i class="ti ti-clipboard-list"></i></div></div>
           <div class="stat loading" id="statConso"><span class="n">…</span><span class="l">chargement</span></div>
           <span class="go">Ouvrir →</span>
         </a>
-        <button class="magvolet-btn" data-volet="conso"><span class="chev">▾</span> Page boutique (commande conso)</button>
+        <button class="magvolet-btn" data-volet="conso"><i class="ti ti-chevron-down chev"></i> Page boutique (commande conso)</button>
         <div class="magvolet" id="volet-conso">
           <input type="text" class="mv-search" placeholder="🔍 Chercher un magasin…" data-search="conso">
           <div class="mv-list" id="list-conso"><div class="mv-empty">Chargement…</div></div>
@@ -188,8 +192,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
   <div class="grp">
     <div class="section-lab">Administration</div>
     <div class="grid">
-      <a class="tile" href="securite.html">
-        <div class="tile-top"><div><h3>Sécurité</h3><div class="desc">Code PIN, accès magasins, historique des connexions et réglages.</div></div><div class="tile-ic ic-secu">🔐</div></div>
+      <a class="tile" href="securite.html" style="--accent:var(--danger)">
+        <div class="tile-top"><div><h3>Sécurité</h3><div class="desc">Code PIN, accès magasins, historique des connexions et réglages.</div></div><div class="tile-ic ic-secu"><i class="ti ti-lock"></i></div></div>
         <span class="go">Ouvrir →</span>
       </a>
     </div>
@@ -357,22 +361,34 @@ function renderVolet(which, filter){
 }
 
 // ouvrir / fermer un volet
+function closeAllVolets(except){
+  document.querySelectorAll('.magvolet.open').forEach(v=>{ if(v!==except) v.classList.remove('open'); });
+  document.querySelectorAll('.magvolet-btn.open').forEach(b=>{ b.classList.remove('open'); });
+}
 document.querySelectorAll('.magvolet-btn').forEach(btn=>{
-  btn.addEventListener('click', async ()=>{
+  btn.addEventListener('click', async (e)=>{
+    e.stopPropagation();
     const which=btn.dataset.volet;
     const volet=document.getElementById('volet-'+which);
-    const open=volet.classList.toggle('open');
-    btn.classList.toggle('open',open);
-    if(open && !voletLoaded[which]){
+    const willOpen=!volet.classList.contains('open');
+    closeAllVolets(willOpen?volet:null);
+    volet.classList.toggle('open',willOpen);
+    btn.classList.toggle('open',willOpen);
+    if(willOpen && !voletLoaded[which]){
       voletLoaded[which]=true;
       if(which!=='meteo'){ await loadMagsBase(); }
       renderVolet(which,'');
     }
   });
 });
+// clic en dehors d'un volet -> fermer
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.magvolet') && !e.target.closest('.magvolet-btn')) closeAllVolets(null);
+});
 // recherche dans un volet
 document.querySelectorAll('.mv-search').forEach(inp=>{
   inp.addEventListener('input',()=>renderVolet(inp.dataset.search, inp.value));
+  inp.addEventListener('click',e=>e.stopPropagation());
 });
 </script>
 </body>
