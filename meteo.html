@@ -267,16 +267,16 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
 </div>
 <div class="view" id="view-comparatif">
   <div class="comparatif-bar">
-    <div class="cb-presets"><span class="cb-presets-lbl">⚡ Raccourcis</span><button class="cb-preset" onclick="presetJour()">📅 Aujourd'hui vs même jour l'an dernier</button><button class="cb-preset" onclick="presetSemaine('prev')">📅 Semaine passée vs semaine d'avant</button><button class="cb-preset" onclick="presetSemaine('yoy')">📅 Semaine passée vs même semaine l'an dernier</button></div>
-    <span class="cb-label">Comparer :</span>
+    <div class="cb-presets"><span class="cb-presets-lbl">⚡ Raccourcis</span><button class="cb-preset" onclick="presetJour()">📅 Aujourd'hui vs même jour l'an dernier</button><button class="cb-preset" onclick="presetSemaine('prev')">📅 Semaine passée vs semaine d'avant</button><button class="cb-preset" onclick="presetSemaine('yoy')">📅 Semaine passée vs même semaine l'an dernier</button><span style="flex:1"></span><button class="cb-preset" id="btn-mode-date" style="background:#fff;color:#0D2750" onclick="setMode('date')">🔍 Une seule date</button><button class="cb-preset" id="btn-mode-periode" style="background:#fff;color:#0D2750" onclick="setMode('periode')">📆 Une période (sans comparaison)</button></div>
+    <span class="cb-label" id="cb-mode-label">Comparer :</span>
     <div class="cb-group">
-      <span class="cb-badge cb-p1">P1</span>
+      <span class="cb-badge cb-p1" id="badge-p1">P1</span>
       <input type="date" class="cb-input" id="date-p1" value="2024-06-01">
-      <span style="font-size:11px;color:#6B7280">→</span>
+      <span style="font-size:11px;color:#6B7280" id="sep-p1">→</span>
       <input type="date" class="cb-input" id="date-p1-fin" value="2024-06-30">
     </div>
-    <span style="font-size:16px;color:#9CA3AF">vs</span>
-    <div class="cb-group">
+    <span style="font-size:16px;color:#9CA3AF" id="vs-label">vs</span>
+    <div class="cb-group" id="group-p2">
       <span class="cb-badge cb-p2">P2</span>
       <input type="date" class="cb-input" id="date-p2" value="2025-06-01">
       <span style="font-size:11px;color:#6B7280">→</span>
@@ -583,10 +583,55 @@ async function loadRealtimeRegion(reg){
 function renderCmpVide(){
   document.getElementById('rgrid-cmp').innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9CA3AF;font-size:14px">Sélectionnez vos périodes et cliquez sur <strong>Comparer →</strong></div>`;
 }
+let modeSimple=false; // 'date' | 'periode' | false
+function setMode(m){
+  modeSimple = (modeSimple===m) ? false : m;
+  const groupP2=document.getElementById('group-p2');
+  const vsLabel=document.getElementById('vs-label');
+  const modeLabel=document.getElementById('cb-mode-label');
+  const sepP1=document.getElementById('sep-p1');
+  const p1fin=document.getElementById('date-p1-fin');
+  const badgeP1=document.getElementById('badge-p1');
+  const btnComparer=document.getElementById('btn-comparer');
+  const btnDate=document.getElementById('btn-mode-date');
+  const btnPeriode=document.getElementById('btn-mode-periode');
+  const onCol='#0D2750',onTxt='#fff',offCol='#fff',offTxt='#0D2750';
+  btnDate.style.background=offCol;btnDate.style.color=offTxt;
+  btnPeriode.style.background=offCol;btnPeriode.style.color=offTxt;
+  if(modeSimple==='date'){
+    groupP2.style.display='none'; vsLabel.style.display='none';
+    sepP1.style.display='none'; p1fin.style.display='none'; badgeP1.style.display='none';
+    modeLabel.textContent='Date :';
+    btnComparer.textContent='Rechercher →';
+    btnDate.style.background=onCol;btnDate.style.color=onTxt;
+    p1fin.value=document.getElementById('date-p1').value;
+  } else if(modeSimple==='periode'){
+    groupP2.style.display='none'; vsLabel.style.display='none';
+    sepP1.style.display=''; p1fin.style.display=''; badgeP1.style.display='none';
+    modeLabel.textContent='Période :';
+    btnComparer.textContent='Rechercher →';
+    btnPeriode.style.background=onCol;btnPeriode.style.color=onTxt;
+  } else {
+    groupP2.style.display=''; vsLabel.style.display='';
+    sepP1.style.display=''; p1fin.style.display=''; badgeP1.style.display='';
+    modeLabel.textContent='Comparer :';
+    btnComparer.textContent='Comparer →';
+  }
+  document.getElementById('cb-status').textContent='';
+}
 async function lancerComparatif(){
-  const p1d=document.getElementById('date-p1').value,p1f=document.getElementById('date-p1-fin').value;
-  const p2d=document.getElementById('date-p2').value,p2f=document.getElementById('date-p2-fin').value;
-  if(!p1d||!p1f||!p2d||!p2f){alert('Veuillez remplir toutes les dates.');return;}
+  const p1d=document.getElementById('date-p1').value;
+  let p1f=document.getElementById('date-p1-fin').value;
+  let p2d,p2f;
+  if(modeSimple==='date'){
+    p1f=p1d;
+    p2d='';p2f='';
+  } else if(modeSimple==='periode'){
+    p2d='';p2f='';
+  } else {
+    p2d=document.getElementById('date-p2').value;p2f=document.getElementById('date-p2-fin').value;
+  }
+  if(!p1d||!p1f||(!modeSimple&&(!p2d||!p2f))){alert('Veuillez remplir toutes les dates.');return;}
   const btn=document.getElementById('btn-comparer'),status=document.getElementById('cb-status');
   btn.disabled=true;btn.textContent='Chargement...';
   const allB=REGIONS.flatMap(r=>r.boutiques.map(b=>({...b,regId:r.id,regNom:r.nom})));
@@ -609,7 +654,7 @@ async function lancerComparatif(){
     await Promise.all(batch.map(async entry=>{
       const [m1,m2]=await Promise.all([
         fetchArchive(entry.lat,entry.lon,p1d,p1f),
-        fetchArchive(entry.lat,entry.lon,p2d,p2f)
+        modeSimple?Promise.resolve(null):fetchArchive(entry.lat,entry.lon,p2d,p2f)
       ]);
       entry.boutiques.forEach(b=>{
         if(!results[b.regId]) results[b.regId]={};
@@ -620,16 +665,16 @@ async function lancerComparatif(){
       status.textContent=pct+'% — '+done+'/'+totalRequetes+' villes';
     }));
   }
-  cmpData={results,p1d,p1f,p2d,p2f};
-  try{localStorage.setItem('izac_meteo_cmp',JSON.stringify({p1d,p1f,p2d,p2f}));}catch(e){}
+  cmpData={results,p1d,p1f,p2d,p2f,modeSimple};
+  try{localStorage.setItem('izac_meteo_cmp',JSON.stringify({p1d,p1f,p2d,p2f,modeSimple}));}catch(e){}
   btn.disabled=false;btn.textContent='Comparer →';
-  let koN=0;for(const rid in results){for(const bn in results[rid]){const dd=results[rid][bn];if(!(dd.m1&&dd.m2))koN++;}}
+  let koN=0;for(const rid in results){for(const bn in results[rid]){const dd=results[rid][bn];if(!dd.m1||(!modeSimple&&!dd.m2))koN++;}}
   if(koN===0){ status.textContent='✓ '+allB.length+' boutiques chargées'; status.style.color='#27500A'; }
   else { status.textContent='⚠ '+koN+' boutique(s) non chargée(s) — recliquez « Comparer » pour les récupérer'; status.style.color='#B45309'; }
   renderComparatif(cmpData);
 }
 function fmt(d){return d?d.split('-').reverse().join('/'):'—';}
-function renderComparatif({results,p1d,p1f,p2d,p2f}){
+function renderComparatif({results,p1d,p1f,p2d,p2f,modeSimple}){
   const summaryGrid=document.getElementById('cmp-summary-grid');
   summaryGrid.innerHTML='';
   const allM=[];for(const rid in results){for(const bn in results[rid]){allM.push(results[rid][bn]);}}
@@ -641,12 +686,21 @@ function renderComparatif({results,p1d,p1f,p2d,p2f}){
   const dT=(T1!=null&&T2!=null)?Math.round((T2-T1)*10)/10:null;
   const dR=(R1!=null&&R2!=null)?Math.round((R2-R1)*10)/10:null;
   const ar=(d,u)=>d==null?'':`<span style="font-weight:800;color:#0D2750;white-space:nowrap">${d>0?'▲ +':d<0?'▼ ':'= '}${d}${u}</span>`;
+  if(modeSimple){
+    document.getElementById('cmp-summary-title').innerHTML=
+      `<div style="font-size:13px;font-weight:700;color:#0D2750;margin-bottom:10px">Météo · heures d'ouverture 10h–20h &nbsp;—&nbsp; <span class="pl" style="background:#0D2750;color:#fff">📅 ${fmt(p1d)}${p1d!==p1f?' → '+fmt(p1f):''}</span></div>`
+      +`<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px">`
+      +`<div style="flex:1;min-width:230px;background:#F4F7FB;border:1px solid #E5E9F2;border-radius:9px;padding:10px 15px"><span style="font-size:11px;color:#6B7280;display:block;margin-bottom:3px">🌡 Température moyenne réseau</span><b style="font-size:22px;color:#0C447C">${T1!=null?T1+'°':'—'}</b></div>`
+      +`<div style="flex:1;min-width:230px;background:#F4F7FB;border:1px solid #E5E9F2;border-radius:9px;padding:10px 15px"><span style="font-size:11px;color:#6B7280;display:block;margin-bottom:3px">🌧 Pluie moyenne réseau (cumul 10h–20h)</span><b style="font-size:22px;color:#0C447C">${R1!=null?R1+' mm':'—'}</b></div>`
+      +`</div>`;
+  } else {
   document.getElementById('cmp-summary-title').innerHTML=
     `<div style="font-size:13px;font-weight:700;color:#0D2750;margin-bottom:10px">Comparatif météo · heures d'ouverture 10h–20h &nbsp;—&nbsp; <span class="pl" style="background:#0C5AB8;color:#fff">P1</span> ${fmt(p1d)}${p1d!==p1f?' → '+fmt(p1f):''} &nbsp;vs&nbsp; <span class="pl" style="background:#2E7D12;color:#fff">P2</span> ${fmt(p2d)}${p2d!==p2f?' → '+fmt(p2f):''}</div>`
     +`<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px">`
     +`<div style="flex:1;min-width:230px;background:#F4F7FB;border:1px solid #E5E9F2;border-radius:9px;padding:10px 15px"><span style="font-size:11px;color:#6B7280;display:block;margin-bottom:3px">🌡 Température moyenne réseau</span><b style="font-size:18px;color:#0C447C">${T1!=null?T1+'°':'—'}</b> <span style="color:#9CA3AF">→</span> <b style="font-size:18px;color:#27500A">${T2!=null?T2+'°':'—'}</b> &nbsp; ${ar(dT,'°')}</div>`
     +`<div style="flex:1;min-width:230px;background:#F4F7FB;border:1px solid #E5E9F2;border-radius:9px;padding:10px 15px"><span style="font-size:11px;color:#6B7280;display:block;margin-bottom:3px">🌧 Pluie moyenne réseau (cumul 10h–20h)</span><b style="font-size:18px;color:#0C447C">${R1!=null?R1+' mm':'—'}</b> <span style="color:#9CA3AF">→</span> <b style="font-size:18px;color:#27500A">${R2!=null?R2+' mm':'—'}</b> &nbsp; ${ar(dR,' mm')}</div>`
     +`</div>`;
+  }
   for(const reg of REGIONS){
     const rd=results[reg.id]||{};
     const t1s=Object.values(rd).map(d=>d.m1?.temp).filter(t=>t!=null);
@@ -685,7 +739,7 @@ function renderComparatif({results,p1d,p1f,p2d,p2f}){
     }).join('');
     card.innerHTML=`<div class="rchead"><div><div class="rc-region">${reg.nom}</div><div class="rc-ar">${reg.ar}</div><div class="rc-nb">${reg.boutiques.length} boutiques</div></div>
       <div style="text-align:right"><div style="display:flex;gap:6px;align-items:center;justify-content:flex-end">${avg1!=null?`<span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;background:#0C5AB8;color:#fff"><b class="pl">P1</b> ${avg1}°C</span>`:''}${avg2!=null?`<span style="font-size:11px;color:#6B7280">→</span><span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;background:#2E7D12;color:#fff"><b class="pl">P2</b> ${avg2}°C</span>`:''}</div>${delta!=null?`<div style="font-size:12px;font-weight:700;color:${dColor};margin-top:3px">${dSign}${delta}°C écart</div>`:''}</div></div>
-      <div class="rc-bouts"><div class="cmp-datehead"><span class="cmp-datechip d1"><b class="pl">P1</b><span class="dd">${fmt(p1d)}${p1d!==p1f?' → '+fmt(p1f):''}</span></span><span style="color:#9CA3AF;font-weight:600">vs</span><span class="cmp-datechip d2"><b class="pl">P2</b><span class="dd">${fmt(p2d)}${p2d!==p2f?' → '+fmt(p2f):''}</span></span><span class="cmp-eq">Δ = écart · météo 10h–20h</span></div><div class="bcmp-grid">${boutsHtml}</div></div>`;
+      <div class="rc-bouts"><div class="cmp-datehead">${modeSimple?`<span class="cmp-datechip d1"><b class="pl">📅</b><span class="dd">${fmt(p1d)}${p1d!==p1f?' → '+fmt(p1f):''}</span></span><span class="cmp-eq">météo 10h–20h</span>`:`<span class="cmp-datechip d1"><b class="pl">P1</b><span class="dd">${fmt(p1d)}${p1d!==p1f?' → '+fmt(p1f):''}</span></span><span style="color:#9CA3AF;font-weight:600">vs</span><span class="cmp-datechip d2"><b class="pl">P2</b><span class="dd">${fmt(p2d)}${p2d!==p2f?' → '+fmt(p2f):''}</span></span><span class="cmp-eq">Δ = écart · météo 10h–20h</span>`}</div><div class="bcmp-grid">${boutsHtml}</div></div>`;
     grid.appendChild(card);
   }
 }
@@ -1074,7 +1128,7 @@ function init(){
     String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear()+' '+
     String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
   let cmp=null; try{cmp=JSON.parse(localStorage.getItem('izac_meteo_cmp')||'null');}catch(e){}
-  if(cmp&&cmp.p1d){ document.getElementById('date-p1').value=cmp.p1d;document.getElementById('date-p1-fin').value=cmp.p1f;document.getElementById('date-p2').value=cmp.p2d;document.getElementById('date-p2-fin').value=cmp.p2f; }
+  if(cmp&&cmp.p1d){ document.getElementById('date-p1').value=cmp.p1d;document.getElementById('date-p1-fin').value=cmp.p1f;document.getElementById('date-p2').value=cmp.p2d;document.getElementById('date-p2-fin').value=cmp.p2f; if(cmp.modeSimple) setMode(cmp.modeSimple); }
   else { presetJour(false); }
   renderTempsReel();
   let savedTab=null; try{savedTab=localStorage.getItem('izac_meteo_tab');}catch(e){}
