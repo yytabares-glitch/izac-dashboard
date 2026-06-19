@@ -18,7 +18,7 @@
   --ok:#1f7a44;--ok-bg:#e8f4ec;--ok-bd:#c3e2d0;
   --warn:#9a6a00;--warn-bg:#f7efd6;
   --danger:#b42318;--danger-bg:#fdecea;--danger-bd:#f6cbc5;
-  --meteo:#0C447C;--msg:#7a4ba8;--recep:#1f7a44;--exped:#c2610f;--conso:#263145;
+  --meteo:#0C447C;--msg:#7a4ba8;--recep:#1f7a44;--exped:#c2610f;--conso:#263145;--backup:#3a4db0;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased;letter-spacing:.01em}
@@ -75,6 +75,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
 .ic-exped{background:#fbe9d8;color:var(--exped)}
 .ic-conso{background:var(--tint-2);color:var(--conso)}
 .ic-secu{background:#fdecea;color:var(--danger)}
+.ic-backup{background:#eef0fb;color:var(--backup)}
 /* volet pages magasin — en superposition (ne décale pas la grille) */
 .tile-wrap{position:relative}
 .magvolet-btn{margin-top:8px;background:transparent;border:1px solid var(--line-2);color:var(--ink-70);border-radius:9px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);display:inline-flex;align-items:center;gap:6px;transition:.12s}
@@ -190,6 +191,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:10
     <div class="lab-row"><span class="lab">Administration</span></div>
     <a class="tile" href="securite.html" style="--accent:var(--danger)">
       <div class="tile-top"><div><h3>Sécurité</h3><div class="desc">Code PIN, accès magasins, historique des connexions et réglages.</div></div><div class="tile-ic ic-secu"><i class="ti ti-lock"></i></div></div>
+      <span class="go">Ouvrir →</span>
+    </a>
+    <a class="tile" href="backup.html" style="--accent:var(--backup)">
+      <div class="tile-top"><div><h3>Sauvegarde</h3><div class="desc">Exporter toute la base en un fichier. À faire une fois par semaine.</div></div><div class="tile-ic ic-backup"><i class="ti ti-database-export"></i></div></div>
       <span class="go">Ouvrir →</span>
     </a>
   </div>
