@@ -267,7 +267,7 @@ body{font-family:'DM Sans',sans-serif;background:#F5F7FA;color:#1A1F36;min-heigh
 </div>
 <div class="view" id="view-comparatif">
   <div class="comparatif-bar">
-    <div class="cb-presets"><span class="cb-presets-lbl">⚡ Raccourcis</span><button class="cb-preset" onclick="presetJour()">📅 Aujourd'hui vs même jour l'an dernier</button><button class="cb-preset" onclick="presetSemaine('prev')">📅 Semaine passée vs semaine d'avant</button><button class="cb-preset" onclick="presetSemaine('yoy')">📅 Semaine passée vs même semaine l'an dernier</button><span style="flex:1"></span><button class="cb-preset" id="btn-mode-date" style="background:#fff;color:#0D2750" onclick="setMode('date')">🔍 Une seule date</button><button class="cb-preset" id="btn-mode-periode" style="background:#fff;color:#0D2750" onclick="setMode('periode')">📆 Une période (sans comparaison)</button></div>
+    <div class="cb-presets"><span class="cb-presets-lbl">⚡ Raccourcis</span><button class="cb-preset" onclick="presetJour()">📅 Aujourd'hui vs même jour l'an dernier</button><button class="cb-preset" onclick="presetSemaine('prev')">📅 Semaine passée vs semaine d'avant</button><button class="cb-preset" onclick="presetSemaine('yoy')">📅 Semaine passée vs même semaine l'an dernier</button><span style="flex:1"></span><button class="cb-preset" id="btn-mode-normal" style="background:#0D2750;color:#fff" onclick="setMode('normal')">↔️ Comparer P1 vs P2</button><button class="cb-preset" id="btn-mode-date" style="background:#fff;color:#0D2750" onclick="setMode('date')">🔍 Une seule date</button><button class="cb-preset" id="btn-mode-periode" style="background:#fff;color:#0D2750" onclick="setMode('periode')">📆 Une période (sans comparaison)</button></div>
     <span class="cb-label" id="cb-mode-label">Comparer :</span>
     <div class="cb-group">
       <span class="cb-badge cb-p1" id="badge-p1">P1</span>
@@ -583,9 +583,9 @@ async function loadRealtimeRegion(reg){
 function renderCmpVide(){
   document.getElementById('rgrid-cmp').innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9CA3AF;font-size:14px">Sélectionnez vos périodes et cliquez sur <strong>Comparer →</strong></div>`;
 }
-let modeSimple=false; // 'date' | 'periode' | false
+let modeSimple=false; // 'date' | 'periode' | false ('normal')
 function setMode(m){
-  modeSimple = (modeSimple===m) ? false : m;
+  modeSimple = (m==='normal') ? false : m;
   const groupP2=document.getElementById('group-p2');
   const vsLabel=document.getElementById('vs-label');
   const modeLabel=document.getElementById('cb-mode-label');
@@ -593,9 +593,11 @@ function setMode(m){
   const p1fin=document.getElementById('date-p1-fin');
   const badgeP1=document.getElementById('badge-p1');
   const btnComparer=document.getElementById('btn-comparer');
+  const btnNormal=document.getElementById('btn-mode-normal');
   const btnDate=document.getElementById('btn-mode-date');
   const btnPeriode=document.getElementById('btn-mode-periode');
   const onCol='#0D2750',onTxt='#fff',offCol='#fff',offTxt='#0D2750';
+  btnNormal.style.background=offCol;btnNormal.style.color=offTxt;
   btnDate.style.background=offCol;btnDate.style.color=offTxt;
   btnPeriode.style.background=offCol;btnPeriode.style.color=offTxt;
   if(modeSimple==='date'){
@@ -616,6 +618,7 @@ function setMode(m){
     sepP1.style.display=''; p1fin.style.display=''; badgeP1.style.display='';
     modeLabel.textContent='Comparer :';
     btnComparer.textContent='Comparer →';
+    btnNormal.style.background=onCol;btnNormal.style.color=onTxt;
   }
   document.getElementById('cb-status').textContent='';
 }
@@ -1128,8 +1131,8 @@ function init(){
     String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear()+' '+
     String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
   let cmp=null; try{cmp=JSON.parse(localStorage.getItem('izac_meteo_cmp')||'null');}catch(e){}
-  if(cmp&&cmp.p1d){ document.getElementById('date-p1').value=cmp.p1d;document.getElementById('date-p1-fin').value=cmp.p1f;document.getElementById('date-p2').value=cmp.p2d;document.getElementById('date-p2-fin').value=cmp.p2f; if(cmp.modeSimple) setMode(cmp.modeSimple); }
-  else { presetJour(false); }
+  if(cmp&&cmp.p1d){ document.getElementById('date-p1').value=cmp.p1d;document.getElementById('date-p1-fin').value=cmp.p1f;document.getElementById('date-p2').value=cmp.p2d;document.getElementById('date-p2-fin').value=cmp.p2f; setMode(cmp.modeSimple||'normal'); }
+  else { presetJour(false); setMode('normal'); }
   renderTempsReel();
   let savedTab=null; try{savedTab=localStorage.getItem('izac_meteo_tab');}catch(e){}
   if(savedTab&&savedTab!=='temps-reel'){ setTab(savedTab); if(savedTab==='comparatif'&&cmp&&cmp.p1d) lancerComparatif(); }
