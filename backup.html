@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IZAC — Sauvegarde de la base</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+:root{--bg:#EDEFF3;--ink:#263145;--ink2:#5b647a;--ink3:#828a9c;--line:#E5E9F2;--line2:#EEF1F6;--card:#fff;
+--navy:#263145;--green:#1f9d57;--greenbg:#e6f6ed;--greenline:#bfe6cf;--red:#c0392b;--redbg:#fdecea;
+--serif:'Fraunces',Georgia,serif;--sans:'Hanken Grotesk',system-ui,sans-serif}
+body{font-family:var(--sans);background:radial-gradient(1200px 600px at 50% -8%,#F6F8FC 0%,#EDEFF3 50%,#E6E9F1 100%) fixed;color:var(--ink);font-size:14px;-webkit-font-smoothing:antialiased;min-height:100vh}
+.wrap{max-width:760px;margin:0 auto;padding:24px 26px 60px}
+.hero{background:linear-gradient(135deg,#2b3752 0%,#222c41 55%,#1b2336 100%);border-radius:18px;padding:22px 26px;margin-bottom:18px;box-shadow:0 12px 34px rgba(18,26,44,.28);display:flex;align-items:center;gap:14px}
+.hero-logo{width:50px;height:50px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:13px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:21px;font-weight:600;color:#fff;letter-spacing:.04em}
+.hero .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.55);font-weight:700}
+.hero h1{font-family:var(--serif);color:#fff;font-size:23px;font-weight:600;line-height:1.1}
+.back{display:inline-block;margin-bottom:14px;color:var(--ink2);font-size:12.5px;font-weight:600;text-decoration:none}
+.back:hover{color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 24px;box-shadow:0 5px 18px rgba(38,49,69,.06);margin-bottom:16px}
+.card h2{font-family:var(--serif);font-size:17px;font-weight:600;margin-bottom:6px}
+.card p{font-size:13px;color:var(--ink2);line-height:1.55;margin-bottom:8px}
+.btn{border:1px solid var(--navy);background:var(--navy);color:#fff;border-radius:11px;padding:12px 20px;font-size:14px;font-weight:600;font-family:var(--sans);cursor:pointer;transition:.12s}
+.btn:hover{opacity:.92}.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.sec{background:#fff;color:var(--ink);border-color:var(--line)}
+.tablelist{margin:14px 0;border:1px solid var(--line2);border-radius:12px;overflow:hidden}
+.trow{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;font-size:13px;border-bottom:1px solid var(--line2)}
+.trow:last-child{border-bottom:none}
+.trow .tn{font-weight:600}
+.trow .tc{font-variant-numeric:tabular-nums;color:var(--ink2)}
+.trow .st{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px}
+.st.wait{background:#eef1f5;color:var(--ink3)}
+.st.run{background:#fef6e7;color:#b9770e}
+.st.done{background:var(--greenbg);color:var(--green)}
+.st.err{background:var(--redbg);color:var(--red)}
+.summary{margin-top:14px;padding:14px 16px;border-radius:12px;background:var(--greenbg);border:1px solid var(--greenline);font-size:13px;display:none}
+.summary.show{display:block}
+.note{font-size:12px;color:var(--ink3);margin-top:10px;line-height:1.5}
+#login{max-width:380px;margin:10vh auto 0;text-align:center;padding:40px 36px}
+#login .lg{width:60px;height:60px;background:var(--navy);border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:24px;font-weight:600;color:#fff;margin:0 auto 18px}
+#login h2{font-family:var(--serif);font-size:21px;font-weight:600;margin-bottom:6px}
+#login p{font-size:12.5px;color:var(--ink2);margin-bottom:22px}
+#login input{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px;text-align:center;letter-spacing:.3em;font-size:18px;outline:none;font-family:var(--sans)}
+#login input:focus{border-color:var(--navy)}
+.err{color:var(--red);font-size:12.5px;font-weight:600;margin-top:10px;min-height:15px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="login" class="card">
+    <div class="lg">IZ</div>
+    <h2>Sauvegarde</h2>
+    <p>Accès réservé — code PIN du siège.</p>
+    <input id="pin" type="password" inputmode="numeric" placeholder="••••" maxlength="12" autocomplete="off">
+    <div style="margin-top:14px"><button class="btn" id="loginBtn">Entrer</button></div>
+    <div class="err" id="loginErr"></div>
+  </div>
+
+  <div id="main" class="hide">
+    <a href="index.html" class="back">← Portail</a>
+    <div class="hero">
+      <div class="hero-logo">IZ</div>
+      <div><div class="eyebrow">IZAC — Maintenance</div><h1>Sauvegarde de la base</h1></div>
+    </div>
+
+    <div class="card">
+      <h2>Exporter toute la base</h2>
+      <p>Télécharge l'intégralité des données (colis, réceptions, articles, magasins, consommables, réglages) dans un seul fichier <b>.json</b>. Conserve ce fichier en lieu sûr — c'est ta copie de secours.</p>
+      <p class="note">Recommandation : fais une sauvegarde <b>une fois par semaine</b>, et avant toute opération de nettoyage. Le plan Supabase gratuit ne fait aucune sauvegarde automatique.</p>
+      <div class="tablelist" id="tableList"></div>
+      <button class="btn" id="backupBtn">⬇ Lancer la sauvegarde</button>
+      <div class="summary" id="summary"></div>
+    </div>
+  </div>
+</div>
+<script>
+const SUPA_URL='https://imurxmsglmpgxdbavalk.supabase.co';
+const SUPA_KEY='sb_publishable_-FqQ5I6tx4rCUwUqmsf5DA_IFsfkUlQ';
+// Tables à sauvegarder. Si une table n'existe pas, elle est ignorée proprement.
+const TABLES=['colis','reception','articles','magasins','conso_commandes','conso_magasins','app_config','login_log'];
+let sb=null;
+
+async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+
+function renderList(states){
+  const el=document.getElementById('tableList');
+  el.innerHTML=TABLES.map(t=>{
+    const s=states[t]||{st:'wait',n:''};
+    const lbl={wait:'en attente',run:'lecture…',done:'OK',err:'absente/erreur'}[s.st];
+    return '<div class="trow"><span class="tn">'+t+'</span>'
+      +'<span class="tc">'+(s.n!==''?s.n+' lignes':'')+'</span>'
+      +'<span class="st '+s.st+'">'+lbl+'</span></div>';
+  }).join('');
+}
+
+async function fetchAll(table){
+  let all=[]; 
+  for(let from=0;;from+=1000){
+    const {data,error}=await sb.from(table).select('*').range(from,from+999);
+    if(error) throw error;
+    all=all.concat(data||[]);
+    if(!data||data.length<1000) break;
+  }
+  return all;
+}
+
+async function doBackup(){
+  const btn=document.getElementById('backupBtn');
+  btn.disabled=true;
+  const states={}; TABLES.forEach(t=>states[t]={st:'wait',n:''}); renderList(states);
+  const dump={_meta:{exported_at:new Date().toISOString(),project:'imurxmsglmpgxdbavalk',source:'IZAC backup tool'}};
+  let totalRows=0, okTables=0;
+  for(const t of TABLES){
+    states[t]={st:'run',n:''}; renderList(states);
+    try{
+      const rows=await fetchAll(t);
+      dump[t]=rows; totalRows+=rows.length; okTables++;
+      states[t]={st:'done',n:rows.length}; renderList(states);
+    }catch(e){
+      dump[t]=null; dump._meta['error_'+t]=(e.message||String(e));
+      states[t]={st:'err',n:''}; renderList(states);
+    }
+  }
+  // téléchargement
+  const name='izac_backup_'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')+'.json';
+  const blob=new Blob([JSON.stringify(dump,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{try{URL.revokeObjectURL(url);a.remove();}catch(_){}},800);
+  const sum=document.getElementById('summary');
+  sum.className='summary show';
+  sum.innerHTML='✅ Sauvegarde terminée : <b>'+okTables+'/'+TABLES.length+'</b> tables, <b>'+totalRows.toLocaleString('fr-FR')+'</b> lignes au total.<br>Fichier téléchargé : <b>'+name+'</b>. Range-le en lieu sûr.';
+  btn.disabled=false;
+}
+
+async function doLogin(){
+  const pin=(document.getElementById('pin').value||'').trim();
+  const err=document.getElementById('loginErr');
+  if(!pin){err.textContent='Entre le code PIN.';return;}
+  try{
+    const hash=await sha256(pin);
+    const {data,error}=await sb.rpc('conso_login',{p_hash:hash});
+    if(error){err.textContent='Erreur de connexion.';return;}
+    if(data&&data.ok){err.textContent='';try{sessionStorage.setItem('izac_backup_unlocked','1');}catch(e){}showMain();return;}
+    if(data&&data.locked) err.textContent='Trop d\'essais. Réessaie dans '+(data.wait||15)+' min.';
+    else if(data&&typeof data.left==='number') err.textContent='Code incorrect — '+data.left+' essai(s) restant(s).';
+    else err.textContent='Code incorrect.';
+    document.getElementById('pin').value='';
+  }catch(e){err.textContent='Erreur : '+(e.message||e);}
+}
+function showMain(){document.getElementById('login').classList.add('hide');document.getElementById('main').classList.remove('hide');renderList({});}
+function init(){
+  sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+  let unlocked=false;try{unlocked=sessionStorage.getItem('izac_backup_unlocked')==='1';}catch(e){}
+  if(unlocked) showMain();
+  document.getElementById('loginBtn').addEventListener('click',doLogin);
+  document.getElementById('pin').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+  document.getElementById('backupBtn').addEventListener('click',doBackup);
+}
+window.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>

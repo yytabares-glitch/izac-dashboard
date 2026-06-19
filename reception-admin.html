@@ -126,9 +126,11 @@ tbody tr.lateRow{background:#fdf3f3} tbody tr.lateRow:hover{background:#fbe9e9}
       </div>
       <div class="card">
         <h2><span class="htxt"><span class="num">2</span>Livraisons du jour</span></h2>
-        <p class="desc">Dépose les fichiers <b>.paq</b>. Ajoute les nouveaux colis, conserve les autres.</p>
-        <label>Fichiers transporteur (.paq)</label>
+        <p class="desc">Dépose les fichiers <b>.paq</b> dans la bonne zone. Ajoute les nouveaux colis, conserve les autres.</p>
+        <label>📦 Réassort boutique (.paq)</label>
         <input id="paqFiles" type="file" multiple accept=".paq,.txt">
+        <label style="margin-top:10px">🛒 Commandes web / Click &amp; Collect (.paq)</label>
+        <input id="paqFilesCC" type="file" multiple accept=".paq,.txt">
         <div class="row"><button class="btn sm" id="importBtn">Importer</button></div>
         <div id="log" class="log"></div>
       </div>
@@ -143,6 +145,13 @@ tbody tr.lateRow{background:#fdf3f3} tbody tr.lateRow:hover{background:#fbe9e9}
         <input id="cleanDays" type="number" value="7" style="width:48px;display:inline-block;padding:4px 6px"> jours</span>
         <button class="btn sec sm" id="cleanBtn">Nettoyer</button>
       </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="htxt">🚚 Livraisons Atvyl</span><button class="btn sec sm" id="atvylRefreshBtn">Rafraîchir</button></h2>
+      <p class="desc">Statut transporteur par magasin, croisé sur <b>date + code magasin</b>. Le transporteur regroupe réassort et click&amp;collect ; on suit ici l'<b>état de livraison</b>, pas le détail colis.</p>
+      <div class="toolbar"><div class="find"><input id="atvylFind" placeholder="Filtrer un magasin…"></div><button class="btn sec sm" id="atvylBadBtn">Anomalies / en cours</button><span class="count" id="atvylCount"></span></div>
+      <div id="atvylBox"><div class="muted">Chargement…</div></div>
     </div>
 
     <div class="card">
@@ -165,6 +174,41 @@ const SUPA_URL='https://imurxmsglmpgxdbavalk.supabase.co';
 const SUPA_KEY='sb_publishable_-FqQ5I6tx4rCUwUqmsf5DA_IFsfkUlQ';
 const MAG_NAMES={"1009": "Auber", "1010": "B. Epin", "1028": "Rue Ren", "1045": "Parinor", "1104": "Creteil", "1198": "Velizy", "1215": "St Quentin", "1254": "Auberv.", "1332": "St Laz.", "1339": "Fontai.", "1352": "Levallois", "1353": "Claye Souilly", "1449": "Aeroville", "1489": "Quartz", "1498": "Gonesse", "1552": "Val D'europe", "1568": "Carre Senart", "1575": "La Defense", "1604": "Rosny 2", "1655": "Parly 2", "1665": "Montparnasse", "1692": "Trading", "1696": "Forum Des Halles", "1748": "Beaugrenelle", "1756": "Boulogne", "1779": "Arcueil", "1782": "Corbeil", "1109": "St Denis", "1199": "Beziers", "1335": "Lille", "1350": "Perpignan Auchan", "1354": "Nancy", "1355": "Nantes Crebillons", "1377": "Ptstem", "1427": "Perpignan Claira", "1451": "Clermont", "1487": "Strasb.", "1543": "A13", "1563": "St Omer", "1566": "Beauv.", "1608": "Anglet", "1615": "N Creb", "1618": "Euralille", "1648": "Roubaix", "1651": "Pau", "1659": "Reims", "1667": "G. Var", "1668": "Noyelles", "1670": "Brest", "1672": "St Eti.", "1683": "Arras", "1721": "Bethune", "1729": "Lillenium", "1735": "Villefontaine", "1740": "Romans", "1785": "Gap", "1011": "Herriot", "1057": "Siege", "1074": "Blagnac", "1330": "Confluence", "1331": "Montpellier", "1334": "Rouen", "1426": "Begles", "1448": "Dijon", "1450": "R Alma", "1469": "Monta.", "1470": "Avignon", "1485": "Merignac", "1486": "Terrasses Du Port", "1488": "La Valentine", "1505": "Talang", "1513": "Part Dieu", "1518": "Ecouf.", "1526": "Niort", "1544": "Epagny", "1545": "Lormont", "1567": "Bord.", "1592": "Colmar", "1597": "Auxer.", "1598": "Bastia", "1603": "Fenouillet", "1609": "Nimes", "1621": "Aix", "1627": "Miramas", "1636": "Metz", "1637": "Ajacc.", "1654": "Prado", "1666": "Cap", "1669": "Voiron", "1671": "Andrezieux", "1694": "Mulhou.", "1704": "Blois", "1716": "Epinal", "1724": "Olonne", "1728": "Cannes", "1732": "Haguenau", "1737": "Bordeaux Lac", "1738": "Ecully", "1739": "Toulouse", "1742": "Thionville", "1743": "Mont De Marsan", "1749": "Aix En Provence", "1755": "Besancon", "1787": "La Rochelle", "1791": "Tours", "1792": "Grenoble", "1793": "Dijon Cv", "1801": "Rennes Cv", "1703": "Luxembourg", "1054": "T. D H. 72", "1055": "Tdh 61", "1070": "Côte Homme", "1204": "Marco Men", "1207": "Hopium", "1286": "Jasyl Sarl", "1289": "Manceau Eurl", "1305": "Aff D Homme", "1317": "Wilhelem Sa", "1349": "Bloom David", "142": "Brousseau", "1434": "Aumaclaire", "1461": "B. Engelyc", "1492": "Jack Mod", "1496": "Buxy", "1510": "Senso", "1511": "Boutik Homme", "1512": "Havane", "1581": "Vanni.O", "1643": "Rezland", "1645": "Show Room", "1661": "Langlais", "1678": "H. Dhomme", "1708": "Les Galeries Sas Du Grand Baza", "1710": "Boutique Mr", "1711": "Coupin", "1715": "Boutique Raphael", "1722": "O Masculin", "1758": "We Are Select / Was", "1760": "Les Sables", "1769": "Boy And Girl", "1773": "Xavier Men'S Wear", "1780": "Boutique Monsieur", "1783": "G3M Diffusion / Printemps Le H", "1794": "Will'S", "1799": "Printemps Caen / Jel Diffusion", "1805": "Driver", "318": "Espace Griff", "380": "Gentlemen", "437": "Hors Ligne", "507": "Labau", "532": "Le Gendre Ideal", "566": "Matco Sarl", "576": "La Maison", "61": "Arvet Sarl", "717": "Penaud", "724": "Pinel", "835": "Cap Code / Sngd", "851": "Sporlux", "954": "Verso Sarl", "997": "Jld Diff.", "1224": "As St Etienne Att. Valerie Sem", "1318": "G. Lemoine", "1457": "Boz Couture", "1557": "Abv Service", "1623": "Cote Homm", "1641": "Mhb / Benjamin Terme", "1650": "E. Griffe", "1675": "Losc", "1699": "Place Aux Hommes", "1700": "We Are Select W.A.S.", "1718": "Escale", "1726": "Cloane Square", "1766": "Iconik Store Chez We Are Selec", "1775": "Oscar", "1776": "Ol Sasu / Att Florence Dams Et", "1781": "Rennes Alma", "1784": "Griffe Rouge", "1800": "Sas Racing Club De Lens / Arth", "1808": "Sas Racing Club De Strasbourg", "1812": "Affaire D'Homme", "216": "Cosmopolite", "626": "Mickelson", "647": "Morence", "1411": "Lol By L.", "1795": "Hotel Le Grand Mazarin / Att.", "1814": "My Comm", "206": "Mossis J. - Sarl Come Back", "268": "Donald Bout.", "479": "Js Trading", "559": "M.C.S. Sarl", "1527": "Fashion R.", "1546": "Rackstore M.", "1629": "Mkm -", "1646": "Basile Boutique", "1830": "Neyrpic", "1835": "Orleans", "1831": "Strasbourg Centre Ville", "1828": "Caen", "1818": "Sarl Roy", "1549": "Firex", "1578": "Pretty Women", "1701": "Mon Vestaire", "1768": "Abc", "1807": "Pont Ste Marie", "1820": "Le 18 Sarl", "1823": "Dress Code", "1833": "Le 10 Coffy Distribution", "1834": "Tarantola", "1841": "Montal Sarl", "1815": "Sas Expentour", "1837": "Chabe", "1843": "Deauville", "1777": "Boutique Hom", "1839": "Clothing Distributions", "1845": "Showroom Formen", "952": "Vente Privee.Com", "1291": "Somajy", "1840": "Cabries", "1844": "Polygone", "1842": "Le Mans", "1851": "Sas Baron", "1850": "Sas Rc Strasbourg", "1852": "Bey First 2", "1865": "Giverny", "1862": "Chambery", "1861": "Jump Atelier"};
 let sb=null; const CHUNK=800;
+// ── SUIVI ATVYL (lecture du data.json public du repo tracking) ──
+const ATVYL_URL='https://timotamir92-cmd.github.io/izac-tracking/data.json';
+let ATVYL=[];            // expéditions brutes
+let ATVYL_BY_MAG={};     // code magasin -> liste d'expéditions (triées récentes d'abord)
+let ATVYL_OK=false, ATVYL_ERR='', ATVYL_UPD='';
+function atvylMagCode(dest){ if(!dest) return ''; const m=String(dest).trim().match(/^(\d+)/); return m?m[1]:''; }
+function atvylStatutKey(s){ if(s==='Livre conforme')return 'ok'; if(s==='Anomalie')return 'bad'; if(s==='Souffrance')return 'bad'; if(s==='Livre non conforme')return 'bad'; return 'cours'; }
+function atvylClean(v){ return (!v||v==='nan')?'':v; }
+async function loadAtvyl(){
+  try{
+    const res=await fetch(ATVYL_URL+'?t='+Date.now());
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const json=await res.json();
+    ATVYL=json.expeditions||[];
+    ATVYL_UPD=json.lastUpdate||'';
+    ATVYL_BY_MAG={};
+    ATVYL.forEach(e=>{ const c=atvylMagCode(e.destinataire); if(!c)return;
+      (ATVYL_BY_MAG[c]=ATVYL_BY_MAG[c]||[]).push(e); });
+    ATVYL_OK=true; ATVYL_ERR='';
+  }catch(e){ ATVYL_OK=false; ATVYL_ERR=(e.message||String(e)); ATVYL=[]; ATVYL_BY_MAG={}; }
+}
+// Statut Atvyl consolidé pour un magasin (toutes dates récentes) : pour la colonne du tableau
+function atvylMagSummary(code){
+  const list=ATVYL_BY_MAG[code]||[];
+  if(!list.length) return null;
+  // dernière expédition par date d'expédition (parse JJ/MM, année du lastUpdate)
+  let best=null, bestT=-1;
+  const year=(ATVYL_UPD?new Date(ATVYL_UPD).getFullYear():new Date().getFullYear());
+  list.forEach(e=>{ const p=String(e.dateExpedition||'').split('/'); if(p.length!==2)return;
+    const t=new Date(year,(+p[1])-1,(+p[0])).getTime(); if(t>bestT){bestT=t;best=e;} });
+  if(!best) best=list[0];
+  return { statut:best.statut||'En cours', key:atvylStatutKey(best.statut||''),
+           dateExp:best.dateExpedition||'', dateLivr:atvylClean(best.dateLivraison),
+           nb:list.length };
+}
 let SUIVI=[], ACC=[], COLIS_ALL=[]; let suiviLate=false, NET_CAT='all'; let REF_CACHE=null;
 function esc(s){return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 const storeBase=location.href.replace(/[^/]*$/,'reception.html').split('#')[0].split('?')[0];
@@ -224,16 +268,21 @@ async function loadCatStatus(){
 }
 async function doImport(){
   const paqs=[...document.getElementById('paqFiles').files];
-  if(!paqs.length){log('⚠ Sélectionne au moins un .paq.');return;}
+  const paqsCC=[...document.getElementById('paqFilesCC').files];
+  if(!paqs.length && !paqsCC.length){log('⚠ Sélectionne au moins un .paq (réassort ou C&C).');return;}
   document.getElementById('importBtn').disabled=true;
   try{
     let all=[],tot=0; const eans=new Set();
-    for(const f of paqs){const colis=await parsePaq(f);log(f.name+' : '+colis.length+' colis.');tot+=colis.length;
-      colis.forEach(c=>{all.push(Object.assign({},c,{batch:f.name}));c.art.forEach(a=>eans.add(a.ean));});}
+    // Réassort boutique
+    for(const f of paqs){const colis=await parsePaq(f);log('📦 '+f.name+' : '+colis.length+' colis (réassort).');tot+=colis.length;
+      colis.forEach(c=>{all.push(Object.assign({},c,{batch:f.name,source:'reassort'}));c.art.forEach(a=>eans.add(a.ean));});}
+    // Commandes web / Click & Collect
+    for(const f of paqsCC){const colis=await parsePaq(f);log('🛒 '+f.name+' : '+colis.length+' colis (click & collect).');tot+=colis.length;
+      colis.forEach(c=>{all.push(Object.assign({},c,{batch:f.name,source:'cc'}));c.art.forEach(a=>eans.add(a.ean));});}
     log('Noms ('+eans.size+' articles)…'); const nm={};
     for(const ch of chunk([...eans],300)){const {data}=await sb.from('articles').select('ean,ref,lib,fam,taille,coul').in('ean',ch);(data||[]).forEach(a=>{nm[a.ean]={ref:a.ref,lib:a.lib,fam:a.fam,taille:a.taille,coul:a.coul};});}
     let manq=0; eans.forEach(e=>{if(!nm[e])manq++;}); if(manq)log('ℹ '+manq+' article(s) sans nom — recharge le référentiel si nombreux.');
-    const rows=all.map(c=>({code:c.code,magasin:c.magasin,cde:c.cde,pieces:c.art.reduce((s,a)=>s+a.qte,0),contenu:enrich(c.art,nm),batch:c.batch}));
+    const rows=all.map(c=>({code:c.code,magasin:c.magasin,cde:c.cde,pieces:c.art.reduce((s,a)=>s+a.qte,0),contenu:enrich(c.art,nm),batch:c.batch,source:c.source}));
     log('Envoi de '+rows.length+' colis…');
     for(const ch of chunk(rows,CHUNK)) await sb.from('colis').upsert(ch,{onConflict:'code'});
     log('✅ Import terminé : '+tot+' colis. Avancement conservé.');
@@ -257,20 +306,23 @@ async function fetchReception(){
 }
 async function loadSuivi(){
   REF_CACHE=null;
+  await loadAtvyl();
   const today0=new Date(); today0.setHours(0,0,0,0);
-  const {data:colis}=await sb.from('colis').select('code,magasin,cde,pieces,created_at');
+  let {data:colis,error:colErr}=await sb.from('colis').select('code,magasin,cde,pieces,created_at,source');
+  if(colErr){const r=await sb.from('colis').select('code,magasin,cde,pieces,created_at');colis=r.data;}
   const recs=await fetchReception();
   const rec={}; recs.forEach(r=>{rec[r.colis_code]=r;});
   COLIS_ALL=(colis||[]).map(c=>{const r=rec[c.code]||{}; const statut=r.statut||'attendu';
     const late=(statut==='attendu'&&c.created_at&&new Date(c.created_at)<today0);
-    return {code:c.code,magasin:c.magasin,cde:c.cde,pieces:c.pieces||0,created_at:c.created_at,statut,note:r.note||'',declarant:r.declarant||'',recu_at:r.updated_at||'',late};});
+    return {code:c.code,magasin:c.magasin,cde:c.cde,pieces:c.pieces||0,created_at:c.created_at,source:c.source||'reassort',statut,note:r.note||'',declarant:r.declarant||'',recu_at:r.updated_at||'',late};});
   const agg={};
-  COLIS_ALL.forEach(c=>{const a=agg[c.magasin]=agg[c.magasin]||{att:0,recu:0,ec:0,late:0,cmds:new Set()};
+  COLIS_ALL.forEach(c=>{const a=agg[c.magasin]=agg[c.magasin]||{att:0,recu:0,ec:0,late:0,reassort:0,cc:0,cmds:new Set()};
     a.att++; a.cmds.add(c.cde);
+    if(c.source==='cc')a.cc++; else a.reassort++;
     if(c.statut==='recu')a.recu++; else if(c.statut==='ecart')a.ec++;
     if(c.late)a.late++;});
   SUIVI=Object.keys(agg).sort().map(m=>({m,...agg[m],cmd:agg[m].cmds.size}));
-  renderOverview(); renderSuivi();
+  renderOverview(); renderSuivi(); renderAtvyl();
 }
 function renderOverview(){
   const el=document.getElementById('overview'); if(!el)return;
@@ -338,13 +390,47 @@ function renderSuivi(){
   document.getElementById('suiviCount').textContent=rows.length+' magasin'+(rows.length>1?'s':'')+(suiviLate?' en retard':'');
   if(!SUIVI.length){el.innerHTML='<div class="muted">Aucune livraison importée.</div>';return;}
   if(!rows.length){el.innerHTML='<div class="muted">'+(suiviLate?'Aucun magasin en retard ✓':'Aucun résultat.')+'</div>';return;}
-  let h='<div class="scroll"><table><thead><tr><th>Magasin</th><th class="n">ID</th><th class="n">Colis</th><th class="n">Reçus</th><th>Avancement</th><th class="n">Écarts</th><th class="n">Retard</th></tr></thead><tbody>';
+  let h='<div class="scroll"><table><thead><tr><th>Magasin</th><th class="n">ID</th><th class="n">Colis</th><th class="n">Reçus</th><th>Avancement</th><th class="n">Écarts</th><th>Transport Atvyl</th><th class="n">Retard</th></tr></thead><tbody>';
   rows.forEach(r=>{const pct=r.att?Math.round(100*(r.recu+r.ec)/r.att):0;
-    h+='<tr'+(r.late>0?' class="lateRow"':'')+'><td class="code">'+r.m+(MAG_NAMES[r.m]?' · <span style="font-weight:500;color:#6b7280">'+magName(r.m)+'</span>':'')+'</td><td class="n">'+r.cmd+'</td><td class="n">'+r.att+'</td><td class="n">'+r.recu+'</td>'
+    const av=atvylMagSummary(r.m);
+    let atvCell='<span class="muted">—</span>';
+    if(av){ const lbl={ok:'Livré',cours:'En cours',bad:'Anomalie'}[av.key]||'En cours';
+      const cls=av.key==='ok'?'ok':(av.key==='bad'?'r':'g');
+      const det=av.key==='ok'?(av.dateLivr?(' '+av.dateLivr.split(' ')[0]):''):'';
+      atvCell='<span class="pill '+cls+'">'+lbl+det+'</span>'; }
+    h+='<tr'+(r.late>0?' class="lateRow"':'')+'><td class="code">'+r.m+(MAG_NAMES[r.m]?' · <span style="font-weight:500;color:#6b7280">'+magName(r.m)+'</span>':'')+'</td><td class="n">'+r.cmd+'</td><td class="n">'+r.att+'</td>'
+     +'<td class="n">'+r.recu+'</td>'
      +'<td><span class="bar"><i style="width:'+pct+'%"></i></span> <span class="muted">'+pct+'%</span></td>'
      +'<td class="n">'+(r.ec?'<span class="pill r">'+r.ec+'</span>':'<span class="muted">0</span>')+'</td>'
+     +'<td>'+atvCell+'</td>'
      +'<td class="n">'+(r.late>0?'<span class="pill r">'+r.late+'</span> <button class="btn sec sm" style="padding:3px 8px" onclick="relanceStore(\''+r.m+'\')">Relancer</button>':'<span class="muted">—</span>')+'</td></tr>';});
   el.innerHTML=h+'</tbody></table></div>';
+}
+let atvylBadOnly=false;
+function renderAtvyl(){
+  const el=document.getElementById('atvylBox'); if(!el)return;
+  const cnt=document.getElementById('atvylCount');
+  if(!ATVYL_OK){
+    el.innerHTML='<div class="muted">⚠ Suivi Atvyl indisponible'+(ATVYL_ERR?(' ('+esc(ATVYL_ERR)+')'):'')+'. Vérifie que le data.json est bien publié à l\'adresse attendue.</div>';
+    if(cnt)cnt.textContent=''; return;
+  }
+  const q=(document.getElementById('atvylFind').value||'').toLowerCase();
+  const codes=[...new Set([...SUIVI.map(s=>s.m), ...Object.keys(ATVYL_BY_MAG)])].sort();
+  let list=codes.map(c=>({c,av:atvylMagSummary(c)})).filter(x=>x.av);
+  if(q) list=list.filter(x=>(x.c+' '+(MAG_NAMES[x.c]||'')).toLowerCase().includes(q));
+  if(atvylBadOnly) list=list.filter(x=>x.av.key!=='ok');
+  if(cnt)cnt.textContent=list.length+' magasin'+(list.length>1?'s':'');
+  const upd=ATVYL_UPD?(' · maj '+new Date(ATVYL_UPD).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})):'';
+  if(!list.length){ el.innerHTML='<div class="muted">Aucun magasin'+(atvylBadOnly?' en anomalie/en cours ✓':'')+'.'+upd+'</div>'; return; }
+  let h='<div class="scroll"><table><thead><tr><th>Magasin</th><th>Statut</th><th>Dernière exp.</th><th>Livraison</th><th class="n">Exp. (30j)</th></tr></thead><tbody>';
+  list.forEach(x=>{ const av=x.av; const lbl={ok:'Livré conforme',cours:'En cours',bad:'Anomalie'}[av.key]||'En cours';
+    const cls=av.key==='ok'?'ok':(av.key==='bad'?'r':'g');
+    h+='<tr><td class="code">'+x.c+(MAG_NAMES[x.c]?' · <span style="font-weight:500;color:#6b7280">'+magName(x.c)+'</span>':'')+'</td>'
+      +'<td><span class="pill '+cls+'">'+lbl+'</span></td>'
+      +'<td>'+esc(av.dateExp||'—')+'</td>'
+      +'<td style="color:'+(av.dateLivr?'var(--green)':'var(--ink3)')+'">'+(av.dateLivr?esc(av.dateLivr):'en attente')+'</td>'
+      +'<td class="n">'+av.nb+'</td></tr>';});
+  el.innerHTML=h+'</tbody></table></div><div class="muted" style="margin-top:8px;font-size:11px">Source : suivi Atvyl'+upd+'</div>';
 }
 
 async function ensureRefData(){
@@ -486,12 +572,15 @@ async function init(){
   document.getElementById('catBtn').addEventListener('click',importCatalogue);
   document.getElementById('suiviFind').addEventListener('input',renderSuivi);
   document.getElementById('suiviLateBtn').addEventListener('click',()=>{suiviLate=!suiviLate;document.getElementById('suiviLateBtn').className=suiviLate?'btn sm on':'btn sec sm';renderSuivi();});
+  document.getElementById('atvylRefreshBtn').addEventListener('click',async()=>{await loadAtvyl();renderSuivi();renderAtvyl();});
+  document.getElementById('atvylFind').addEventListener('input',renderAtvyl);
+  document.getElementById('atvylBadBtn').addEventListener('click',()=>{atvylBadOnly=!atvylBadOnly;document.getElementById('atvylBadBtn').className=atvylBadOnly?'btn sm on':'btn sec sm';renderAtvyl();});
   document.getElementById('relanceAllBtn').addEventListener('click',relanceAllLate);
   document.getElementById('accFind').addEventListener('input',renderAcces);
   document.getElementById('refBtn').addEventListener('click',searchRef);
   document.getElementById('refFind').addEventListener('keydown',e=>{if(e.key==='Enter')searchRef();});
   document.getElementById('logout').addEventListener('click',e=>{e.preventDefault();try{sessionStorage.removeItem('izac_recep_unlocked');}catch(_){}location.reload();});
-  Object.assign(window,{parseCatalogueText,parsePaq,enrich,parseCSVLine,setPin,copyLink,doImport,loadSuivi,loadAcces,renderSuivi,renderAcces,showNet,hideNet,exportNet,netCSV,relanceStore,relanceAllLate,relanceOne,relanceText});
+  Object.assign(window,{parseCatalogueText,parsePaq,enrich,parseCSVLine,setPin,copyLink,doImport,loadSuivi,loadAcces,renderSuivi,renderAcces,renderAtvyl,loadAtvyl,showNet,hideNet,exportNet,netCSV,relanceStore,relanceAllLate,relanceOne,relanceText});
 }
 window.addEventListener('DOMContentLoaded',init);
 window.__init=init;
