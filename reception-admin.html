@@ -434,8 +434,8 @@ function renderSuivi(){
       atvCell='<span class="pill '+cls+'">'+lbl+det+'</span>'; }
     const bls=r.blList||[];
     let blCell='<span class="muted">—</span>';
-    if(bls.length===1) blCell='<span class="code" style="font-size:11.5px">'+esc(bls[0])+'</span>';
-    else if(bls.length>1) blCell='<span class="code" style="font-size:11.5px" title="'+esc(bls.join(', '))+'">'+bls.length+' BL</span>';
+    if(bls.length===1) blCell='<span class="code" style="font-size:11.5px;cursor:pointer;color:var(--blue)" onclick="showBL(\''+r.m+'\')">'+esc(bls[0])+'</span>';
+    else if(bls.length>1) blCell='<span class="code" style="font-size:11.5px;cursor:pointer;color:var(--blue);text-decoration:underline" onclick="showBL(\''+r.m+'\')">'+bls.length+' BL ▾</span>';
     h+='<tr'+(r.late>0?' class="lateRow"':'')+'><td class="code">'+r.m+(MAG_NAMES[r.m]?' · <span style="font-weight:500;color:#6b7280">'+magName(r.m)+'</span>':'')+'</td><td class="n">'+r.cmd+'</td><td>'+blCell+'</td><td class="n">'+r.att+'</td>'
      +'<td class="n">'+r.recu+'</td>'
      +'<td><span class="bar"><i style="width:'+pct+'%"></i></span> <span class="muted">'+pct+'%</span></td>'
@@ -444,7 +444,24 @@ function renderSuivi(){
      +'<td class="n">'+(r.late>0?'<span class="pill r">'+r.late+'</span> <button class="btn sec sm" style="padding:3px 8px" onclick="relanceStore(\''+r.m+'\')">Relancer</button>':'<span class="muted">—</span>')+'</td></tr>';});
   el.innerHTML=h+'</tbody></table></div>';
 }
-let atvylBadOnly=false;
+function showBL(mag){
+  const el=document.getElementById('netdetail'); if(!el)return;
+  const list=COLIS_ALL.filter(c=>c.magasin===mag);
+  // regroupe par BL
+  const byBL={};
+  list.forEach(c=>{ const k=c.bl||'(sans BL)';
+    const g=byBL[k]=byBL[k]||{colis:0,recu:0,ec:0,att:0};
+    g.colis++; if(c.statut==='recu')g.recu++; else if(c.statut==='ecart')g.ec++; else g.att++; });
+  const nom=MAG_NAMES[mag]?(' · '+magName(mag)):'';
+  let h='<div class="nd-head"><div class="nd-t">Bons de livraison — magasin '+mag+nom+'</div><button class="btn sec sm" onclick="hideNet()">Fermer ✕</button></div>';
+  const keys=Object.keys(byBL).sort();
+  h+='<div class="scroll"><table><thead><tr><th>N° BL</th><th class="n">Colis</th><th class="n">Reçus</th><th class="n">Écarts</th><th>État réception</th></tr></thead><tbody>';
+  keys.forEach(k=>{ const g=byBL[k]; const pct=g.colis?Math.round(100*(g.recu+g.ec)/g.colis):0;
+    let etat=pct===100?'<span class="pill ok">Complet</span>':(g.recu+g.ec>0?'<span class="pill g">En cours '+pct+'%</span>':'<span class="pill g">Attendu</span>');
+    h+='<tr><td class="code">'+esc(k)+'</td><td class="n">'+g.colis+'</td><td class="n">'+g.recu+'</td><td class="n">'+(g.ec||0)+'</td><td>'+etat+'</td></tr>'; });
+  h+='</tbody></table></div>';
+  el.innerHTML=h; el.classList.remove('hide'); try{el.scrollIntoView({behavior:'smooth',block:'nearest'});}catch(_){}
+}
 function renderAtvyl(){
   const el=document.getElementById('atvylBox'); if(!el)return;
   const cnt=document.getElementById('atvylCount');
@@ -618,7 +635,7 @@ async function init(){
   document.getElementById('refBtn').addEventListener('click',searchRef);
   document.getElementById('refFind').addEventListener('keydown',e=>{if(e.key==='Enter')searchRef();});
   document.getElementById('logout').addEventListener('click',e=>{e.preventDefault();try{sessionStorage.removeItem('izac_recep_unlocked');}catch(_){}location.reload();});
-  Object.assign(window,{parseCatalogueText,parsePaq,parseWidget,isWidgetCsv,enrich,parseCSVLine,setPin,copyLink,doImport,loadSuivi,loadAcces,renderSuivi,renderAcces,renderAtvyl,loadAtvyl,showNet,hideNet,exportNet,netCSV,relanceStore,relanceAllLate,relanceOne,relanceText});
+  Object.assign(window,{parseCatalogueText,parsePaq,parseWidget,isWidgetCsv,enrich,parseCSVLine,setPin,copyLink,doImport,loadSuivi,loadAcces,renderSuivi,renderAcces,renderAtvyl,loadAtvyl,showNet,showBL,hideNet,exportNet,netCSV,relanceStore,relanceAllLate,relanceOne,relanceText});
 }
 window.addEventListener('DOMContentLoaded',init);
 window.__init=init;
