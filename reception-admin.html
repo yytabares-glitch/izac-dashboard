@@ -126,11 +126,9 @@ tbody tr.lateRow{background:#fdf3f3} tbody tr.lateRow:hover{background:#fbe9e9}
       </div>
       <div class="card">
         <h2><span class="htxt"><span class="num">2</span>Livraisons du jour</span></h2>
-        <p class="desc">Dépose les fichiers <b>.paq</b> dans la bonne zone. Ajoute les nouveaux colis, conserve les autres.</p>
-        <label>📦 Réassort boutique (.paq)</label>
-        <input id="paqFiles" type="file" multiple accept=".paq,.txt">
-        <label style="margin-top:10px">🛒 Commandes web / Click &amp; Collect (.paq)</label>
-        <input id="paqFilesCC" type="file" multiple accept=".paq,.txt">
+        <p class="desc">Dépose ensemble tes fichiers <b>.paq</b> (colis) et le <b>widget.csv</b> (correspondance n° de BL). L'outil trie automatiquement chaque fichier selon son format.</p>
+        <label>📦 Fichiers du jour (.paq + widget.csv)</label>
+        <input id="paqFiles" type="file" multiple accept=".paq,.txt,.csv">
         <div class="row"><button class="btn sm" id="importBtn">Importer</button></div>
         <div id="log" class="log"></div>
       </div>
@@ -266,25 +264,61 @@ async function loadCatStatus(){
       :'⚠ Aucun référentiel — charge-le une fois, sinon les colis s\'afficheront sans nom.';
   }catch(e){el.textContent='Statut indisponible.';}
 }
+// Parse le widget.csv Fastmag -> table { cde : {bl, etat} }
+// On garde uniquement Piece commençant par 'BL' et LibReservation 'BL Non Facturable'/'BL Reservation'
+async function parseWidget(file){
+  const txt=await file.text();
+  const lines=txt.replace(/^\ufeff/,'').split(/\r?\n/).filter(l=>l.trim());
+  if(!lines.length) return {};
+  const split=l=>l.split(',').map(c=>c.replace(/^"|"$/g,'').trim());
+  const head=split(lines[0]);
+  const iLib=head.indexOf('LibReservation'), iId=head.indexOf('EntetePiece'), iPiece=head.indexOf('Piece');
+  if(iId<0||iPiece<0) return {};
+  const map={};
+  for(let i=1;i<lines.length;i++){
+    const p=split(lines[i]); const id=p[iId], piece=p[iPiece], lib=iLib>=0?p[iLib]:'';
+    if(!id||!piece) continue;
+    if(!piece.startsWith('BL')) continue;          // on ignore FA / CD
+    if(lib==='Normal') continue;                    // on ignore les 'Normal'
+    map[id]={bl:piece, etat: lib==='BL Reservation'?'prepa':(lib==='BL Non Facturable'?'expedie':'') };
+  }
+  return map;
+}
+// Détecte si un fichier est un widget.csv (en-tête EntetePiece/Piece) ou un .paq
+async function isWidgetCsv(file){
+  if(!/\.csv$/i.test(file.name)) return false;
+  try{ const head=(await file.slice(0,300).text()).replace(/^\ufeff/,''); return /EntetePiece/.test(head)&&/Piece/.test(head); }catch(e){ return false; }
+}
 async function doImport(){
-  const paqs=[...document.getElementById('paqFiles').files];
-  const paqsCC=[...document.getElementById('paqFilesCC').files];
-  if(!paqs.length && !paqsCC.length){log('⚠ Sélectionne au moins un .paq (réassort ou C&C).');return;}
+  const files=[...document.getElementById('paqFiles').files];
+  if(!files.length){log('⚠ Dépose au moins un fichier (.paq et/ou widget.csv).');return;}
   document.getElementById('importBtn').disabled=true;
   try{
+    // 1) tri automatique des fichiers
+    const paqFiles=[], widgetFiles=[];
+    for(const f of files){ (await isWidgetCsv(f)) ? widgetFiles.push(f) : paqFiles.push(f); }
+    // 2) table de correspondance cde -> {bl, etat}
+    let blMap={};
+    for(const f of widgetFiles){ const m=await parseWidget(f); Object.assign(blMap,m); log('🧾 '+f.name+' : '+Object.keys(m).length+' BL (correspondance).'); }
+    if(!paqFiles.length){ log('ℹ Aucun .paq déposé — seule la correspondance BL a été lue.'); document.getElementById('importBtn').disabled=false; return; }
+    // 3) parse des .paq
     let all=[],tot=0; const eans=new Set();
-    // Réassort boutique
-    for(const f of paqs){const colis=await parsePaq(f);log('📦 '+f.name+' : '+colis.length+' colis (réassort).');tot+=colis.length;
-      colis.forEach(c=>{all.push(Object.assign({},c,{batch:f.name,source:'reassort'}));c.art.forEach(a=>eans.add(a.ean));});}
-    // Commandes web / Click & Collect
-    for(const f of paqsCC){const colis=await parsePaq(f);log('🛒 '+f.name+' : '+colis.length+' colis (click & collect).');tot+=colis.length;
-      colis.forEach(c=>{all.push(Object.assign({},c,{batch:f.name,source:'cc'}));c.art.forEach(a=>eans.add(a.ean));});}
+    for(const f of paqFiles){const colis=await parsePaq(f);log('📦 '+f.name+' : '+colis.length+' colis.');tot+=colis.length;
+      colis.forEach(c=>{all.push(Object.assign({},c,{batch:f.name}));c.art.forEach(a=>eans.add(a.ean));});}
+    // 4) noms d'articles
     log('Noms ('+eans.size+' articles)…'); const nm={};
     for(const ch of chunk([...eans],300)){const {data}=await sb.from('articles').select('ean,ref,lib,fam,taille,coul').in('ean',ch);(data||[]).forEach(a=>{nm[a.ean]={ref:a.ref,lib:a.lib,fam:a.fam,taille:a.taille,coul:a.coul};});}
     let manq=0; eans.forEach(e=>{if(!nm[e])manq++;}); if(manq)log('ℹ '+manq+' article(s) sans nom — recharge le référentiel si nombreux.');
-    const rows=all.map(c=>({code:c.code,magasin:c.magasin,cde:c.cde,pieces:c.art.reduce((s,a)=>s+a.qte,0),contenu:enrich(c.art,nm),batch:c.batch,source:c.source}));
+    // 5) croisement BL par cde
+    let blFound=0;
+    const rows=all.map(c=>{ const b=blMap[c.cde]; if(b)blFound++;
+      return {code:c.code,magasin:c.magasin,cde:c.cde,pieces:c.art.reduce((s,a)=>s+a.qte,0),contenu:enrich(c.art,nm),batch:c.batch,bl:b?b.bl:null}; });
+    if(Object.keys(blMap).length) log('🔗 N° de BL associés : '+blFound+' / '+rows.length+' colis'+(blFound<rows.length?' ('+(rows.length-blFound)+' sans correspondance)':'')+'.');
+    else log('ℹ Pas de widget.csv déposé — les n° de BL ne seront pas mis à jour.');
     log('Envoi de '+rows.length+' colis…');
-    for(const ch of chunk(rows,CHUNK)) await sb.from('colis').upsert(ch,{onConflict:'code'});
+    // si pas de widget fourni, ne pas écraser le bl existant : on retire la clé bl du payload
+    const payload = Object.keys(blMap).length ? rows : rows.map(r=>{const {bl,...rest}=r; return rest;});
+    for(const ch of chunk(payload,CHUNK)) await sb.from('colis').upsert(ch,{onConflict:'code'});
     log('✅ Import terminé : '+tot+' colis. Avancement conservé.');
     loadSuivi(); loadAcces();
   }catch(e){log('❌ '+(e.message||e));}
@@ -308,20 +342,20 @@ async function loadSuivi(){
   REF_CACHE=null;
   await loadAtvyl();
   const today0=new Date(); today0.setHours(0,0,0,0);
-  let {data:colis,error:colErr}=await sb.from('colis').select('code,magasin,cde,pieces,created_at,source');
+  let {data:colis,error:colErr}=await sb.from('colis').select('code,magasin,cde,pieces,created_at,bl');
   if(colErr){const r=await sb.from('colis').select('code,magasin,cde,pieces,created_at');colis=r.data;}
   const recs=await fetchReception();
   const rec={}; recs.forEach(r=>{rec[r.colis_code]=r;});
   COLIS_ALL=(colis||[]).map(c=>{const r=rec[c.code]||{}; const statut=r.statut||'attendu';
     const late=(statut==='attendu'&&c.created_at&&new Date(c.created_at)<today0);
-    return {code:c.code,magasin:c.magasin,cde:c.cde,pieces:c.pieces||0,created_at:c.created_at,source:c.source||'reassort',statut,note:r.note||'',declarant:r.declarant||'',recu_at:r.updated_at||'',late};});
+    return {code:c.code,magasin:c.magasin,cde:c.cde,pieces:c.pieces||0,created_at:c.created_at,bl:c.bl||'',statut,note:r.note||'',declarant:r.declarant||'',recu_at:r.updated_at||'',late};});
   const agg={};
-  COLIS_ALL.forEach(c=>{const a=agg[c.magasin]=agg[c.magasin]||{att:0,recu:0,ec:0,late:0,reassort:0,cc:0,cmds:new Set()};
+  COLIS_ALL.forEach(c=>{const a=agg[c.magasin]=agg[c.magasin]||{att:0,recu:0,ec:0,late:0,cmds:new Set(),bls:new Set()};
     a.att++; a.cmds.add(c.cde);
-    if(c.source==='cc')a.cc++; else a.reassort++;
+    if(c.bl)a.bls.add(c.bl);
     if(c.statut==='recu')a.recu++; else if(c.statut==='ecart')a.ec++;
     if(c.late)a.late++;});
-  SUIVI=Object.keys(agg).sort().map(m=>({m,...agg[m],cmd:agg[m].cmds.size}));
+  SUIVI=Object.keys(agg).sort().map(m=>({m,...agg[m],cmd:agg[m].cmds.size,blList:[...agg[m].bls]}));
   renderOverview(); renderSuivi(); renderAtvyl();
 }
 function renderOverview(){
@@ -390,7 +424,7 @@ function renderSuivi(){
   document.getElementById('suiviCount').textContent=rows.length+' magasin'+(rows.length>1?'s':'')+(suiviLate?' en retard':'');
   if(!SUIVI.length){el.innerHTML='<div class="muted">Aucune livraison importée.</div>';return;}
   if(!rows.length){el.innerHTML='<div class="muted">'+(suiviLate?'Aucun magasin en retard ✓':'Aucun résultat.')+'</div>';return;}
-  let h='<div class="scroll"><table><thead><tr><th>Magasin</th><th class="n">ID</th><th class="n">Colis</th><th class="n">Reçus</th><th>Avancement</th><th class="n">Écarts</th><th>Transport Atvyl</th><th class="n">Retard</th></tr></thead><tbody>';
+  let h='<div class="scroll"><table><thead><tr><th>Magasin</th><th class="n">ID</th><th>N° BL</th><th class="n">Colis</th><th class="n">Reçus</th><th>Avancement</th><th class="n">Écarts</th><th>Transport Atvyl</th><th class="n">Retard</th></tr></thead><tbody>';
   rows.forEach(r=>{const pct=r.att?Math.round(100*(r.recu+r.ec)/r.att):0;
     const av=atvylMagSummary(r.m);
     let atvCell='<span class="muted">—</span>';
@@ -398,7 +432,11 @@ function renderSuivi(){
       const cls=av.key==='ok'?'ok':(av.key==='bad'?'r':'g');
       const det=av.key==='ok'?(av.dateLivr?(' '+av.dateLivr.split(' ')[0]):''):'';
       atvCell='<span class="pill '+cls+'">'+lbl+det+'</span>'; }
-    h+='<tr'+(r.late>0?' class="lateRow"':'')+'><td class="code">'+r.m+(MAG_NAMES[r.m]?' · <span style="font-weight:500;color:#6b7280">'+magName(r.m)+'</span>':'')+'</td><td class="n">'+r.cmd+'</td><td class="n">'+r.att+'</td>'
+    const bls=r.blList||[];
+    let blCell='<span class="muted">—</span>';
+    if(bls.length===1) blCell='<span class="code" style="font-size:11.5px">'+esc(bls[0])+'</span>';
+    else if(bls.length>1) blCell='<span class="code" style="font-size:11.5px" title="'+esc(bls.join(', '))+'">'+bls.length+' BL</span>';
+    h+='<tr'+(r.late>0?' class="lateRow"':'')+'><td class="code">'+r.m+(MAG_NAMES[r.m]?' · <span style="font-weight:500;color:#6b7280">'+magName(r.m)+'</span>':'')+'</td><td class="n">'+r.cmd+'</td><td>'+blCell+'</td><td class="n">'+r.att+'</td>'
      +'<td class="n">'+r.recu+'</td>'
      +'<td><span class="bar"><i style="width:'+pct+'%"></i></span> <span class="muted">'+pct+'%</span></td>'
      +'<td class="n">'+(r.ec?'<span class="pill r">'+r.ec+'</span>':'<span class="muted">0</span>')+'</td>'
@@ -580,7 +618,7 @@ async function init(){
   document.getElementById('refBtn').addEventListener('click',searchRef);
   document.getElementById('refFind').addEventListener('keydown',e=>{if(e.key==='Enter')searchRef();});
   document.getElementById('logout').addEventListener('click',e=>{e.preventDefault();try{sessionStorage.removeItem('izac_recep_unlocked');}catch(_){}location.reload();});
-  Object.assign(window,{parseCatalogueText,parsePaq,enrich,parseCSVLine,setPin,copyLink,doImport,loadSuivi,loadAcces,renderSuivi,renderAcces,renderAtvyl,loadAtvyl,showNet,hideNet,exportNet,netCSV,relanceStore,relanceAllLate,relanceOne,relanceText});
+  Object.assign(window,{parseCatalogueText,parsePaq,parseWidget,isWidgetCsv,enrich,parseCSVLine,setPin,copyLink,doImport,loadSuivi,loadAcces,renderSuivi,renderAcces,renderAtvyl,loadAtvyl,showNet,hideNet,exportNet,netCSV,relanceStore,relanceAllLate,relanceOne,relanceText});
 }
 window.addEventListener('DOMContentLoaded',init);
 window.__init=init;
