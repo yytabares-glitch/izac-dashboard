@@ -66,6 +66,15 @@
   .pickresults .pk .pc{font-size:11px;color:var(--ink3);margin-top:2px}
   .pickresults .none{grid-column:1/-1;text-align:center;color:var(--ink3);padding:20px;font-size:13px}
 
+  .addnew{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+  .addnew-lab{font-size:12px;color:var(--ink3);font-weight:600;white-space:nowrap}
+  .addnew input{padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit}
+  .addnew input#newCode{width:70px}
+  .addnew input#newNom{flex:1;min-width:140px}
+  .addnew input:focus{outline:none;border-color:var(--navy)}
+  .addnew button{background:var(--navy);color:#fff;border:none;border-radius:7px;padding:8px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+  .addnew button:hover{background:var(--navy2)}
+
 
   .qpick{display:flex;gap:3px}
   .qpick button{width:26px;height:26px;border:1px solid var(--line);background:#fff;color:var(--ink2);border-radius:6px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;font-variant-numeric:tabular-nums}
@@ -106,6 +115,12 @@
   <div class="pickbar hidden" id="pickBar">
     <input type="text" id="pickSearch" placeholder="🔍 Tape le nom du magasin…" autocomplete="off">
     <div class="pickresults" id="pickResults"></div>
+    <div class="addnew">
+      <span class="addnew-lab">Magasin absent de la liste ?</span>
+      <input type="text" id="newCode" placeholder="Code" maxlength="6">
+      <input type="text" id="newNom" placeholder="Nom du magasin">
+      <button id="newAddBtn">+ Ajouter à la liste</button>
+    </div>
   </div>
 
   <div class="panel">
@@ -157,9 +172,17 @@
 
 <script>
 const LS_KEY='izac_boites_web_liste';
+const LS_CUSTOM='izac_boites_web_custom_stores';
 // Liste des magasins IZAC (code + nom) — extraite du rapport transport
-const STORES=[{"code": "1791", "nom": "TOURS"}, {"code": "1828", "nom": "CAEN"}, {"code": "1330", "nom": "CONFLUENCE"}, {"code": "1737", "nom": "BORDEAUX LAC"}, {"code": "1801", "nom": "RENNES CV"}, {"code": "1353", "nom": "CLAYE SOUILLY"}, {"code": "1603", "nom": "FENOUILLET"}, {"code": "1654", "nom": "PRADO"}, {"code": "1793", "nom": "DIJON CV"}, {"code": "1724", "nom": "OLONNE"}, {"code": "1470", "nom": "AVIGNON"}, {"code": "1350", "nom": "PERPIGNAN AUCHAN"}, {"code": "1835", "nom": "ORLEANS"}, {"code": "1598", "nom": "BASTIA"}, {"code": "1738", "nom": "ECULLY"}, {"code": "1742", "nom": "THIONVILLE"}, {"code": "1840", "nom": "CABRIES"}, {"code": "1787", "nom": "LA ROCHELLE"}, {"code": "1427", "nom": "PERPIGNAN CLAIRA"}, {"code": "1831", "nom": "STRASBOURG CENTRE VILLE"}, {"code": "1608", "nom": "ANGLET"}, {"code": "1842", "nom": "LE MANS"}, {"code": "1683", "nom": "ARRAS"}, {"code": "1694", "nom": "MULHOU."}, {"code": "1651", "nom": "PAU"}, {"code": "1544", "nom": "EPAGNY"}, {"code": "1636", "nom": "METZ"}, {"code": "1844", "nom": "POLYGONE"}, {"code": "1704", "nom": "BLOIS"}, {"code": "1671", "nom": "ANDREZIEUX"}, {"code": "1756", "nom": "BOULOGNE"}, {"code": "1621", "nom": "AIX"}, {"code": "1755", "nom": "BESANCON"}, {"code": "1637", "nom": "AJACC."}, {"code": "1716", "nom": "EPINAL"}, {"code": "1785", "nom": "GAP"}, {"code": "1563", "nom": "ST OMER"}, {"code": "1672", "nom": "ST ETI."}, {"code": "1703", "nom": "LUXEMBOURG"}, {"code": "1469", "nom": "MONTA."}, {"code": "1843", "nom": "DEAUVILLE"}, {"code": "1597", "nom": "AUXER."}, {"code": "1732", "nom": "HAGUENAU"}, {"code": "1526", "nom": "NIORT"}, {"code": "1669", "nom": "VOIRON"}, {"code": "1354", "nom": "NANCY"}, {"code": "1779", "nom": "ARCUEIL"}, {"code": "1670", "nom": "BREST"}, {"code": "1743", "nom": "MONT DE MARSAN"}, {"code": "1498", "nom": "GONESSE"}, {"code": "1377", "nom": "PTSTEM"}, {"code": "1782", "nom": "CORBEIL"}, {"code": "1648", "nom": "ROUBAIX"}, {"code": "1740", "nom": "ROMANS"}, {"code": "1735", "nom": "VILLEFONTAINE"}, {"code": "1627", "nom": "MIRAMAS"}, {"code": "1729", "nom": "LILLENIUM"}, {"code": "1665", "nom": "MONTPARNASSE"}, {"code": "1543", "nom": "A13"}, {"code": "1545", "nom": "LORMONT"}, {"code": "1109", "nom": "ST DENIS"}, {"code": "1254", "nom": "AUBERV."}, {"code": "1592", "nom": "COLMAR"}, {"code": "1862", "nom": "CHAMBERY"}, {"code": "1865", "nom": "GIVERNY"}, {"code": "216", "nom": "COSMOPOLITE"}, {"code": "1566", "nom": "BEAUV."}, {"code": "532", "nom": "LE GENDRE IDEAL"}, {"code": "1699", "nom": "PLACE AUX HOMMES"}, {"code": "1818", "nom": "SARL ROY"}, {"code": "1692", "nom": "TRADING"}, {"code": "437", "nom": "HORS LIGNE"}, {"code": "566", "nom": "MATCO SARL"}, {"code": "1505", "nom": "TALANG"}, {"code": "479", "nom": "JS TRADING"}, {"code": "1710", "nom": "BOUTIQUE MR"}, {"code": "1768", "nom": "ABC"}, {"code": "1715", "nom": "BOUTIQUE RAPHAEL"}, {"code": "1851", "nom": "SAS BARON"}, {"code": "507", "nom": "LABAU"}, {"code": "1780", "nom": "BOUTIQUE MONSIEUR"}, {"code": "1678", "nom": "H. DHOMME"}, {"code": "1645", "nom": "SHOW ROOM"}, {"code": "1496", "nom": "BUXY"}, {"code": "380", "nom": "GENTLEMEN"}, {"code": "1434", "nom": "AUMACLAIRE"}, {"code": "954", "nom": "VERSO SARL"}, {"code": "142", "nom": "BROUSSEAU"}, {"code": "1054", "nom": "T. D H. 72"}, {"code": "1805", "nom": "DRIVER"}, {"code": "1411", "nom": "LOL BY L."}, {"code": "1207", "nom": "HOPIUM"}, {"code": "724", "nom": "PINEL"}, {"code": "318", "nom": "ESPACE GRIFF"}, {"code": "1289", "nom": "MANCEAU EURL"}, {"code": "1758", "nom": "WE ARE SELECT / WAS"}, {"code": "1055", "nom": "TDH 61"}, {"code": "268", "nom": "DONALD BOUT."}, {"code": "717", "nom": "PENAUD"}, {"code": "1070", "nom": "CÔTE HOMME"}, {"code": "1781", "nom": "RENNES ALMA"}, {"code": "1776", "nom": "OL SASU / ATT FLORENCE DAMS ET"}, {"code": "1643", "nom": "REZLAND"}, {"code": "1812", "nom": "AFFAIRE D'HOMME"}, {"code": "647", "nom": "MORENCE"}, {"code": "1769", "nom": "BOY AND GIRL"}, {"code": "1711", "nom": "COUPIN"}, {"code": "1722", "nom": "O MASCULIN"}, {"code": "851", "nom": "SPORLUX"}, {"code": "1492", "nom": "JACK MOD"}, {"code": "1766", "nom": "ICONIK STORE CHEZ WE ARE SELEC"}, {"code": "1850", "nom": "SAS RC STRASBOURG"}, {"code": "559", "nom": "M.C.S. SARL"}, {"code": "1318", "nom": "G. LEMOINE"}, {"code": "1317", "nom": "WILHELEM SA"}, {"code": "206", "nom": "MOSSIS J. - SARL COME BACK"}, {"code": "1557", "nom": "ABV SERVICE"}, {"code": "1773", "nom": "XAVIER MEN'S WEAR"}, {"code": "1661", "nom": "LANGLAIS"}, {"code": "1650", "nom": "E. GRIFFE"}, {"code": "1800", "nom": "SAS RACING CLUB DE LENS / ARTH"}, {"code": "1852", "nom": "BEY FIRST 2"}, {"code": "1204", "nom": "MARCO MEN"}, {"code": "1784", "nom": "GRIFFE ROUGE"}, {"code": "1349", "nom": "BLOOM DAVID"}, {"code": "1708", "nom": "LES GALERIES SAS DU GRAND BAZA"}, {"code": "1512", "nom": "HAVANE"}, {"code": "997", "nom": "JLD DIFF."}, {"code": "1641", "nom": "MHB / BENJAMIN TERME"}, {"code": "626", "nom": "MICKELSON"}, {"code": "1511", "nom": "BOUTIK HOMME"}, {"code": "1783", "nom": "G3M DIFFUSION / PRINTEMPS LE H"}, {"code": "1799", "nom": "PRINTEMPS CAEN / JEL DIFFUSION"}, {"code": "61", "nom": "ARVET SARL"}, {"code": "1527", "nom": "FASHION R."}, {"code": "1578", "nom": "PRETTY WOMEN"}, {"code": "1726", "nom": "CLOANE SQUARE"}, {"code": "576", "nom": "LA MAISON"}, {"code": "1701", "nom": "MON VESTAIRE"}, {"code": "1286", "nom": "JASYL SARL"}, {"code": "1646", "nom": "BASILE BOUTIQUE"}, {"code": "1510", "nom": "SENSO"}, {"code": "1839", "nom": "CLOTHING DISTRIBUTIONS"}, {"code": "1581", "nom": "VANNI.O"}, {"code": "1777", "nom": "BOUTIQUE HOM"}, {"code": "1718", "nom": "ESCALE"}, {"code": "1461", "nom": "B. ENGELYC"}, {"code": "1549", "nom": "FIREX"}, {"code": "1820", "nom": "LE 18 SARL"}, {"code": "1546", "nom": "RACKSTORE M."}, {"code": "1291", "nom": "SOMAJY"}, {"code": "952", "nom": "VENTE PRIVEE.COM"}, {"code": "1224", "nom": "AS ST ETIENNE ATT. VALERIE SEM"}, {"code": "1841", "nom": "MONTAL SARL"}, {"code": "1834", "nom": "TARANTOLA"}, {"code": "1721", "nom": "BETHUNE"}, {"code": "1675", "nom": "LOSC"}, {"code": "1845", "nom": "SHOWROOM FORMEN"}, {"code": "1795", "nom": "HOTEL LE GRAND MAZARIN / ATT."}]
+const BASE_STORES=[{"code": "1791", "nom": "TOURS"}, {"code": "1828", "nom": "CAEN"}, {"code": "1330", "nom": "CONFLUENCE"}, {"code": "1737", "nom": "BORDEAUX LAC"}, {"code": "1801", "nom": "RENNES CV"}, {"code": "1353", "nom": "CLAYE SOUILLY"}, {"code": "1603", "nom": "FENOUILLET"}, {"code": "1654", "nom": "PRADO"}, {"code": "1793", "nom": "DIJON CV"}, {"code": "1448", "nom": "DIJON TOISON"}, {"code": "1724", "nom": "OLONNE"}, {"code": "1470", "nom": "AVIGNON"}, {"code": "1350", "nom": "PERPIGNAN AUCHAN"}, {"code": "1835", "nom": "ORLEANS"}, {"code": "1598", "nom": "BASTIA"}, {"code": "1738", "nom": "ECULLY"}, {"code": "1742", "nom": "THIONVILLE"}, {"code": "1840", "nom": "CABRIES"}, {"code": "1787", "nom": "LA ROCHELLE"}, {"code": "1427", "nom": "PERPIGNAN CLAIRA"}, {"code": "1831", "nom": "STRASBOURG CENTRE VILLE"}, {"code": "1608", "nom": "ANGLET"}, {"code": "1842", "nom": "LE MANS"}, {"code": "1683", "nom": "ARRAS"}, {"code": "1694", "nom": "MULHOU."}, {"code": "1651", "nom": "PAU"}, {"code": "1544", "nom": "EPAGNY"}, {"code": "1636", "nom": "METZ"}, {"code": "1844", "nom": "POLYGONE"}, {"code": "1704", "nom": "BLOIS"}, {"code": "1671", "nom": "ANDREZIEUX"}, {"code": "1756", "nom": "BOULOGNE"}, {"code": "1621", "nom": "AIX"}, {"code": "1755", "nom": "BESANCON"}, {"code": "1637", "nom": "AJACC."}, {"code": "1716", "nom": "EPINAL"}, {"code": "1785", "nom": "GAP"}, {"code": "1563", "nom": "ST OMER"}, {"code": "1672", "nom": "ST ETI."}, {"code": "1703", "nom": "LUXEMBOURG"}, {"code": "1469", "nom": "MONTA."}, {"code": "1843", "nom": "DEAUVILLE"}, {"code": "1597", "nom": "AUXER."}, {"code": "1732", "nom": "HAGUENAU"}, {"code": "1526", "nom": "NIORT"}, {"code": "1669", "nom": "VOIRON"}, {"code": "1354", "nom": "NANCY"}, {"code": "1779", "nom": "ARCUEIL"}, {"code": "1670", "nom": "BREST"}, {"code": "1743", "nom": "MONT DE MARSAN"}, {"code": "1498", "nom": "GONESSE"}, {"code": "1377", "nom": "PTSTEM"}, {"code": "1782", "nom": "CORBEIL"}, {"code": "1648", "nom": "ROUBAIX"}, {"code": "1740", "nom": "ROMANS"}, {"code": "1735", "nom": "VILLEFONTAINE"}, {"code": "1627", "nom": "MIRAMAS"}, {"code": "1729", "nom": "LILLENIUM"}, {"code": "1665", "nom": "MONTPARNASSE"}, {"code": "1543", "nom": "A13"}, {"code": "1545", "nom": "LORMONT"}, {"code": "1109", "nom": "ST DENIS"}, {"code": "1254", "nom": "AUBERV."}, {"code": "1592", "nom": "COLMAR"}, {"code": "1862", "nom": "CHAMBERY"}, {"code": "1865", "nom": "GIVERNY"}, {"code": "216", "nom": "COSMOPOLITE"}, {"code": "1566", "nom": "BEAUV."}, {"code": "532", "nom": "LE GENDRE IDEAL"}, {"code": "1699", "nom": "PLACE AUX HOMMES"}, {"code": "1818", "nom": "SARL ROY"}, {"code": "1692", "nom": "TRADING"}, {"code": "437", "nom": "HORS LIGNE"}, {"code": "566", "nom": "MATCO SARL"}, {"code": "1505", "nom": "TALANG"}, {"code": "479", "nom": "JS TRADING"}, {"code": "1710", "nom": "BOUTIQUE MR"}, {"code": "1768", "nom": "ABC"}, {"code": "1715", "nom": "BOUTIQUE RAPHAEL"}, {"code": "1851", "nom": "SAS BARON"}, {"code": "507", "nom": "LABAU"}, {"code": "1780", "nom": "BOUTIQUE MONSIEUR"}, {"code": "1678", "nom": "H. DHOMME"}, {"code": "1645", "nom": "SHOW ROOM"}, {"code": "1496", "nom": "BUXY"}, {"code": "380", "nom": "GENTLEMEN"}, {"code": "1434", "nom": "AUMACLAIRE"}, {"code": "954", "nom": "VERSO SARL"}, {"code": "142", "nom": "BROUSSEAU"}, {"code": "1054", "nom": "T. D H. 72"}, {"code": "1805", "nom": "DRIVER"}, {"code": "1411", "nom": "LOL BY L."}, {"code": "1207", "nom": "HOPIUM"}, {"code": "724", "nom": "PINEL"}, {"code": "318", "nom": "ESPACE GRIFF"}, {"code": "1289", "nom": "MANCEAU EURL"}, {"code": "1758", "nom": "WE ARE SELECT / WAS"}, {"code": "1055", "nom": "TDH 61"}, {"code": "268", "nom": "DONALD BOUT."}, {"code": "717", "nom": "PENAUD"}, {"code": "1070", "nom": "CÔTE HOMME"}, {"code": "1781", "nom": "RENNES ALMA"}, {"code": "1776", "nom": "OL SASU / ATT FLORENCE DAMS ET"}, {"code": "1643", "nom": "REZLAND"}, {"code": "1812", "nom": "AFFAIRE D'HOMME"}, {"code": "647", "nom": "MORENCE"}, {"code": "1769", "nom": "BOY AND GIRL"}, {"code": "1711", "nom": "COUPIN"}, {"code": "1722", "nom": "O MASCULIN"}, {"code": "851", "nom": "SPORLUX"}, {"code": "1492", "nom": "JACK MOD"}, {"code": "1766", "nom": "ICONIK STORE CHEZ WE ARE SELEC"}, {"code": "1850", "nom": "SAS RC STRASBOURG"}, {"code": "559", "nom": "M.C.S. SARL"}, {"code": "1318", "nom": "G. LEMOINE"}, {"code": "1317", "nom": "WILHELEM SA"}, {"code": "206", "nom": "MOSSIS J. - SARL COME BACK"}, {"code": "1557", "nom": "ABV SERVICE"}, {"code": "1773", "nom": "XAVIER MEN'S WEAR"}, {"code": "1661", "nom": "LANGLAIS"}, {"code": "1650", "nom": "E. GRIFFE"}, {"code": "1800", "nom": "SAS RACING CLUB DE LENS / ARTH"}, {"code": "1852", "nom": "BEY FIRST 2"}, {"code": "1204", "nom": "MARCO MEN"}, {"code": "1784", "nom": "GRIFFE ROUGE"}, {"code": "1349", "nom": "BLOOM DAVID"}, {"code": "1708", "nom": "LES GALERIES SAS DU GRAND BAZA"}, {"code": "1512", "nom": "HAVANE"}, {"code": "997", "nom": "JLD DIFF."}, {"code": "1641", "nom": "MHB / BENJAMIN TERME"}, {"code": "626", "nom": "MICKELSON"}, {"code": "1511", "nom": "BOUTIK HOMME"}, {"code": "1783", "nom": "G3M DIFFUSION / PRINTEMPS LE H"}, {"code": "1799", "nom": "PRINTEMPS CAEN / JEL DIFFUSION"}, {"code": "61", "nom": "ARVET SARL"}, {"code": "1527", "nom": "FASHION R."}, {"code": "1578", "nom": "PRETTY WOMEN"}, {"code": "1726", "nom": "CLOANE SQUARE"}, {"code": "576", "nom": "LA MAISON"}, {"code": "1701", "nom": "MON VESTAIRE"}, {"code": "1286", "nom": "JASYL SARL"}, {"code": "1646", "nom": "BASILE BOUTIQUE"}, {"code": "1510", "nom": "SENSO"}, {"code": "1839", "nom": "CLOTHING DISTRIBUTIONS"}, {"code": "1581", "nom": "VANNI.O"}, {"code": "1777", "nom": "BOUTIQUE HOM"}, {"code": "1718", "nom": "ESCALE"}, {"code": "1461", "nom": "B. ENGELYC"}, {"code": "1549", "nom": "FIREX"}, {"code": "1820", "nom": "LE 18 SARL"}, {"code": "1546", "nom": "RACKSTORE M."}, {"code": "1291", "nom": "SOMAJY"}, {"code": "952", "nom": "VENTE PRIVEE.COM"}, {"code": "1224", "nom": "AS ST ETIENNE ATT. VALERIE SEM"}, {"code": "1841", "nom": "MONTAL SARL"}, {"code": "1834", "nom": "TARANTOLA"}, {"code": "1721", "nom": "BETHUNE"}, {"code": "1675", "nom": "LOSC"}, {"code": "1845", "nom": "SHOWROOM FORMEN"}, {"code": "1795", "nom": "HOTEL LE GRAND MAZARIN / ATT."}]
 ;
+
+let CUSTOM_STORES=[];
+try{ CUSTOM_STORES=JSON.parse(localStorage.getItem(LS_CUSTOM)||'[]'); }catch(e){ CUSTOM_STORES=[]; }
+function getStores(){ return BASE_STORES.concat(CUSTOM_STORES); }
+function persistCustomStores(){
+  try{ localStorage.setItem(LS_CUSTOM, JSON.stringify(CUSTOM_STORES)); }catch(e){}
+}
 
 let rows=[];
 const tbody=document.getElementById('tbody');
@@ -172,7 +195,13 @@ function showToast(msg){
 }
 function esc(s){ return (s===undefined||s===null?'':String(s)).replace(/"/g,'&quot;'); }
 
-document.getElementById('masterCount').textContent=`${STORES.length} magasins en référence`;
+function updateMasterCount(){
+  const n=getStores().length;
+  document.getElementById('masterCount').textContent=CUSTOM_STORES.length
+    ? `${n} magasins en référence (dont ${CUSTOM_STORES.length} ajoutés par toi)`
+    : `${n} magasins en référence`;
+}
+updateMasterCount();
 
 // --- sélecteur de magasin ---
 const pickBar=document.getElementById('pickBar');
@@ -190,7 +219,7 @@ pickSearch.addEventListener('input',e=>renderPickResults(e.target.value));
 function renderPickResults(filter){
   const f=(filter||'').trim().toLowerCase();
   const usedCodes=new Set(rows.map(r=>r.code));
-  let list=STORES.filter(s=>!usedCodes.has(s.code));
+  let list=getStores().filter(s=>!usedCodes.has(s.code));
   if(f) list=list.filter(s=>s.nom.toLowerCase().includes(f)||s.code.includes(f));
   list=list.slice().sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
   if(!list.length){ pickResults.innerHTML='<div class="none">Aucun magasin trouvé (ou déjà ajouté).</div>'; return; }
@@ -198,12 +227,31 @@ function renderPickResults(filter){
 }
 pickResults.addEventListener('click',e=>{
   const btn=e.target.closest('.pk'); if(!btn) return;
-  const s=STORES.find(x=>x.code===btn.dataset.code); if(!s) return;
+  const s=getStores().find(x=>x.code===btn.dataset.code); if(!s) return;
   if(rows.some(r=>r.code===s.code)){ showToast(`${s.nom} déjà dans la liste`); pickBar.classList.add('hidden'); return; }
   rows.push({code:s.code, nom:s.nom, mm:0, gm:0, comment:'PACK DE 10'});
   pickBar.classList.add('hidden');
   render();
   showToast(`${s.nom} ajouté`);
+});
+
+// --- ajout manuel d'un magasin absent de la liste ---
+document.getElementById('newAddBtn').addEventListener('click',()=>{
+  const codeInp=document.getElementById('newCode');
+  const nomInp=document.getElementById('newNom');
+  const code=codeInp.value.trim();
+  const nom=nomInp.value.trim().toUpperCase();
+  if(!code||!nom){ showToast('Renseigne le code et le nom du magasin'); return; }
+  if(getStores().some(s=>s.code===code)){ showToast('Ce code magasin existe déjà'); return; }
+  CUSTOM_STORES.push({code, nom});
+  persistCustomStores();
+  updateMasterCount();
+  codeInp.value=''; nomInp.value='';
+  if(rows.some(r=>r.code===code)){ showToast(`${nom} déjà dans la liste`); return; }
+  rows.push({code, nom, mm:0, gm:0, comment:'PACK DE 10'});
+  pickBar.classList.add('hidden');
+  render();
+  showToast(`${nom} ajouté à la liste et à ta commande`);
 });
 
 function loadRows(){
