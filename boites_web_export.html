@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boîtes web — Export dépôt — IZAC</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --navy:#0D2750; --navy2:#0C447C; --bg:#EDEFF3; --line:#E5E9F2; --line2:#EEF1F6;
+    --ink:#263145; --ink2:#5b647a; --ink3:#828a9c; --green:#1f9d57; --greenbg:#e6f6ed; --red:#D64545;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.4}
+  .wrap{max-width:820px;margin:0 auto;padding:18px 18px 100px}
+  .hdr{background:var(--navy);border-radius:10px;padding:16px 22px;display:flex;align-items:center;gap:14px;margin-bottom:16px}
+  .hdr-logo{width:38px;height:38px;background:#1E4D9B;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff}
+  .hdr h1{font-size:19px;font-weight:800;color:#fff}
+  .hdr .sub{font-size:12px;color:rgba(255,255,255,.7);font-weight:600;margin-top:1px}
+  .note{background:#e6eefb;border:1px solid #c5d6f5;border-left:3px solid var(--navy2);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--navy2);font-weight:600;margin-bottom:16px}
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+  .toolbar button{font-family:inherit;font-size:13px;font-weight:700;border:1px solid var(--line);background:#fff;color:var(--navy2);padding:10px 16px;border-radius:8px;cursor:pointer}
+  .toolbar button:hover{border-color:var(--navy);background:var(--line2)}
+
+  .panel{background:#fff;border:1px solid var(--line);border-radius:10px;margin-bottom:16px;overflow:hidden}
+  .panel-hd{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+  .panel-hd h2{font-size:13px;color:var(--navy);font-weight:800}
+  .panel-hd .count{font-size:11.5px;color:var(--ink3);font-weight:600}
+  .panel-body{padding:6px 16px 16px}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  thead th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);font-weight:700;padding:8px 6px;border-bottom:1px solid var(--line)}
+  tbody td{padding:5px 6px;border-bottom:1px solid var(--line2);vertical-align:middle}
+  tbody tr:hover{background:var(--line2)}
+  td input{width:100%;border:1px solid transparent;background:transparent;font-family:inherit;font-size:13.5px;padding:7px 8px;border-radius:6px;color:var(--ink)}
+  td input:hover{border-color:var(--line)}
+  td input:focus{outline:none;border-color:var(--navy);background:#fff}
+  td input.qty{width:56px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+  td.code input{width:56px;text-align:center}
+  td.del{width:30px;text-align:center}
+  td.del span{cursor:pointer;color:var(--ink3);font-size:16px}
+  td.del span:hover{color:var(--red)}
+  .empty-row td{text-align:center;color:var(--ink3);padding:24px;font-size:12.5px}
+
+  .stat-row{display:flex;gap:12px;margin-top:8px}
+  .stat{flex:1;background:var(--line2);border-radius:8px;padding:10px 14px}
+  .stat .n{font-size:20px;font-weight:800;color:var(--navy)}
+  .stat .l{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);font-weight:700}
+
+  .footer-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:14px 18px;display:flex;align-items:center;justify-content:center;box-shadow:0 -4px 20px rgba(13,39,80,.06)}
+  .btn{background:var(--navy);color:#fff;border:none;border-radius:9px;padding:13px 30px;font-size:14px;font-weight:700;cursor:pointer}
+  .btn:hover{background:var(--navy2)}
+  .btn:disabled{opacity:.4;cursor:default}
+
+  .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.2);opacity:0;pointer-events:none;transition:.25s}
+  .toast.show{opacity:1;transform:translate(-50%,-6px)}
+
+  .pickbar{background:#fff;border:1.5px solid var(--navy);border-radius:10px;padding:14px 16px;margin-bottom:16px}
+  .pickbar input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-size:15px;margin-bottom:8px}
+  .pickbar input:focus{outline:none;border-color:var(--navy)}
+  .pickresults{max-height:280px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  .pickresults .pk{background:var(--line2);border:1px solid transparent;border-radius:8px;padding:10px 12px;cursor:pointer;text-align:left;font-family:inherit}
+  .pickresults .pk:hover{border-color:var(--navy);background:#f7faff}
+  .pickresults .pk .pn{font-weight:700;font-size:13.5px;color:var(--navy)}
+  .pickresults .pk .pc{font-size:11px;color:var(--ink3);margin-top:2px}
+  .pickresults .none{grid-column:1/-1;text-align:center;color:var(--ink3);padding:20px;font-size:13px}
+
+
+  .qpick{display:flex;gap:3px}
+  .qpick button{width:26px;height:26px;border:1px solid var(--line);background:#fff;color:var(--ink2);border-radius:6px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;font-variant-numeric:tabular-nums}
+  .qpick button:hover{border-color:var(--navy)}
+  .qpick button.active{background:var(--navy);border-color:var(--navy);color:#fff}
+  .qpick .qmore{width:26px;height:26px;font-size:14px}
+  .codeval{font-weight:700;color:var(--ink2);font-variant-numeric:tabular-nums;font-size:13px}
+  .nomval{font-weight:700;color:var(--navy);font-size:14px}
+
+  tr.row-pending{background:#FDECEC}
+  tr.row-pending td{background:#FDECEC}
+  tr.row-done{background:#e6f6ed}
+  tr.row-done td{background:#e6f6ed}
+
+  .mailfield{margin-bottom:12px}
+  .mailfield label{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);font-weight:700;margin-bottom:5px}
+  .mailfield input,.mailfield textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:13.5px;font-family:inherit;color:var(--ink)}
+  .mailfield textarea{resize:vertical;line-height:1.5}
+  .mailfield input:focus,.mailfield textarea:focus{outline:none;border-color:var(--navy)}
+  .mailhint{font-size:11.5px;color:var(--ink3);margin-top:10px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <div class="hdr-logo">IZ</div>
+    <div><h1>Boîtes web — Export dépôt</h1><div class="sub">Génère le fichier à envoyer au dépôt (LOGNC)</div></div>
+  </div>
+
+  <div class="note">Saisis les magasins et quantités MM/GM, puis génère le fichier Excel — 2 onglets, même format que la trame habituelle.</div>
+
+  <div class="toolbar">
+    <button id="addRowBtn">+ Choisir un magasin</button>
+    <button id="resetQtyBtn">Remettre quantités à 0</button>
+    <span id="masterCount" style="font-size:11.5px;color:var(--ink3);font-weight:600;align-self:center"></span>
+  </div>
+
+  <div class="pickbar hidden" id="pickBar">
+    <input type="text" id="pickSearch" placeholder="🔍 Tape le nom du magasin…" autocomplete="off">
+    <div class="pickresults" id="pickResults"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-hd">
+      <h2>Magasins &amp; quantités</h2>
+      <div class="count" id="rowCount">0 magasin</div>
+    </div>
+    <div class="panel-body">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:64px">Code</th>
+            <th>Nom magasin</th>
+            <th style="width:64px">MM</th>
+            <th style="width:64px">GM</th>
+            <th>Commentaire</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="stat-row">
+        <div class="stat"><div class="n" id="totalMM">0</div><div class="l">Total MM</div></div>
+        <div class="stat"><div class="n" id="totalGM">0</div><div class="l">Total GM</div></div>
+        <div class="stat"><div class="n" id="totalMag">0</div><div class="l">Magasins</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-hd"><h2>✉️ Mail au dépôt</h2></div>
+    <div class="panel-body" style="padding-top:12px">
+      <div class="mailfield"><label>À</label><input type="text" id="mailTo" placeholder="destinataires principaux"></div>
+      <div class="mailfield"><label>Cc</label><input type="text" id="mailCc" placeholder="copie"></div>
+      <div class="mailfield"><label>Objet</label><input type="text" id="mailSubject"></div>
+      <div class="mailfield"><label>Message</label><textarea id="mailBody" rows="8"></textarea></div>
+      <div class="toolbar" style="margin-bottom:0">
+        <button id="mailBtn">Ouvrir le mail</button>
+        <button id="copyBodyBtn">Copier le message</button>
+      </div>
+      <div class="mailhint">Le fichier Excel doit être téléchargé d'abord (bouton ci-dessus) — glisse-le en pièce jointe dans le mail avant d'envoyer, le lien mail ne peut pas le joindre automatiquement.</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer-bar">
+  <button class="btn" id="exportBtn">Générer le fichier &amp; ouvrir le mail</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const LS_KEY='izac_boites_web_liste';
+// Liste des magasins IZAC (code + nom) — extraite du rapport transport
+const STORES=[{"code": "1791", "nom": "TOURS"}, {"code": "1828", "nom": "CAEN"}, {"code": "1330", "nom": "CONFLUENCE"}, {"code": "1737", "nom": "BORDEAUX LAC"}, {"code": "1801", "nom": "RENNES CV"}, {"code": "1353", "nom": "CLAYE SOUILLY"}, {"code": "1603", "nom": "FENOUILLET"}, {"code": "1654", "nom": "PRADO"}, {"code": "1793", "nom": "DIJON CV"}, {"code": "1724", "nom": "OLONNE"}, {"code": "1470", "nom": "AVIGNON"}, {"code": "1350", "nom": "PERPIGNAN AUCHAN"}, {"code": "1835", "nom": "ORLEANS"}, {"code": "1598", "nom": "BASTIA"}, {"code": "1738", "nom": "ECULLY"}, {"code": "1742", "nom": "THIONVILLE"}, {"code": "1840", "nom": "CABRIES"}, {"code": "1787", "nom": "LA ROCHELLE"}, {"code": "1427", "nom": "PERPIGNAN CLAIRA"}, {"code": "1831", "nom": "STRASBOURG CENTRE VILLE"}, {"code": "1608", "nom": "ANGLET"}, {"code": "1842", "nom": "LE MANS"}, {"code": "1683", "nom": "ARRAS"}, {"code": "1694", "nom": "MULHOU."}, {"code": "1651", "nom": "PAU"}, {"code": "1544", "nom": "EPAGNY"}, {"code": "1636", "nom": "METZ"}, {"code": "1844", "nom": "POLYGONE"}, {"code": "1704", "nom": "BLOIS"}, {"code": "1671", "nom": "ANDREZIEUX"}, {"code": "1756", "nom": "BOULOGNE"}, {"code": "1621", "nom": "AIX"}, {"code": "1755", "nom": "BESANCON"}, {"code": "1637", "nom": "AJACC."}, {"code": "1716", "nom": "EPINAL"}, {"code": "1785", "nom": "GAP"}, {"code": "1563", "nom": "ST OMER"}, {"code": "1672", "nom": "ST ETI."}, {"code": "1703", "nom": "LUXEMBOURG"}, {"code": "1469", "nom": "MONTA."}, {"code": "1843", "nom": "DEAUVILLE"}, {"code": "1597", "nom": "AUXER."}, {"code": "1732", "nom": "HAGUENAU"}, {"code": "1526", "nom": "NIORT"}, {"code": "1669", "nom": "VOIRON"}, {"code": "1354", "nom": "NANCY"}, {"code": "1779", "nom": "ARCUEIL"}, {"code": "1670", "nom": "BREST"}, {"code": "1743", "nom": "MONT DE MARSAN"}, {"code": "1498", "nom": "GONESSE"}, {"code": "1377", "nom": "PTSTEM"}, {"code": "1782", "nom": "CORBEIL"}, {"code": "1648", "nom": "ROUBAIX"}, {"code": "1740", "nom": "ROMANS"}, {"code": "1735", "nom": "VILLEFONTAINE"}, {"code": "1627", "nom": "MIRAMAS"}, {"code": "1729", "nom": "LILLENIUM"}, {"code": "1665", "nom": "MONTPARNASSE"}, {"code": "1543", "nom": "A13"}, {"code": "1545", "nom": "LORMONT"}, {"code": "1109", "nom": "ST DENIS"}, {"code": "1254", "nom": "AUBERV."}, {"code": "1592", "nom": "COLMAR"}, {"code": "1862", "nom": "CHAMBERY"}, {"code": "1865", "nom": "GIVERNY"}, {"code": "216", "nom": "COSMOPOLITE"}, {"code": "1566", "nom": "BEAUV."}, {"code": "532", "nom": "LE GENDRE IDEAL"}, {"code": "1699", "nom": "PLACE AUX HOMMES"}, {"code": "1818", "nom": "SARL ROY"}, {"code": "1692", "nom": "TRADING"}, {"code": "437", "nom": "HORS LIGNE"}, {"code": "566", "nom": "MATCO SARL"}, {"code": "1505", "nom": "TALANG"}, {"code": "479", "nom": "JS TRADING"}, {"code": "1710", "nom": "BOUTIQUE MR"}, {"code": "1768", "nom": "ABC"}, {"code": "1715", "nom": "BOUTIQUE RAPHAEL"}, {"code": "1851", "nom": "SAS BARON"}, {"code": "507", "nom": "LABAU"}, {"code": "1780", "nom": "BOUTIQUE MONSIEUR"}, {"code": "1678", "nom": "H. DHOMME"}, {"code": "1645", "nom": "SHOW ROOM"}, {"code": "1496", "nom": "BUXY"}, {"code": "380", "nom": "GENTLEMEN"}, {"code": "1434", "nom": "AUMACLAIRE"}, {"code": "954", "nom": "VERSO SARL"}, {"code": "142", "nom": "BROUSSEAU"}, {"code": "1054", "nom": "T. D H. 72"}, {"code": "1805", "nom": "DRIVER"}, {"code": "1411", "nom": "LOL BY L."}, {"code": "1207", "nom": "HOPIUM"}, {"code": "724", "nom": "PINEL"}, {"code": "318", "nom": "ESPACE GRIFF"}, {"code": "1289", "nom": "MANCEAU EURL"}, {"code": "1758", "nom": "WE ARE SELECT / WAS"}, {"code": "1055", "nom": "TDH 61"}, {"code": "268", "nom": "DONALD BOUT."}, {"code": "717", "nom": "PENAUD"}, {"code": "1070", "nom": "CÔTE HOMME"}, {"code": "1781", "nom": "RENNES ALMA"}, {"code": "1776", "nom": "OL SASU / ATT FLORENCE DAMS ET"}, {"code": "1643", "nom": "REZLAND"}, {"code": "1812", "nom": "AFFAIRE D'HOMME"}, {"code": "647", "nom": "MORENCE"}, {"code": "1769", "nom": "BOY AND GIRL"}, {"code": "1711", "nom": "COUPIN"}, {"code": "1722", "nom": "O MASCULIN"}, {"code": "851", "nom": "SPORLUX"}, {"code": "1492", "nom": "JACK MOD"}, {"code": "1766", "nom": "ICONIK STORE CHEZ WE ARE SELEC"}, {"code": "1850", "nom": "SAS RC STRASBOURG"}, {"code": "559", "nom": "M.C.S. SARL"}, {"code": "1318", "nom": "G. LEMOINE"}, {"code": "1317", "nom": "WILHELEM SA"}, {"code": "206", "nom": "MOSSIS J. - SARL COME BACK"}, {"code": "1557", "nom": "ABV SERVICE"}, {"code": "1773", "nom": "XAVIER MEN'S WEAR"}, {"code": "1661", "nom": "LANGLAIS"}, {"code": "1650", "nom": "E. GRIFFE"}, {"code": "1800", "nom": "SAS RACING CLUB DE LENS / ARTH"}, {"code": "1852", "nom": "BEY FIRST 2"}, {"code": "1204", "nom": "MARCO MEN"}, {"code": "1784", "nom": "GRIFFE ROUGE"}, {"code": "1349", "nom": "BLOOM DAVID"}, {"code": "1708", "nom": "LES GALERIES SAS DU GRAND BAZA"}, {"code": "1512", "nom": "HAVANE"}, {"code": "997", "nom": "JLD DIFF."}, {"code": "1641", "nom": "MHB / BENJAMIN TERME"}, {"code": "626", "nom": "MICKELSON"}, {"code": "1511", "nom": "BOUTIK HOMME"}, {"code": "1783", "nom": "G3M DIFFUSION / PRINTEMPS LE H"}, {"code": "1799", "nom": "PRINTEMPS CAEN / JEL DIFFUSION"}, {"code": "61", "nom": "ARVET SARL"}, {"code": "1527", "nom": "FASHION R."}, {"code": "1578", "nom": "PRETTY WOMEN"}, {"code": "1726", "nom": "CLOANE SQUARE"}, {"code": "576", "nom": "LA MAISON"}, {"code": "1701", "nom": "MON VESTAIRE"}, {"code": "1286", "nom": "JASYL SARL"}, {"code": "1646", "nom": "BASILE BOUTIQUE"}, {"code": "1510", "nom": "SENSO"}, {"code": "1839", "nom": "CLOTHING DISTRIBUTIONS"}, {"code": "1581", "nom": "VANNI.O"}, {"code": "1777", "nom": "BOUTIQUE HOM"}, {"code": "1718", "nom": "ESCALE"}, {"code": "1461", "nom": "B. ENGELYC"}, {"code": "1549", "nom": "FIREX"}, {"code": "1820", "nom": "LE 18 SARL"}, {"code": "1546", "nom": "RACKSTORE M."}, {"code": "1291", "nom": "SOMAJY"}, {"code": "952", "nom": "VENTE PRIVEE.COM"}, {"code": "1224", "nom": "AS ST ETIENNE ATT. VALERIE SEM"}, {"code": "1841", "nom": "MONTAL SARL"}, {"code": "1834", "nom": "TARANTOLA"}, {"code": "1721", "nom": "BETHUNE"}, {"code": "1675", "nom": "LOSC"}, {"code": "1845", "nom": "SHOWROOM FORMEN"}, {"code": "1795", "nom": "HOTEL LE GRAND MAZARIN / ATT."}]
+;
+
+let rows=[];
+const tbody=document.getElementById('tbody');
+const toast=document.getElementById('toast');
+
+function showToast(msg){
+  toast.textContent=msg;
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'),2000);
+}
+function esc(s){ return (s===undefined||s===null?'':String(s)).replace(/"/g,'&quot;'); }
+
+document.getElementById('masterCount').textContent=`${STORES.length} magasins en référence`;
+
+// --- sélecteur de magasin ---
+const pickBar=document.getElementById('pickBar');
+const pickSearch=document.getElementById('pickSearch');
+const pickResults=document.getElementById('pickResults');
+
+document.getElementById('addRowBtn').addEventListener('click',()=>{
+  pickBar.classList.remove('hidden');
+  pickSearch.value='';
+  renderPickResults('');
+  pickSearch.focus();
+});
+pickSearch.addEventListener('input',e=>renderPickResults(e.target.value));
+
+function renderPickResults(filter){
+  const f=(filter||'').trim().toLowerCase();
+  const usedCodes=new Set(rows.map(r=>r.code));
+  let list=STORES.filter(s=>!usedCodes.has(s.code));
+  if(f) list=list.filter(s=>s.nom.toLowerCase().includes(f)||s.code.includes(f));
+  list=list.slice().sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
+  if(!list.length){ pickResults.innerHTML='<div class="none">Aucun magasin trouvé (ou déjà ajouté).</div>'; return; }
+  pickResults.innerHTML=list.map(s=>`<button class="pk" data-code="${s.code}"><div class="pn">${esc(s.nom)}</div><div class="pc">Code ${s.code}</div></button>`).join('');
+}
+pickResults.addEventListener('click',e=>{
+  const btn=e.target.closest('.pk'); if(!btn) return;
+  const s=STORES.find(x=>x.code===btn.dataset.code); if(!s) return;
+  if(rows.some(r=>r.code===s.code)){ showToast(`${s.nom} déjà dans la liste`); pickBar.classList.add('hidden'); return; }
+  rows.push({code:s.code, nom:s.nom, mm:0, gm:0, comment:'PACK DE 10'});
+  pickBar.classList.add('hidden');
+  render();
+  showToast(`${s.nom} ajouté`);
+});
+
+function loadRows(){
+  try{
+    const saved=localStorage.getItem(LS_KEY);
+    rows=saved?JSON.parse(saved):[];
+  }catch(e){ rows=[]; }
+  render();
+}
+function persistRows(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(rows)); }catch(e){}
+}
+
+function qpickHtml(i, f, val){
+  const v=Number(val)||0;
+  const isCustom=v>3;
+  const btns=[0,1,2,3].map(n=>`<button data-i="${i}" data-f="${f}" data-v="${n}" class="${!isCustom&&v===n?'active':''}">${n}</button>`).join('');
+  const moreBtn=`<button data-i="${i}" data-f="${f}" data-more="1" class="qmore ${isCustom?'active':''}" title="Autre quantité">${isCustom?v:'…'}</button>`;
+  return `<div class="qpick">${btns}${moreBtn}</div>`;
+}
+
+function render(){
+  tbody.innerHTML='';
+  if(rows.length===0){
+    tbody.innerHTML='<tr class="empty-row"><td colspan="6">Aucun magasin. Clique sur "+ Choisir un magasin".</td></tr>';
+  }
+  rows.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    const done=(Number(r.mm)||0)>0||(Number(r.gm)||0)>0;
+    tr.className=done?'row-done':'row-pending';
+    tr.innerHTML=`
+      <td class="code"><span class="codeval">${esc(r.code)}</span></td>
+      <td><span class="nomval">${esc(r.nom)}</span></td>
+      <td>${qpickHtml(i,'mm',r.mm)}</td>
+      <td>${qpickHtml(i,'gm',r.gm)}</td>
+      <td><input value="${esc(r.comment)}" data-i="${i}" data-f="comment"></td>
+      <td class="del"><span data-i="${i}" class="delBtn" title="Supprimer">✕</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  updateStats();
+  document.getElementById('rowCount').textContent=rows.length+(rows.length>1?' magasins':' magasin');
+  persistRows();
+}
+function updateStats(){
+  document.getElementById('totalMM').textContent=rows.reduce((a,r)=>a+(Number(r.mm)||0),0);
+  document.getElementById('totalGM').textContent=rows.reduce((a,r)=>a+(Number(r.gm)||0),0);
+  document.getElementById('totalMag').textContent=rows.filter(r=>(Number(r.mm)||0)>0||(Number(r.gm)||0)>0).length;
+}
+
+tbody.addEventListener('click',e=>{
+  const qbtn=e.target.closest('.qpick button'); if(!qbtn) return;
+  const i=qbtn.dataset.i, f=qbtn.dataset.f;
+  if(qbtn.dataset.more){
+    const cur=Number(rows[i][f])||0;
+    const input=prompt('Quantité pour ce magasin :', cur>3?cur:'');
+    if(input===null) return;
+    const v=Math.max(0, parseInt(input,10)||0);
+    rows[i][f]=v;
+  } else {
+    rows[i][f]=Number(qbtn.dataset.v);
+  }
+  render();
+});
+
+tbody.addEventListener('input',e=>{
+  const i=e.target.dataset.i, f=e.target.dataset.f;
+  if(i===undefined||!f||f==='mm'||f==='gm') return;
+  rows[i][f]=e.target.value;
+  persistRows();
+});
+tbody.addEventListener('click',e=>{
+  if(e.target.classList.contains('delBtn')){
+    rows.splice(e.target.dataset.i,1);
+    render();
+  }
+});
+document.getElementById('resetQtyBtn').addEventListener('click',()=>{
+  rows.forEach(r=>{r.mm=0;r.gm=0;});
+  render();
+  showToast('Quantités remises à zéro');
+});
+
+function fileName(){
+  const d=new Date();
+  const dd=String(d.getDate()).padStart(2,'0'), mm=String(d.getMonth()+1).padStart(2,'0');
+  return `TRAME_PREPA_BOITES_WEB_${dd}${mm}${d.getFullYear()}.xlsx`;
+}
+document.getElementById('exportBtn').addEventListener('click',()=>{
+  const hasQty=rows.some(r=>(Number(r.mm)||0)>0||(Number(r.gm)||0)>0);
+  if(!hasQty){ showToast('Renseigne au moins une quantité'); return; }
+  const wb=XLSX.utils.book_new();
+  const header=['CODE MAG','NOM MAG','REFERENCE','QUANTITES','COMMENTAIRES'];
+  const mmData=[header], gmData=[header];
+  rows.forEach(r=>{
+    if((Number(r.mm)||0)>0) mmData.push([r.code,r.nom,'BOITES WEB MM',Number(r.mm),r.comment||'PACK DE 10']);
+    if((Number(r.gm)||0)>0) gmData.push([r.code,r.nom,'BOITES WEB GM',Number(r.gm),r.comment||'PACK DE 10']);
+  });
+  const wsMM=XLSX.utils.aoa_to_sheet(mmData), wsGM=XLSX.utils.aoa_to_sheet(gmData);
+  wsMM['!cols']=[{wch:10},{wch:15},{wch:15},{wch:11},{wch:16}];
+  wsGM['!cols']=[{wch:10},{wch:15},{wch:15},{wch:11},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,wsMM,'BOITES MM');
+  XLSX.utils.book_append_sheet(wb,wsGM,'BOITES GM');
+  XLSX.writeFile(wb, fileName());
+  showToast('Fichier téléchargé — ouverture du mail…');
+  setTimeout(openMail, 600);
+});
+
+// --- mail ---
+const LS_MAILTO='izac_boites_web_mailto';
+const LS_MAILCC='izac_boites_web_mailcc';
+const DEFAULT_TO='kamel.boubaker@lognc.fr,consommable@izac.fr';
+const DEFAULT_CC='noorbux.maleck@lognc.fr,Alan.LEBRUN@lognc.fr,smiljana.joksimovic@lognc.fr,antony.bonnin@lognc.fr,stephanie.niard@lognc.fr,uzma.abdul@lognc.fr,Christophe.SANNA@lognc.fr,Adjoints.Expedition@lognc.fr,gilles.couloubaly@lognc.fr,Miloud.El-horri@lognc.fr,ORossard@izac.fr,Raphael.JOHAN@lognc.fr';
+const MAIL_TEMPLATE=`Bonjour à tous,
+
+Voici la nouvelle demande de préparation pour les boites WEB MOYENNE ET GRANDE.
+
+Pouvez-vous me dire quand ça sera expédié svp.
+
+Merci`;
+document.getElementById('mailBody').value=MAIL_TEMPLATE;
+document.getElementById('mailSubject').value=`SHIP FROM STORE - BOITES MM ET GM — ${new Date().toLocaleDateString('fr-FR')}`;
+try{
+  document.getElementById('mailTo').value=localStorage.getItem(LS_MAILTO)||DEFAULT_TO;
+  document.getElementById('mailCc').value=localStorage.getItem(LS_MAILCC)||DEFAULT_CC;
+}catch(e){
+  document.getElementById('mailTo').value=DEFAULT_TO;
+  document.getElementById('mailCc').value=DEFAULT_CC;
+}
+
+function openMail(){
+  const to=document.getElementById('mailTo').value.trim();
+  const cc=document.getElementById('mailCc').value.trim();
+  const subject=document.getElementById('mailSubject').value;
+  const body=document.getElementById('mailBody').value;
+  try{ localStorage.setItem(LS_MAILTO, to); localStorage.setItem(LS_MAILCC, cc); }catch(e){}
+  let url=`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  if(cc) url+=`&cc=${encodeURIComponent(cc)}`;
+  window.location.href=url;
+}
+document.getElementById('mailBtn').addEventListener('click', openMail);
+document.getElementById('copyBodyBtn').addEventListener('click', async ()=>{
+  try{ await navigator.clipboard.writeText(document.getElementById('mailBody').value); showToast('Message copié'); }
+  catch(e){ showToast('Copie impossible — sélectionne le texte manuellement'); }
+});
+
+loadRows();
+</script>
+</body>
+</html>
