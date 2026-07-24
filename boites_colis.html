@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Estimation Colis — Import Fastmag</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --navy:#1C2541;
+    --navy-2:#141a30;
+    --cream:#F6F3EE;
+    --copper:#B8763E;
+    --copper-dark:#96602F;
+    --gray:#8D99AE;
+    --line:#E2DDD3;
+    --white:#ffffff;
+    --good:#3F7D5C;
+    --warn:#B8763E;
+    --warn-bg:#FBF0E4;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI',Arial,Helvetica,sans-serif;
+    background:var(--cream);
+    color:var(--navy);
+  }
+  .wrap{max-width:1150px;margin:0 auto;padding:32px 24px 60px;}
+
+  .hero{
+    background:var(--navy);
+    color:var(--cream);
+    border-radius:14px;
+    padding:28px 32px;
+    margin-bottom:24px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero::after{
+    content:"";
+    position:absolute;
+    right:-40px;top:-40px;
+    width:180px;height:180px;
+    border:2px solid rgba(184,118,62,0.35);
+    border-radius:24px;
+    transform:rotate(18deg);
+  }
+  .hero .eyebrow{
+    font-size:11px;letter-spacing:2.5px;text-transform:uppercase;
+    color:var(--copper);font-weight:600;margin-bottom:8px;
+  }
+  .hero h1{margin:0 0 6px;font-size:26px;font-weight:700;}
+  .hero p{margin:0;font-size:13.5px;color:#C9CFE0;max-width:660px;line-height:1.5;}
+
+  .dropzone{
+    background:var(--white);
+    border:2px dashed var(--line);
+    border-radius:14px;
+    padding:34px 24px;
+    text-align:center;
+    margin-bottom:22px;
+    transition:border-color .15s ease, background .15s ease;
+    cursor:pointer;
+  }
+  .dropzone.drag{
+    border-color:var(--copper);
+    background:#FBF6EF;
+  }
+  .dropzone .icon{font-size:30px;margin-bottom:8px;}
+  .dropzone h3{margin:0 0 4px;font-size:15px;color:var(--navy);}
+  .dropzone p{margin:0;font-size:12.5px;color:var(--gray);}
+  .dropzone input{display:none;}
+  .filename-tag{
+    display:inline-block;
+    margin-top:12px;
+    font-size:12px;
+    font-weight:600;
+    background:#EFEAE0;
+    color:var(--navy);
+    padding:5px 12px;
+    border-radius:20px;
+  }
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+  select{
+    font-family:inherit;font-size:13px;padding:9px 12px;border-radius:8px;
+    border:1px solid var(--line);background:#fff;color:var(--navy);
+  }
+  button{
+    font-family:inherit;font-size:13px;font-weight:600;border-radius:8px;
+    border:1px solid transparent;padding:10px 16px;cursor:pointer;
+    transition:transform .08s ease, background .15s ease;
+  }
+  button:active{transform:scale(0.97);}
+  .btn-primary{background:var(--copper);color:#fff;}
+  .btn-primary:hover{background:var(--copper-dark);}
+  .btn-ghost{background:transparent;color:var(--navy);border-color:var(--line);}
+  .btn-ghost:hover{background:#fff;}
+  .btn-danger-ghost{background:transparent;color:#9B4A3F;border-color:#E7CFC9;font-size:12px;padding:6px 10px;}
+  .btn-danger-ghost:hover{background:#FBEEEA;}
+
+  .panel{background:var(--white);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:22px;display:none;}
+  .panel.show{display:block;}
+
+  .review-banner{
+    display:none;
+    background:var(--warn-bg);
+    border:1px solid #EBD2AE;
+    color:#7A5124;
+    font-size:12.5px;
+    padding:12px 16px;
+    border-radius:10px;
+    margin-bottom:16px;
+    line-height:1.5;
+  }
+  .review-banner.show{display:block;}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  thead th{
+    text-align:left;background:#F0ECE3;color:var(--navy);font-size:11px;
+    letter-spacing:1px;text-transform:uppercase;font-weight:700;
+    padding:12px 14px;border-bottom:1px solid var(--line);
+  }
+  thead th.num{text-align:right;}
+  tbody td{padding:8px 14px;border-bottom:1px solid #F1EEE7;vertical-align:middle;}
+  tbody tr:hover{background:#FBF9F5;}
+  tbody tr.needs-review{background:#FBF6EC;}
+  td.num{text-align:right;}
+  td input[type=text]{width:100%;}
+  td input[type=number]{width:90px;text-align:right;}
+  input{
+    font-family:inherit;font-size:13.5px;padding:6px 8px;border:1px solid var(--line);
+    border-radius:6px;background:#fff;color:var(--navy);
+  }
+  input:focus{outline:2px solid var(--copper);outline-offset:1px;border-color:var(--copper);}
+  .readonly{color:var(--navy);font-variant-numeric:tabular-nums;}
+  .flag{
+    display:inline-block;font-size:10px;font-weight:700;color:#946024;
+    background:#F3E1C4;padding:2px 7px;border-radius:20px;margin-left:6px;
+    vertical-align:middle;
+  }
+
+  tfoot td{padding:12px 14px;font-weight:700;background:#F0ECE3;border-top:2px solid var(--line);}
+
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:22px;}
+  .stat{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:18px 20px;}
+  .stat .label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--gray);font-weight:700;margin-bottom:8px;}
+  .stat .value{font-size:28px;font-weight:700;color:var(--navy);line-height:1;}
+  .stat .sub{font-size:12px;color:var(--gray);margin-top:6px;}
+  .stat.highlight{background:var(--navy);border-color:var(--navy);}
+  .stat.highlight .label{color:var(--copper);}
+  .stat.highlight .value{color:#fff;}
+  .stat.highlight .sub{color:#B9C0D6;}
+
+  .footnote{font-size:12px;color:var(--gray);line-height:1.6;padding:4px 4px 0;}
+
+  @media (max-width:640px){
+    .hero h1{font-size:21px;}
+    td input[type=number]{width:70px;}
+    thead th, tbody td{padding:8px 8px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Logistique — Fermeture de magasin</div>
+    <h1>Estimation colis à partir d'un export Fastmag</h1>
+    <p>Dépose ton export de stock brut (Fastmag, tout format : .xls, .xlsx, .csv, .txt). Les quantités sont regroupées automatiquement par famille et converties en nombre de colis (80×50×30), mélange autorisé entre familles.</p>
+  </div>
+
+  <div class="dropzone" id="dropzone">
+    <div class="icon">📦</div>
+    <h3>Glisse ton fichier ici, ou clique pour choisir</h3>
+    <p>Export Fastmag brut — colonnes Magasin / Famille / Stock détectées automatiquement</p>
+    <input type="file" id="fileInput" accept=".xls,.xlsx,.csv,.txt">
+    <div id="filenameTag" style="display:none" class="filename-tag"></div>
+  </div>
+
+  <div class="toolbar" id="storeToolbar" style="display:none">
+    <label style="font-size:12.5px;color:var(--gray);font-weight:600;">Magasin :</label>
+    <select id="storeSelect" onchange="onStoreChange()"></select>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn-ghost" onclick="toggleBasePanel()" id="toggleBaseBtn">Gerer la base de capacites</button>
+  </div>
+
+  <div class="panel" id="basePanel">
+    <div style="padding:18px 20px 6px;">
+      <h3 style="margin:0 0 4px;font-size:15px;">Base de capacites (pieces max / colis)</h3>
+      <p style="margin:0 0 14px;font-size:12.5px;color:var(--gray);line-height:1.5;">
+        Utilisee pour reconnaitre automatiquement chaque famille a l'import. Tes ajouts et modifications sont enregistres dans ce navigateur et s'appliquent a tous les prochains fichiers.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;">
+        <div>
+          <label style="display:block;font-size:11px;color:var(--gray);font-weight:700;margin-bottom:4px;">Famille</label>
+          <input type="text" id="newFamInput" placeholder="ex: DOUDOUNE" style="width:220px;">
+        </div>
+        <div>
+          <label style="display:block;font-size:11px;color:var(--gray);font-weight:700;margin-bottom:4px;">Pieces max / colis</label>
+          <input type="number" id="newCapInput" min="1" placeholder="ex: 10" style="width:140px;">
+        </div>
+        <button class="btn-primary" onclick="addToBase()">Ajouter / mettre a jour</button>
+        <button class="btn-ghost" onclick="resetOverrides()">Reinitialiser mes modifs</button>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:40%">Famille</th>
+          <th class="num" style="width:20%">Pieces max / colis</th>
+          <th style="width:20%">Origine</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="baseRows"></tbody>
+    </table>
+  </div>
+
+  <div class="review-banner" id="reviewBanner"></div>
+
+  <div class="toolbar" id="editToolbar" style="display:none">
+    <button class="btn-primary" onclick="addRow()">+ Ajouter une famille</button>
+    <button class="btn-ghost" onclick="exportCSV()">Exporter en CSV</button>
+    <button class="btn-ghost" onclick="clearAll()">Nouveau fichier</button>
+  </div>
+
+  <div class="panel" id="panel">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:30%">Famille (export Fastmag)</th>
+          <th class="num" style="width:14%">Stock</th>
+          <th class="num" style="width:18%">Pièces max / colis</th>
+          <th class="num" style="width:14%">Volume utilisé</th>
+          <th class="num" style="width:14%">Colis (sans mélange)</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+      <tfoot>
+        <tr>
+          <td>Total général</td>
+          <td class="num" id="totStock">—</td>
+          <td></td>
+          <td class="num" id="totVol">—</td>
+          <td class="num" id="totCeil">—</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="stats" id="statsPanel" style="display:none">
+    <div class="stat highlight">
+      <div class="label">Estimation en mélange optimal</div>
+      <div class="value" id="statMix">—</div>
+      <div class="sub">Volume total arrondi au colis supérieur</div>
+    </div>
+    <div class="stat">
+      <div class="label">Sans mélange (pire cas)</div>
+      <div class="value" id="statNoMix">—</div>
+      <div class="sub">Une famille = ses propres colis</div>
+    </div>
+    <div class="stat">
+      <div class="label">Marge de sécurité conseillée</div>
+      <div class="value" id="statSafe">—</div>
+      <div class="sub">+8% pour un mélange réel sur le terrain</div>
+    </div>
+  </div>
+
+  <div class="footnote" id="footnote" style="display:none">
+    Méthode : chaque pièce occupe 1/(capacité) du volume d'un colis. Volume utilisé = stock ÷ capacité.
+    Les familles marquées <span class="flag">à vérifier</span> n'ont pas de capacité connue avec certitude — une valeur par défaut a été appliquée, à ajuster si besoin.
+  </div>
+
+</div>
+
+<script>
+// ---------- Table de capacités connues (piece max par colis 80x50x30) ----------
+// clé = famille normalisée (majuscules, accents retirés)
+const CAPACITY_TABLE = {
+  "BALLON":20,
+  "BERMUDA":30,
+  "BLOUSON":8, "BLOUSONS":8,
+  "BOITE":100,
+  "BOUTONS DE MANCHETTE":100,
+  "BOXERS":100, "BOXER":100,
+  "CEINTURE":100, "CEINTURES":100,
+  "CHAPEAU":100,
+  "CHAUSSETTES":200,
+  "CHAUSSURE CASUAL":8, "CHAUSSURES CASUAL":8,
+  "CHAUSSURE VILLE":8, "CHAUSSURES VILLE":8,
+  "CHEMISE CASUAL":30,
+  "CHEMISE VILLE":30,
+  "CHEMISE M/LONGUE":30,
+  "CONSOMMABLE":30, "CONSOMMABLES":30,
+  "COSTUME":8, "COSTUMES":8,
+  "CRAVATES":200, "CRAVATTES":200, "CRAVATE":200,
+  "ECHARPE":200, "ECHARPES":200,
+  "GILET":20, "GILETS":20,
+  "GP":8,
+  "JEANS":20,
+  "MAILLOT DE BAIN":20,
+  "MANTEAU":8, "MANTEAUX":8,
+  "MAROQUINERIE":10,
+  "PANTALON CASUAL":30,
+  "PANTALON VILLE":20,
+  "PANTALONS 5P":30,
+  "PARFUM":100,
+  "PEIGNOIR":8, "PEIGNOIRS":8,
+  "POLO":30, "POLOS":30,
+  "PULL":15, "PULLS":15,
+  "SWEAT":15, "SWEATS":15,
+  "TSHIRT":30, "T SHIRT":30, "TSHIRTS":30,
+  "VESTE CASUAL":8,
+  "VESTE VILLE":8,
+  "CUIRS":8, "CUIR":8,
+  "BLAZERS":8, "BLAZER":8,
+};
+// familles ambigües (pas de distinction casual/ville dans le libelle) -> a verifier
+const AMBIGUOUS = new Set(["PANTALON","PANTALONS","CHEMISES","CHEMISE","CHAUSSURES","CHAUSSURE","VESTE","VESTES"]);
+const AMBIGUOUS_DEFAULT = {
+  "PANTALON":25,"PANTALONS":25,
+  "CHEMISES":30,"CHEMISE":30,
+  "CHAUSSURES":8,"CHAUSSURE":8,
+  "VESTE":8,"VESTES":8,
+};
+const DEFAULT_CAPACITY = 20;
+const OVERRIDES_KEY = "colis_capacity_overrides";
+
+function stripAccents(s){
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+function normalizeFamily(raw){
+  let s = stripAccents(String(raw||'').trim().toUpperCase());
+  s = s.replace(/\s+/g,' ');
+  return s;
+}
+
+function loadOverrides(){
+  try{
+    const o = JSON.parse(localStorage.getItem(OVERRIDES_KEY) || "{}");
+    return (o && typeof o === 'object') ? o : {};
+  }catch(e){ return {}; }
+}
+function saveOverrides(o){
+  try{ localStorage.setItem(OVERRIDES_KEY, JSON.stringify(o)); }catch(e){}
+}
+let overrides = loadOverrides();
+
+function lookupCapacity(rawFamily){
+  const norm = normalizeFamily(rawFamily);
+  if(overrides.hasOwnProperty(norm)){
+    return {cap:overrides[norm], review:false};
+  }
+  if(CAPACITY_TABLE.hasOwnProperty(norm)){
+    return {cap:CAPACITY_TABLE[norm], review:false};
+  }
+  if(AMBIGUOUS.has(norm)){
+    return {cap:AMBIGUOUS_DEFAULT[norm]||DEFAULT_CAPACITY, review:true};
+  }
+  return {cap:DEFAULT_CAPACITY, review:true};
+}
+
+// ---------- Gestion base de capacites ----------
+function toggleBasePanel(){
+  const p = document.getElementById('basePanel');
+  p.classList.toggle('show');
+  if(p.classList.contains('show')) renderBasePanel();
+}
+
+function renderBasePanel(){
+  const tbody = document.getElementById('baseRows');
+  tbody.innerHTML = '';
+
+  // union of default table keys and overrides, dedup, sorted
+  const allKeys = new Set([...Object.keys(CAPACITY_TABLE), ...Object.keys(overrides)]);
+  const sorted = [...allKeys].sort();
+
+  sorted.forEach(key => {
+    const isOverride = overrides.hasOwnProperty(key);
+    const cap = isOverride ? overrides[key] : CAPACITY_TABLE[key];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(key)}</td>
+      <td class="num"><input type="number" min="1" value="${cap}" style="width:90px" onchange="editBaseCapacity('${key.replace(/'/g,"\\'")}',this.value)"></td>
+      <td>${isOverride ? '<span class="flag" style="color:#3F7D5C;background:#DCEEE2;">personnalisee</span>' : '<span class="flag" style="color:var(--gray);background:#EFEAE0;">defaut</span>'}</td>
+      <td style="text-align:center">${isOverride ? `<button class="btn-danger-ghost" onclick="removeOverride('${key.replace(/'/g,"\\'")}')">Suppr.</button>` : ''}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function editBaseCapacity(key, value){
+  const v = Number(value);
+  if(!v || v<=0) return;
+  overrides[key] = v;
+  saveOverrides(overrides);
+  renderBasePanel();
+  // recompute current results with updated capacities if a file is loaded
+  if(rows.length) refreshCapacitiesFromBase();
+}
+
+function removeOverride(key){
+  delete overrides[key];
+  saveOverrides(overrides);
+  renderBasePanel();
+  if(rows.length) refreshCapacitiesFromBase();
+}
+
+function addToBase(){
+  const famInput = document.getElementById('newFamInput');
+  const capInput = document.getElementById('newCapInput');
+  const fam = normalizeFamily(famInput.value);
+  const cap = Number(capInput.value);
+  if(!fam){ alert("Indique le nom de la famille."); return; }
+  if(!cap || cap<=0){ alert("Indique une capacite valide (nombre de pieces > 0)."); return; }
+  overrides[fam] = cap;
+  saveOverrides(overrides);
+  famInput.value=''; capInput.value='';
+  renderBasePanel();
+  if(rows.length) refreshCapacitiesFromBase();
+}
+
+function resetOverrides(){
+  if(confirm("Supprimer toutes tes modifications personnalisees de la base de capacites ?")){
+    overrides = {};
+    saveOverrides(overrides);
+    renderBasePanel();
+    if(rows.length) refreshCapacitiesFromBase();
+  }
+}
+
+// Reapplique la base (defaut + overrides) sur les lignes actuellement affichees,
+// sans ecraser les capacites que l'utilisateur a modifiees manuellement ligne par ligne.
+function refreshCapacitiesFromBase(){
+  rows.forEach(r => {
+    if(r._manualCap) return; // ne touche pas aux valeurs corrigees manuellement dans le tableau
+    const {cap, review} = lookupCapacity(r.label);
+    r.cap = cap;
+    r.review = review;
+  });
+  render();
+}
+
+// ---------- State ----------
+let rawData = [];      // parsed rows as array of objects (header->value)
+let headerMap = {};     // detected column indices
+let rows = [];          // {label, stock, cap, review}
+let allParsedRows = []; // full raw rows for store filtering
+let storeColKey = null;
+let familleColKey = null;
+let stockColKey = null;
+
+// ---------- File handling ----------
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+
+dropzone.addEventListener('click', ()=> fileInput.click());
+dropzone.addEventListener('dragover', e=>{ e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', ()=> dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', e=>{
+  e.preventDefault();
+  dropzone.classList.remove('drag');
+  if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e=>{
+  if(e.target.files.length) handleFile(e.target.files[0]);
+});
+
+function clearAll(){
+  rawData = []; rows = []; allParsedRows = [];
+  document.getElementById('filenameTag').style.display='none';
+  document.getElementById('panel').classList.remove('show');
+  document.getElementById('statsPanel').style.display='none';
+  document.getElementById('footnote').style.display='none';
+  document.getElementById('editToolbar').style.display='none';
+  document.getElementById('storeToolbar').style.display='none';
+  document.getElementById('reviewBanner').classList.remove('show');
+  fileInput.value='';
+}
+
+async function handleFile(file){
+  document.getElementById('filenameTag').style.display='inline-block';
+  document.getElementById('filenameTag').textContent = file.name;
+  const buf = await file.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  let table; // array of arrays
+
+  const isZip = bytes[0]===0x50 && bytes[1]===0x4B;
+  const isOLE = bytes[0]===0xD0 && bytes[1]===0xCF && bytes[2]===0x11 && bytes[3]===0xE0;
+
+  if(isZip || isOLE){
+    const wb = XLSX.read(buf, {type:'array'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    table = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:''});
+  } else {
+    let text;
+    try{ text = new TextDecoder('windows-1252').decode(buf); }
+    catch(e){ text = new TextDecoder('utf-8').decode(buf); }
+    table = parseDelimited(text);
+  }
+  processTable(table);
+}
+
+function parseDelimited(text){
+  const lines = text.split(/\r\n|\n|\r/).filter(l => l.length>0);
+  if(!lines.length) return [];
+  const headerLine = lines[0];
+  const delims = ['\t',';',','];
+  let best = '\t', bestCount = -1;
+  delims.forEach(d=>{
+    const count = headerLine.split(d).length;
+    if(count > bestCount){ bestCount = count; best = d; }
+  });
+  return lines.map(l => l.split(best));
+}
+
+function findCol(headers, patterns){
+  for(let i=0;i<headers.length;i++){
+    const h = stripAccents(String(headers[i]||'').trim().toLowerCase());
+    for(const p of patterns){
+      if(h === p) return i;
+    }
+  }
+  // fallback: partial match
+  for(let i=0;i<headers.length;i++){
+    const h = stripAccents(String(headers[i]||'').trim().toLowerCase());
+    for(const p of patterns){
+      if(h.includes(p)) return i;
+    }
+  }
+  return -1;
+}
+
+function processTable(table){
+  if(!table.length){ alert("Fichier vide ou illisible."); return; }
+  const headers = table[0];
+  const idxFamille = findCol(headers, ['famille']);
+  const idxStock = findCol(headers, ['stock']); // matches "Stock" first occurrence
+  const idxMagasin = findCol(headers, ['magasin']);
+
+  if(idxFamille === -1 || idxStock === -1){
+    alert("Colonnes 'Famille' et/ou 'Stock' introuvables dans ce fichier. Vérifie l'export.");
+    return;
+  }
+
+  allParsedRows = table.slice(1).filter(r => r && r.length);
+  storeColKey = idxMagasin;
+  familleColKey = idxFamille;
+  stockColKey = idxStock;
+
+  // Detect distinct stores
+  const storeToolbar = document.getElementById('storeToolbar');
+  const storeSelect = document.getElementById('storeSelect');
+  if(idxMagasin !== -1){
+    const stores = [...new Set(allParsedRows.map(r => String(r[idxMagasin]||'').trim()).filter(Boolean))];
+    if(stores.length > 1){
+      storeSelect.innerHTML = '<option value="__ALL__">Tous les magasins</option>' +
+        stores.map(s => `<option value="${s}">${s}</option>`).join('');
+      storeToolbar.style.display = 'flex';
+    } else {
+      storeToolbar.style.display = 'none';
+    }
+  } else {
+    storeToolbar.style.display = 'none';
+  }
+
+  buildRowsFromStore(idxMagasin !== -1 && document.getElementById('storeSelect').value ? document.getElementById('storeSelect').value : '__ALL__');
+}
+
+function onStoreChange(){
+  buildRowsFromStore(document.getElementById('storeSelect').value);
+}
+
+function buildRowsFromStore(storeFilter){
+  const grouped = {};
+  allParsedRows.forEach(r => {
+    if(storeColKey !== -1 && storeFilter && storeFilter !== '__ALL__'){
+      const store = String(r[storeColKey]||'').trim();
+      if(store !== storeFilter) return;
+    }
+    const famille = String(r[familleColKey]||'').trim();
+    if(!famille) return;
+    let stockVal = parseFloat(String(r[stockColKey]||'0').replace(',','.'));
+    if(isNaN(stockVal)) stockVal = 0;
+    if(stockVal < 0) stockVal = 0;
+    if(stockVal === 0) return;
+    grouped[famille] = (grouped[famille]||0) + stockVal;
+  });
+
+  rows = Object.keys(grouped).sort((a,b)=>grouped[b]-grouped[a]).map(fam => {
+    const {cap, review} = lookupCapacity(fam);
+    return {label:fam, stock:grouped[fam], cap:cap, review:review};
+  });
+
+  document.getElementById('editToolbar').style.display='flex';
+  document.getElementById('panel').classList.add('show');
+  document.getElementById('statsPanel').style.display='grid';
+  document.getElementById('footnote').style.display='block';
+  render();
+}
+
+// ---------- Render ----------
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function render(){
+  const tbody = document.getElementById('rows');
+  tbody.innerHTML = '';
+  let totStock=0, totVol=0, totCeil=0, reviewCount=0;
+
+  rows.forEach((r,i) => {
+    const stock = Number(r.stock)||0;
+    const cap = Number(r.cap)||0;
+    const vol = cap>0 ? stock/cap : 0;
+    const ceilVal = cap>0 ? Math.ceil(stock/cap) : 0;
+    totStock += stock; totVol += vol; totCeil += ceilVal;
+    if(r.review) reviewCount++;
+
+    const tr = document.createElement('tr');
+    if(r.review) tr.classList.add('needs-review');
+    tr.innerHTML = `
+      <td><input type="text" value="${escapeHtml(r.label)}" onchange="updateRow(${i},'label',this.value)">${r.review?'<span class="flag">à vérifier</span>':''}</td>
+      <td class="num"><input type="number" min="0" value="${stock}" onchange="updateRow(${i},'stock',this.value)"></td>
+      <td class="num"><input type="number" min="1" value="${cap}" onchange="updateRow(${i},'cap',this.value)"></td>
+      <td class="num readonly">${vol.toFixed(2)}</td>
+      <td class="num readonly">${ceilVal}</td>
+      <td style="text-align:center;white-space:nowrap;">
+        <button class="btn-ghost" style="font-size:11px;padding:6px 8px;" title="Enregistrer cette capacite dans la base" onclick="saveRowToBase(${i})">💾</button>
+        <button class="btn-danger-ghost" onclick="removeRow(${i})">Suppr.</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('totStock').textContent = totStock.toLocaleString('fr-FR');
+  document.getElementById('totVol').textContent = totVol.toFixed(2);
+  document.getElementById('totCeil').textContent = totCeil;
+
+  const mix = Math.ceil(totVol);
+  document.getElementById('statMix').textContent = mix + ' colis';
+  document.getElementById('statNoMix').textContent = totCeil + ' colis';
+  document.getElementById('statSafe').textContent = Math.ceil(mix*1.08) + ' colis';
+
+  const banner = document.getElementById('reviewBanner');
+  if(reviewCount > 0){
+    banner.classList.add('show');
+    banner.innerHTML = `⚠️ ${reviewCount} famille(s) marquée(s) <strong>à vérifier</strong> : capacité par colis non trouvée avec certitude dans la table de référence (nom non reconnu ou ambigu type "PANTALON" sans précision Casual/Ville). Une valeur par défaut a été appliquée — corrige-la directement dans le tableau si besoin.`;
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+function updateRow(i, field, value){
+  if(field==='label'){ rows[i].label = value; rows[i].review=false; }
+  else {
+    rows[i][field] = value === '' ? 0 : Number(value);
+    if(field==='cap'){ rows[i]._manualCap = true; rows[i].review=false; }
+  }
+  render();
+}
+
+function saveRowToBase(i){
+  const r = rows[i];
+  const key = normalizeFamily(r.label);
+  const cap = Number(r.cap);
+  if(!cap || cap<=0){ alert("Capacite invalide."); return; }
+  overrides[key] = cap;
+  saveOverrides(overrides);
+  r.review = false;
+  render();
+  alert(`"${r.label}" enregistree dans la base avec ${cap} pieces/colis.`);
+}
+function addRow(){
+  rows.push({label:'NOUVELLE FAMILLE', stock:0, cap:20, review:false});
+  render();
+}
+function removeRow(i){
+  rows.splice(i,1);
+  render();
+}
+function exportCSV(){
+  let csv = "Famille;Stock;Capacite max colis;Volume utilise;Colis sans melange\n";
+  rows.forEach(r=>{
+    const stock=Number(r.stock)||0, cap=Number(r.cap)||0;
+    const vol = cap>0? stock/cap:0;
+    const ceilVal = cap>0? Math.ceil(stock/cap):0;
+    csv += `${r.label};${stock};${cap};${vol.toFixed(2)};${ceilVal}\n`;
+  });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'estimation_colis.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
