@@ -63,10 +63,24 @@ function geodisRequest(service, body) {
 app.post('/api/envois', async (req, res) => {
   try {
     const { dateDebut, dateFin, noRecepisse, reference1, nomDest } = req.body;
-    const body = { dateDepartDebut: dateDebut, dateDepartFin: dateFin };
-    if (noRecepisse) body.noRecepisse = noRecepisse;
-    if (reference1)  body.reference1  = reference1;
-    if (nomDest)     body.nomDest     = nomDest;
+    const body = {
+      dateDepart: '',
+      dateDepartDebut: dateDebut || '',
+      dateDepartFin: dateFin || '',
+      noRecepisse: noRecepisse || '',
+      reference1: reference1 || '',
+      noSuivi: '',
+      cabColis: '',
+      codeSa: '',
+      codeClient: '',
+      codeProduit: '',
+      typePrestation: '',
+      dateLivraison: '',
+      refDest: '',
+      nomDest: nomDest || '',
+      codePostalDest: '',
+      natureMarchandise: ''
+    };
     const result = await geodisRequest('api/zoomclient/recherche-envois', body);
     res.json(result);
   } catch(e) {
