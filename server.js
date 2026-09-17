@@ -24,25 +24,26 @@ function geodisRequest(service, body) {
     const ts   = Date.now().toString();
     const data = JSON.stringify(body);
 
-    // Signature SHA256 simple : clé + timestamp + body
+    // Signature exacte doc Geodis : SHA256(cle + timestamp + body)
     const sig = crypto.createHash('sha256')
-      .update(GEODIS_KEY + ts + data)
+      .update(GEODIS_KEY + ts + data, 'utf8')
       .digest('hex');
 
-    console.log('→ Geodis request:', service, data);
-    console.log('→ accessid:', GEODIS_ID, 'ts:', ts, 'sig:', sig.slice(0,20)+'...');
+    console.log('→ payload sig:', (GEODIS_KEY + ts + data).slice(0, 80));
+    console.log('→ sig:', sig);
 
     const options = {
       hostname: 'espace-client.geodis.com',
       path: '/services/' + service,
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(data),
+        'Content-Type': 'application/json;charset=UTF-8',
+        'Content-Length': Buffer.byteLength(data, 'utf8'),
         'accessid': GEODIS_ID,
         'timestamp': ts,
         'signature': sig,
-        'lang': 'fr'
+        'lang': 'fr',
+        'Accept': 'application/json'
       }
     };
 
@@ -50,15 +51,16 @@ function geodisRequest(service, body) {
       let raw = '';
       res.on('data', chunk => raw += chunk);
       res.on('end', () => {
-        console.log('← Geodis status:', res.statusCode);
-        console.log('← Geodis body:', raw.slice(0, 500));
+        console.log('← status:', res.statusCode);
+        console.log('← headers:', JSON.stringify(res.headers));
+        console.log('← body:', raw.slice(0, 1000));
         try { resolve(JSON.parse(raw)); }
         catch(e) { resolve({ error: 'Parse error', raw }); }
       });
     });
 
     req.on('error', err => {
-      console.error('← Geodis error:', err.message);
+      console.error('← error:', err.message);
       reject(err);
     });
 
@@ -82,7 +84,7 @@ app.post('/api/envois', async (req, res) => {
   }
 });
 
-app.get('/api/ping', (req, res) => res.json({ ok: true, id: GEODIS_ID }));
+app.get('/api/ping', (req, res) => res.json({ ok: true }));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log('Geodis server running on port ' + PORT));
