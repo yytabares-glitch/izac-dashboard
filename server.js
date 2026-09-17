@@ -32,7 +32,7 @@ function geodisRequest(service, body) {
     console.log('→ message:', message.slice(0, 120));
 
     const options = {
-      hostname: 'espace-client.geodis.com',
+      hostname: 'espace-client-qua.geodis.com',
       path: '/services/' + service,
       method: 'POST',
       headers: {
