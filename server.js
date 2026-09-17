@@ -16,7 +16,7 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const GEODIS_LOGIN = 'transport@izac.fr';
+const GEODIS_LOGIN = '2235572';
 const GEODIS_KEY   = '73bd9ee05e6f447f8237631f6027a9be';
 const LANG         = 'fr';
 
