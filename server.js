@@ -5,7 +5,6 @@ const path = require('path');
 
 const app = express();
 
-// CORS explicite pour tout
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -22,12 +21,16 @@ const GEODIS_KEY = process.env.GEODIS_KEY || '73bd9ee05e6f447f8237631f6027a9be';
 
 function geodisRequest(service, body) {
   return new Promise((resolve, reject) => {
-    const ts      = Date.now().toString();
-    const payload = GEODIS_ID + ts + JSON.stringify(body);
-    const sig     = crypto.createHmac('sha256', GEODIS_KEY).update(payload).digest('hex');
-    const data    = JSON.stringify(body);
+    const ts   = Date.now().toString();
+    const data = JSON.stringify(body);
 
-    console.log('→ Geodis request:', service, JSON.stringify(body));
+    // Signature SHA256 simple : clé + timestamp + body
+    const sig = crypto.createHash('sha256')
+      .update(GEODIS_KEY + ts + data)
+      .digest('hex');
+
+    console.log('→ Geodis request:', service, data);
+    console.log('→ accessid:', GEODIS_ID, 'ts:', ts, 'sig:', sig.slice(0,20)+'...');
 
     const options = {
       hostname: 'espace-client.geodis.com',
