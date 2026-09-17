@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IZAC — Dashboard Geodis</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; min-height: 100vh; }
+
+  .header { background: #1a237e; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo { background: white; color: #1a237e; font-weight: 800; font-size: 13px; padding: 4px 10px; border-radius: 6px; letter-spacing: 1px; }
+  .header-title { color: white; font-size: 17px; font-weight: 600; }
+  .header-sub { color: rgba(255,255,255,0.7); font-size: 12px; }
+  .live { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.15); color: white; font-size: 12px; padding: 5px 12px; border-radius: 20px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; animation: blink 2s infinite; }
+  @keyframes blink { 0%,100%{opacity:1}50%{opacity:.3} }
+
+  .main { max-width: 1300px; margin: 0 auto; padding: 20px; }
+
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .metric { background: white; border-radius: 10px; padding: 14px 16px; border: 1px solid #e0e0e0; }
+  .metric-label { font-size: 11px; color: #888; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px; }
+  .metric-value { font-size: 26px; font-weight: 700; }
+  .c-blue { color: #1a237e; } .c-green { color: #16a34a; } .c-red { color: #dc2626; } .c-orange { color: #ea580c; } .c-purple { color: #7c3aed; }
+
+  .panel { background: white; border-radius: 12px; border: 1px solid #e0e0e0; padding: 18px; margin-bottom: 18px; }
+  .panel h3 { font-size: 14px; font-weight: 600; color: #444; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+  .date-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 12px; color: #666; font-weight: 500; }
+  .field input { font-size: 13px; padding: 8px 10px; border-radius: 8px; border: 1px solid #ddd; background: #fafafa; outline: none; width: 150px; }
+  .field input:focus { border-color: #1a237e; }
+  .field input.wide { width: 220px; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: 500; padding: 9px 18px; border-radius: 8px; border: 1px solid #ddd; background: white; color: #333; cursor: pointer; transition: all .15s; white-space: nowrap; }
+  .btn:hover { background: #f5f5f5; }
+  .btn.primary { background: #1a237e; color: white; border-color: #1a237e; }
+  .btn.primary:hover { background: #151c6b; }
+  .btn.primary:disabled { background: #9fa8da; cursor: not-allowed; }
+  .btn.sm { font-size: 12px; padding: 6px 10px; }
+  .btn.danger { color: #dc2626; border-color: #fca5a5; }
+  .btn.danger:hover { background: #fef2f2; }
+
+  .filters { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+  .f-btn { font-size: 12px; padding: 5px 14px; border-radius: 20px; border: 1px solid #ddd; background: white; cursor: pointer; color: #555; }
+  .f-btn.active { background: #1a237e; color: white; border-color: #1a237e; }
+  .search { flex: 1; min-width: 200px; font-size: 13px; padding: 6px 12px; border-radius: 8px; border: 1px solid #ddd; outline: none; }
+  .search:focus { border-color: #1a237e; }
+
+  .table-wrap { background: white; border-radius: 12px; border: 1px solid #e0e0e0; overflow: hidden; }
+  .thead { display: grid; grid-template-columns: 1.5fr 1.2fr 1.5fr 1.2fr 1fr 1fr 1fr 0.7fr; padding: 10px 16px; background: #f8f9ff; border-bottom: 1px solid #e0e0e0; font-size: 11px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: .5px; gap: 8px; }
+  .trow-wrap { border-top: 1px solid #f0f0f0; }
+  .trow { display: grid; grid-template-columns: 1.5fr 1.2fr 1.5fr 1.2fr 1fr 1fr 1fr 0.7fr; padding: 11px 16px; align-items: center; gap: 8px; cursor: pointer; transition: background .1s; }
+  .trow:hover { background: #f8f9ff; }
+  .num { font-family: monospace; font-size: 12px; font-weight: 700; color: #1a237e; }
+  .ref { font-size: 11px; color: #888; margin-top: 2px; }
+  .dest { font-size: 13px; font-weight: 500; }
+  .dest-city { font-size: 11px; color: #888; }
+  .badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 6px; }
+  .b-livré, .b-livrée { background: #dcfce7; color: #15803d; }
+  .b-transit, .b-cours { background: #dbeafe; color: #1d4ed8; }
+  .b-anomalie, .b-exception { background: #fee2e2; color: #b91c1c; }
+  .b-attente, .b-planifié { background: #f3f4f6; color: #6b7280; }
+  .b-default { background: #ede9fe; color: #6d28d9; }
+  .prod-tag { font-size: 11px; background: #e0e7ff; color: #3730a3; padding: 2px 7px; border-radius: 4px; font-weight: 500; }
+  .poids { font-size: 12px; color: #666; }
+  .eta { font-size: 12px; color: #555; }
+  .eta.today { color: #16a34a; font-weight: 600; }
+  .eta.late { color: #dc2626; }
+  .mini-btn { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; padding: 4px 8px; border-radius: 6px; border: 1px solid #ddd; background: white; cursor: pointer; color: #555; transition: all .1s; }
+  .mini-btn:hover { border-color: #1a237e; color: #1a237e; background: #f8f9ff; }
+
+  .detail-panel { padding: 16px; background: #f8f9ff; border-top: 1px solid #e8eaf6; display: none; }
+  .detail-panel.open { display: block; }
+  .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .dblock { background: white; border-radius: 8px; border: 1px solid #e0e0e0; padding: 12px; }
+  .dblock-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #1a237e; margin-bottom: 8px; }
+  .drow { display: flex; justify-content: space-between; font-size: 12px; padding: 3px 0; border-bottom: 1px solid #f5f5f5; }
+  .drow:last-child { border-bottom: none; }
+  .dk { color: #888; } .dv { font-weight: 500; text-align: right; max-width: 60%; }
+  .step { display: flex; align-items: flex-start; gap: 10px; padding: 5px 0; border-bottom: 1px solid #f0f0f0; }
+  .step:last-child { border-bottom: none; }
+  .sdot { width: 9px; height: 9px; border-radius: 50%; background: #1a237e; margin-top: 3px; flex-shrink: 0; }
+  .sdot.done { background: #16a34a; }
+  .slabel { font-size: 12px; font-weight: 500; }
+  .sdate { font-size: 11px; color: #888; }
+
+  .empty { padding: 50px; text-align: center; color: #aaa; }
+  .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid #e0e7ff; border-top-color: #1a237e; border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-msg { display: flex; align-items: center; gap: 10px; padding: 30px; justify-content: center; color: #666; font-size: 14px; }
+
+  .toast { position: fixed; bottom: 20px; right: 20px; background: #1a1a1a; color: white; padding: 10px 18px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 100; }
+  .toast.show { opacity: 1; }
+
+  .error-box { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #b91c1c; margin-bottom: 14px; display: none; }
+  .error-box.show { display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">
+    <div class="logo">GEODIS</div>
+    <div>
+      <div class="header-title">Dashboard Tracking IZAC</div>
+      <div class="header-sub">Suivi automatique via API Geodis ZoomClient</div>
+    </div>
+  </div>
+  <div class="live"><span class="dot"></span><span id="live-txt">Connecté</span></div>
+</div>
+
+<div class="main">
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Total envois</div><div class="metric-value c-blue" id="m-tot">0</div></div>
+    <div class="metric"><div class="metric-label">En transit</div><div class="metric-value c-purple" id="m-tr">0</div></div>
+    <div class="metric"><div class="metric-label">Livrés</div><div class="metric-value c-green" id="m-li">0</div></div>
+    <div class="metric"><div class="metric-label">Anomalies</div><div class="metric-value c-red" id="m-er">0</div></div>
+    <div class="metric"><div class="metric-label">Colis total</div><div class="metric-value c-orange" id="m-co">0</div></div>
+  </div>
+
+  <div class="panel">
+    <h3>🔍 Recherche des envois</h3>
+    <div class="date-row">
+      <div class="field"><label>Date départ début</label><input type="date" id="date-debut" /></div>
+      <div class="field"><label>Date départ fin</label><input type="date" id="date-fin" /></div>
+      <div class="field"><label>N° récépissé</label><input type="text" id="f-recepisse" placeholder="optionnel" /></div>
+      <div class="field"><label>Référence</label><input type="text" id="f-ref" placeholder="optionnel" class="wide" /></div>
+      <div class="field"><label>Nom destinataire</label><input type="text" id="f-dest" placeholder="optionnel" class="wide" /></div>
+      <div style="display:flex;gap:8px;align-items:flex-end">
+        <button class="btn primary" id="btn-search" onclick="search()">🔍 Rechercher</button>
+        <button class="btn" onclick="exportCSV()">📥 Export CSV</button>
+        <button class="btn" onclick="setToday()">📅 Aujourd'hui</button>
+        <button class="btn" onclick="setWeek()">📅 7 derniers jours</button>
+      </div>
+    </div>
+    <div class="error-box" id="err-box"></div>
+  </div>
+
+  <div class="filters">
+    <button class="f-btn active" onclick="setFilter('all',this)">Tous</button>
+    <button class="f-btn" onclick="setFilter('livré',this)">Livrés</button>
+    <button class="f-btn" onclick="setFilter('transit',this)">En transit</button>
+    <button class="f-btn" onclick="setFilter('anomalie',this)">Anomalies</button>
+    <input class="search" type="text" id="search-input" placeholder="Filtrer par récépissé, référence, destinataire, ville..." oninput="render()">
+    <span id="count-txt" style="font-size:12px;color:#888;white-space:nowrap"></span>
+  </div>
+
+  <div class="table-wrap">
+    <div class="thead">
+      <div>N° Récépissé</div>
+      <div>Référence</div>
+      <div>Destinataire</div>
+      <div>Ville / CP</div>
+      <div>Statut</div>
+      <div>Produit</div>
+      <div>Livraison prévue</div>
+      <div>Actions</div>
+    </div>
+    <div id="list">
+      <div class="empty">⬆️ Lance une recherche pour afficher tes envois Geodis</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let allData = [];
+let activeFilter = 'all';
+let openRow = null;
+
+// Dates par défaut : 7 derniers jours
+function setWeek() {
+  const fin = new Date();
+  const debut = new Date();
+  debut.setDate(fin.getDate() - 7);
+  document.getElementById('date-debut').value = fmt(debut);
+  document.getElementById('date-fin').value = fmt(fin);
+}
+function setToday() {
+  const d = fmt(new Date());
+  document.getElementById('date-debut').value = d;
+  document.getElementById('date-fin').value = d;
+}
+function fmt(d) { return d.toISOString().slice(0,10); }
+
+setWeek(); // défaut au chargement
+
+function setFilter(f, btn) {
+  activeFilter = f;
+  document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function showError(msg) {
+  const b = document.getElementById('err-box');
+  b.textContent = msg; b.classList.add('show');
+}
+function hideError() { document.getElementById('err-box').classList.remove('show'); }
+
+async function search() {
+  hideError();
+  const debut = document.getElementById('date-debut').value;
+  const fin   = document.getElementById('date-fin').value;
+  if (!debut || !fin) { showError('⚠️ Renseigne les dates de début et de fin.'); return; }
+
+  const btn = document.getElementById('btn-search');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Chargement...';
+  document.getElementById('live-txt').textContent = 'Requête en cours...';
+  document.getElementById('list').innerHTML = '<div class="loading-msg"><span class="spinner"></span> Récupération des envois Geodis...</div>';
+
+  try {
+    const body = { dateDebut: debut, dateFin: fin };
+    const rec = document.getElementById('f-recepisse').value.trim();
+    const ref = document.getElementById('f-ref').value.trim();
+    const dest = document.getElementById('f-dest').value.trim();
+    if (rec)  body.noRecepisse = rec;
+    if (ref)  body.reference1  = ref;
+    if (dest) body.nomDest     = dest;
+
+    const resp = await fetch('/api/envois', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await resp.json();
+
+    if (data.error) { showError('❌ Erreur API : ' + data.error); allData = []; }
+    else {
+      allData = data.liste || data.envois || data.results || (Array.isArray(data) ? data : []);
+      toast(`✅ ${allData.length} envoi(s) trouvé(s)`);
+      document.getElementById('live-txt').textContent = 'Mis à jour ' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    }
+  } catch(e) {
+    showError('❌ Impossible de joindre le serveur. Assure-toi que server.js tourne (node server.js).');
+    allData = [];
+  }
+
+  btn.disabled = false; btn.innerHTML = '🔍 Rechercher';
+  render();
+}
+
+function statusBadge(s) {
+  if (!s) return '<span class="badge b-default">—</span>';
+  const sl = s.toLowerCase();
+  if (sl.includes('livr')) return `<span class="badge b-livré">✅ ${s}</span>`;
+  if (sl.includes('cours') || sl.includes('transit') || sl.includes('acheminement')) return `<span class="badge b-transit">🚚 ${s}</span>`;
+  if (sl.includes('anomalie') || sl.includes('exception') || sl.includes('retard')) return `<span class="badge b-anomalie">⚠️ ${s}</span>`;
+  return `<span class="badge b-default">${s}</span>`;
+}
+
+function filterMatch(p) {
+  const stat = (p.libelleSituation || p.statut || p.situation || '').toLowerCase();
+  if (activeFilter === 'livré'    && !stat.includes('livr'))    return false;
+  if (activeFilter === 'transit'  && !stat.includes('cours') && !stat.includes('transit') && !stat.includes('acheminement')) return false;
+  if (activeFilter === 'anomalie' && !stat.includes('anomalie') && !stat.includes('exception') && !stat.includes('retard')) return false;
+  const search = document.getElementById('search-input').value.toLowerCase();
+  if (search) {
+    const hay = [p.noRecepisse, p.reference1, p.reference2, p.nomDestinataire, p.villeDestinataire, p.codePostalDestinataire].join(' ').toLowerCase();
+    if (!hay.includes(search)) return false;
+  }
+  return true;
+}
+
+function updateMetrics(filtered) {
+  const tot = filtered.length;
+  const li  = filtered.filter(p => (p.libelleSituation||'').toLowerCase().includes('livr')).length;
+  const tr  = filtered.filter(p => { const s=(p.libelleSituation||'').toLowerCase(); return s.includes('cours')||s.includes('transit')||s.includes('acheminement'); }).length;
+  const er  = filtered.filter(p => { const s=(p.libelleSituation||'').toLowerCase(); return s.includes('anomalie')||s.includes('exception')||s.includes('retard'); }).length;
+  const co  = filtered.reduce((acc, p) => acc + (parseInt(p.nombreColis)||1), 0);
+  document.getElementById('m-tot').textContent = tot;
+  document.getElementById('m-li').textContent  = li;
+  document.getElementById('m-tr').textContent  = tr;
+  document.getElementById('m-er').textContent  = er;
+  document.getElementById('m-co').textContent  = co;
+  document.getElementById('count-txt').textContent = `${tot} envoi(s) affiché(s)`;
+}
+
+function toggleRow(id) { openRow = openRow === id ? null : id; render(); }
+
+function render() {
+  const filtered = allData.filter(filterMatch);
+  updateMetrics(filtered);
+  const list = document.getElementById('list');
+  if (!filtered.length) {
+    list.innerHTML = allData.length
+      ? '<div class="empty">Aucun envoi ne correspond au filtre</div>'
+      : '<div class="empty">⬆️ Lance une recherche pour afficher tes envois Geodis</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(p => {
+    const id = p.noRecepisse || Math.random().toString(36).slice(2);
+    const isOpen = openRow === id;
+    const statut = p.libelleSituation || p.statut || p.situation || '—';
+    const eta    = p.dateLivraisonPrevue || p.etaPrevue || '—';
+    const poids  = p.poidsReel ? p.poidsReel + ' kg' : (p.poids ? p.poids + ' kg' : '—');
+    const ncolis = p.nombreColis || '—';
+
+    // Étapes de livraison
+    const evenements = p.evenements || p.historique || [];
+    const stepsHtml = evenements.length
+      ? evenements.map((e, i) => `
+          <div class="step">
+            <div class="sdot ${i > 0 ? 'done' : ''}"></div>
+            <div>
+              <div class="slabel">${e.libelle || e.evenement || '—'}${e.lieu ? ' — ' + e.lieu : ''}</div>
+              <div class="sdate">${e.date || ''} ${e.heure || ''}</div>
+            </div>
+          </div>`).join('')
+      : '<div style="font-size:12px;color:#aaa;padding:6px 0">Aucun événement disponible</div>';
+
+    const detail = `
+      <div class="detail-panel ${isOpen ? 'open' : ''}">
+        <div class="detail-grid">
+          <div class="dblock">
+            <div class="dblock-title">📦 Détails envoi</div>
+            <div class="drow"><span class="dk">Récépissé</span><span class="dv">${p.noRecepisse||'—'}</span></div>
+            <div class="drow"><span class="dk">Référence 1</span><span class="dv">${p.reference1||'—'}</span></div>
+            <div class="drow"><span class="dk">Référence 2</span><span class="dv">${p.reference2||'—'}</span></div>
+            <div class="drow"><span class="dk">Produit</span><span class="dv">${p.codeProduit||p.libelleService||'—'}</span></div>
+            <div class="drow"><span class="dk">Nb colis</span><span class="dv">${ncolis}</span></div>
+            <div class="drow"><span class="dk">Poids</span><span class="dv">${poids}</span></div>
+            <div class="drow"><span class="dk">Date départ</span><span class="dv">${p.dateDepart||p.datePriseEnCharge||'—'}</span></div>
+            <div class="drow"><span class="dk">Livraison prévue</span><span class="dv">${eta}</span></div>
+          </div>
+          <div class="dblock">
+            <div class="dblock-title">📤 Expéditeur</div>
+            <div class="drow"><span class="dk">Nom</span><span class="dv">${p.nomExpediteur||'—'}</span></div>
+            <div class="drow"><span class="dk">Adresse</span><span class="dv">${p.adresseExpediteur||'—'}</span></div>
+            <div class="drow"><span class="dk">CP / Ville</span><span class="dv">${p.codePostalExpediteur||''} ${p.villeExpediteur||''}</span></div>
+            <div class="drow"><span class="dk">Code SA</span><span class="dv">${p.codeSa||'—'}</span></div>
+          </div>
+          <div class="dblock">
+            <div class="dblock-title">📥 Destinataire</div>
+            <div class="drow"><span class="dk">Nom</span><span class="dv">${p.nomDestinataire||'—'}</span></div>
+            <div class="drow"><span class="dk">Adresse</span><span class="dv">${p.adresseDestinataire||'—'}</span></div>
+            <div class="drow"><span class="dk">CP / Ville</span><span class="dv">${p.codePostalDestinataire||''} ${p.villeDestinataire||''}</span></div>
+            <div class="drow"><span class="dk">Pays</span><span class="dv">${p.paysDestinataire||'FR'}</span></div>
+          </div>
+          <div class="dblock">
+            <div class="dblock-title">🗺️ Historique</div>
+            ${stepsHtml}
+          </div>
+        </div>
+        ${p.urlSuivi ? `<a href="${p.urlSuivi}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;color:#1a237e;font-size:13px;font-weight:500;text-decoration:none;padding:6px 12px;border:1px solid #1a237e;border-radius:7px">🔗 Voir sur Geodis.com</a>` : ''}
+      </div>`;
+
+    return `<div class="trow-wrap">
+      <div class="trow" onclick="toggleRow('${id}')">
+        <div><div class="num">${p.noRecepisse||'—'}</div><div class="ref">${p.reference1||''}</div></div>
+        <div><div class="ref" style="font-size:12px">${p.reference2||p.reference1||'—'}</div></div>
+        <div><div class="dest">${p.nomDestinataire||'—'}</div></div>
+        <div><div class="dest-city">${p.villeDestinataire||'—'}</div><div class="ref">${p.codePostalDestinataire||''}</div></div>
+        <div>${statusBadge(statut)}</div>
+        <div><span class="prod-tag">${p.codeProduit||p.libelleService||'—'}</span></div>
+        <div class="eta">${eta}</div>
+        <div><button class="mini-btn" onclick="event.stopPropagation();toggleRow('${id}')">📋 Détail</button></div>
+      </div>
+      ${detail}
+    </div>`;
+  }).join('');
+}
+
+function exportCSV() {
+  if (!allData.length) { toast('⚠️ Aucune donnée à exporter'); return; }
+  const headers = ['Récépissé','Référence 1','Référence 2','Expéditeur','Destinataire','Adresse dest.','CP','Ville','Statut','Produit','Nb colis','Poids','Date départ','ETA'];
+  const rows = allData.map(p => [
+    p.noRecepisse||'', p.reference1||'', p.reference2||'',
+    p.nomExpediteur||'', p.nomDestinataire||'', p.adresseDestinataire||'',
+    p.codePostalDestinataire||'', p.villeDestinataire||'',
+    p.libelleSituation||'', p.codeProduit||'', p.nombreColis||'',
+    p.poidsReel||'', p.dateDepart||'', p.dateLivraisonPrevue||''
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(';')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = `geodis_izac_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  toast('📥 Export CSV téléchargé');
+}
+</script>
+</body>
+</html>
