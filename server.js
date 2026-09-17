@@ -16,33 +16,29 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const GEODIS_ID  = process.env.GEODIS_ID  || '2235572$';
-const GEODIS_KEY = process.env.GEODIS_KEY || '73bd9ee05e6f447f8237631f6027a9be';
+const GEODIS_LOGIN = process.env.GEODIS_LOGIN || '2235572$';
+const GEODIS_KEY   = process.env.GEODIS_KEY   || '73bd9ee05e6f447f8237631f6027a9be';
+const LANG         = 'fr';
 
 function geodisRequest(service, body) {
   return new Promise((resolve, reject) => {
-    const ts   = Date.now().toString();
-    const data = JSON.stringify(body);
+    const timestamp   = (Date.now()).toString();
+    const inlineBody  = JSON.stringify(body);
+    const message     = GEODIS_KEY + ';' + GEODIS_LOGIN + ';' + timestamp + ';' + LANG + ';' + service + ';' + inlineBody;
+    const hash        = crypto.createHash('sha256').update(message, 'utf8').digest('hex');
+    const serviceHeader = GEODIS_LOGIN + ';' + timestamp + ';' + LANG + ';' + hash;
 
-    // Signature exacte doc Geodis : SHA256(cle + timestamp + body)
-    const sig = crypto.createHash('sha256')
-      .update(GEODIS_KEY + ts + data, 'utf8')
-      .digest('hex');
-
-    console.log('→ payload sig:', (GEODIS_KEY + ts + data).slice(0, 80));
-    console.log('→ sig:', sig);
+    console.log('→ message:', message.slice(0, 100));
+    console.log('→ X-GEODIS-Service:', serviceHeader.slice(0, 60));
 
     const options = {
       hostname: 'espace-client.geodis.com',
       path: '/services/' + service,
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json;charset=UTF-8',
-        'Content-Length': Buffer.byteLength(data, 'utf8'),
-        'accessid': GEODIS_ID,
-        'timestamp': ts,
-        'signature': sig,
-        'lang': 'fr',
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(inlineBody, 'utf8'),
+        'X-GEODIS-Service': serviceHeader,
         'Accept': 'application/json'
       }
     };
@@ -52,19 +48,14 @@ function geodisRequest(service, body) {
       res.on('data', chunk => raw += chunk);
       res.on('end', () => {
         console.log('← status:', res.statusCode);
-        console.log('← headers:', JSON.stringify(res.headers));
-        console.log('← body:', raw.slice(0, 1000));
+        console.log('← body:', raw.slice(0, 500));
         try { resolve(JSON.parse(raw)); }
         catch(e) { resolve({ error: 'Parse error', raw }); }
       });
     });
 
-    req.on('error', err => {
-      console.error('← error:', err.message);
-      reject(err);
-    });
-
-    req.write(data);
+    req.on('error', err => { console.error('← error:', err.message); reject(err); });
+    req.write(inlineBody);
     req.end();
   });
 }
@@ -79,7 +70,6 @@ app.post('/api/envois', async (req, res) => {
     const result = await geodisRequest('api/zoomclient/recherche-envois', body);
     res.json(result);
   } catch(e) {
-    console.error('API error:', e.message);
     res.status(500).json({ error: e.message });
   }
 });
