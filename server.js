@@ -16,20 +16,20 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const GEODIS_LOGIN = process.env.GEODIS_LOGIN || '2235572$';
-const GEODIS_KEY   = process.env.GEODIS_KEY   || '73bd9ee05e6f447f8237631f6027a9be';
+const GEODIS_LOGIN = '2235572$';
+const GEODIS_KEY   = '73bd9ee05e6f447f8237631f6027a9be';
 const LANG         = 'fr';
 
 function geodisRequest(service, body) {
   return new Promise((resolve, reject) => {
-    const timestamp   = (Date.now()).toString();
-    const inlineBody  = JSON.stringify(body);
-    const message     = GEODIS_KEY + ';' + GEODIS_LOGIN + ';' + timestamp + ';' + LANG + ';' + service + ';' + inlineBody;
-    const hash        = crypto.createHash('sha256').update(message, 'utf8').digest('hex');
+    const timestamp  = Date.now().toString();
+    const inlineBody = JSON.stringify(body);
+    const message    = GEODIS_KEY + ';' + GEODIS_LOGIN + ';' + timestamp + ';' + LANG + ';' + service + ';' + inlineBody;
+    const hash       = crypto.createHash('sha256').update(message, 'utf8').digest('hex');
     const serviceHeader = GEODIS_LOGIN + ';' + timestamp + ';' + LANG + ';' + hash;
 
-    console.log('→ message:', message.slice(0, 100));
-    console.log('→ X-GEODIS-Service:', serviceHeader.slice(0, 60));
+    console.log('→ X-GEODIS-Service header utilisé');
+    console.log('→ message:', message.slice(0, 120));
 
     const options = {
       hostname: 'espace-client.geodis.com',
