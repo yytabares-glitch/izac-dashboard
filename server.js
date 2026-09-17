@@ -16,8 +16,8 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const GEODIS_LOGIN = '2235572';
-const GEODIS_KEY   = '73bd9ee05e6f447f8237631f6027a9be';
+const GEODIS_LOGIN = '2235572$';
+const GEODIS_KEY   = 'cbba43b9ed1c477ca23b4bcabb384b17';
 const LANG         = 'fr';
 
 function geodisRequest(service, body) {
