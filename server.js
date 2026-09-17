@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 const GEODIS_ID  = process.env.GEODIS_ID  || '2235572$';
-const GEODIS_KEY = process.env.GEODIS_KEY || '73bd9ee05e6f447f8237631f6027a9be';
+const GEODIS_KEY = process.env.GEODIS_KEY || 'cbba43b9ed1c477ca23b4bcabb384b17';
 
 function geodisRequest(service, body) {
   return new Promise((resolve, reject) => {
