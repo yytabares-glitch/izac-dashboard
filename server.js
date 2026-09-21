@@ -16,7 +16,7 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const GEODIS_LOGIN = 'transport@izac.fr';
+const GEODIS_LOGIN = '2235572$';
 const GEODIS_KEY   = '35a654a41c7045d8adbea5170210cdf8';
 const LANG         = 'fr';
 
@@ -29,7 +29,6 @@ function geodisRequest(service, body) {
     const serviceHeader = GEODIS_LOGIN + ';' + timestamp + ';' + LANG + ';' + hash;
 
     console.log('→ message:', message.slice(0, 150));
-    console.log('→ header:', serviceHeader.slice(0, 80));
 
     const options = {
       hostname: 'espace-client.geodis.com',
@@ -64,12 +63,25 @@ app.post('/api/envois', async (req, res) => {
   try {
     const { dateDebut, dateFin, noRecepisse, reference1, nomDest } = req.body;
     const body = {};
+    if (dateDebut)   body.dateDepartDebut = dateDebut;
+    if (dateFin)     body.dateDepartFin   = dateFin;
+    if (noRecepisse) body.noRecepisse     = noRecepisse;
+    if (reference1)  body.reference1      = reference1;
+    if (nomDest)     body.nomDest         = nomDest;
+    const result = await geodisRequest('api/zoomclient/recherche-envois', body);
+    res.json(result);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/suivi', async (req, res) => {
+  try {
+    const { dateDebut, dateFin } = req.body;
+    const body = {};
     if (dateDebut) body.dateDepartDebut = dateDebut;
     if (dateFin)   body.dateDepartFin   = dateFin;
-    if (noRecepisse) body.noRecepisse   = noRecepisse;
-    if (reference1)  body.reference1    = reference1;
-    if (nomDest)     body.nomDest       = nomDest;
-    const result = await geodisRequest('api/zoomclient/recherche-envois', body);
+    const result = await geodisRequest('api/zoomclient/suivi-envois', body);
     res.json(result);
   } catch(e) {
     res.status(500).json({ error: e.message });
