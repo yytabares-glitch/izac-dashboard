@@ -28,7 +28,8 @@ function geodisRequest(service, body) {
     const hash       = crypto.createHash('sha256').update(message, 'utf8').digest('hex');
     const serviceHeader = GEODIS_LOGIN + ';' + timestamp + ';' + LANG + ';' + hash;
 
-    console.log('→ message:', message.slice(0, 150));
+    console.log('→ service:', service);
+    console.log('→ body:', inlineBody);
 
     const options = {
       hostname: 'espace-client.geodis.com',
@@ -61,13 +62,15 @@ function geodisRequest(service, body) {
 
 app.post('/api/envois', async (req, res) => {
   try {
-    const { dateDebut, dateFin, noRecepisse, reference1, nomDest } = req.body;
+    const { dateDebut, dateFin, noRecepisse, reference1, nomDest, codeSa, codeClient } = req.body;
     const body = {};
     if (dateDebut)   body.dateDepartDebut = dateDebut;
     if (dateFin)     body.dateDepartFin   = dateFin;
     if (noRecepisse) body.noRecepisse     = noRecepisse;
     if (reference1)  body.reference1      = reference1;
     if (nomDest)     body.nomDest         = nomDest;
+    if (codeSa)      body.codeSa          = codeSa;
+    if (codeClient)  body.codeClient      = codeClient;
     const result = await geodisRequest('api/zoomclient/recherche-envois', body);
     res.json(result);
   } catch(e) {
@@ -82,6 +85,17 @@ app.post('/api/suivi', async (req, res) => {
     if (dateDebut) body.dateDepartDebut = dateDebut;
     if (dateFin)   body.dateDepartFin   = dateFin;
     const result = await geodisRequest('api/zoomclient/suivi-envois', body);
+    res.json(result);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/nos-suivis', async (req, res) => {
+  try {
+    const { typeRecherche, listReferences } = req.body;
+    const body = { typeRecherche, listReferences };
+    const result = await geodisRequest('api/zoomclient/recherche-nos-suivis', body);
     res.json(result);
   } catch(e) {
     res.status(500).json({ error: e.message });
