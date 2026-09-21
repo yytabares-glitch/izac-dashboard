@@ -28,11 +28,11 @@ function geodisRequest(service, body) {
     const hash       = crypto.createHash('sha256').update(message, 'utf8').digest('hex');
     const serviceHeader = GEODIS_LOGIN + ';' + timestamp + ';' + LANG + ';' + hash;
 
-    console.log('→ X-GEODIS-Service header utilisé');
-    console.log('→ message:', message.slice(0, 120));
+    console.log('→ message:', message.slice(0, 150));
+    console.log('→ header:', serviceHeader.slice(0, 80));
 
     const options = {
-      hostname: 'espace-client-qua.geodis.com',
+      hostname: 'espace-client.geodis.com',
       path: '/services/' + service,
       method: 'POST',
       headers: {
@@ -63,24 +63,12 @@ function geodisRequest(service, body) {
 app.post('/api/envois', async (req, res) => {
   try {
     const { dateDebut, dateFin, noRecepisse, reference1, nomDest } = req.body;
-    const body = {
-      dateDepart: '',
-      dateDepartDebut: dateDebut || '',
-      dateDepartFin: dateFin || '',
-      noRecepisse: noRecepisse || '',
-      reference1: reference1 || '',
-      noSuivi: '',
-      cabColis: '',
-      codeSa: '',
-      codeClient: '',
-      codeProduit: '',
-      typePrestation: '',
-      dateLivraison: '',
-      refDest: '',
-      nomDest: nomDest || '',
-      codePostalDest: '',
-      natureMarchandise: ''
-    };
+    const body = {};
+    if (dateDebut) body.dateDepartDebut = dateDebut;
+    if (dateFin)   body.dateDepartFin   = dateFin;
+    if (noRecepisse) body.noRecepisse   = noRecepisse;
+    if (reference1)  body.reference1    = reference1;
+    if (nomDest)     body.nomDest       = nomDest;
     const result = await geodisRequest('api/zoomclient/recherche-envois', body);
     res.json(result);
   } catch(e) {
