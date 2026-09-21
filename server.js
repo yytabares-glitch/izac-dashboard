@@ -29,7 +29,6 @@ function geodisRequest(service, body) {
     const serviceHeader = GEODIS_LOGIN + ';' + timestamp + ';' + LANG + ';' + hash;
 
     console.log('→ message:', message.slice(0, 150));
-    console.log('→ header:', serviceHeader.slice(0, 80));
 
     const options = {
       hostname: 'espace-client.geodis.com',
@@ -70,6 +69,19 @@ app.post('/api/envois', async (req, res) => {
     if (reference1)  body.reference1      = reference1;
     if (nomDest)     body.nomDest         = nomDest;
     const result = await geodisRequest('api/zoomclient/recherche-envois', body);
+    res.json(result);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/suivi', async (req, res) => {
+  try {
+    const { dateDebut, dateFin } = req.body;
+    const body = {};
+    if (dateDebut) body.dateDepartDebut = dateDebut;
+    if (dateFin)   body.dateDepartFin   = dateFin;
+    const result = await geodisRequest('api/zoomclient/suivi-envois', body);
     res.json(result);
   } catch(e) {
     res.status(500).json({ error: e.message });
