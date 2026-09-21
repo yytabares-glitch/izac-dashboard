@@ -102,6 +102,16 @@ app.post('/api/nos-suivis', async (req, res) => {
   }
 });
 
+app.post('/api/detail', async (req, res) => {
+  try {
+    const { noSuivi } = req.body;
+    const result = await geodisRequest('api/zoomclient/recherche-envoi', { noSuivi });
+    res.json(result);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/ping', (req, res) => res.json({ ok: true }));
 
 const PORT = process.env.PORT || 3000;
