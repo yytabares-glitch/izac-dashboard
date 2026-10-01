@@ -7,104 +7,99 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh}
+:root{--primary:#002D62;--accent:#E8641A;--bg:#f0f2f5;--white:#fff;--border:#e0e3ea;--text:#1a1a2e;--sub:#888;--green:#16a34a;--red:#dc2626;--blue:#1d4ed8;--purple:#7c3aed}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
-.header{background:#1a1a2e;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.header{background:var(--primary);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 10px rgba(0,45,98,.3)}
 .brand{display:flex;align-items:center;gap:14px}
-.logo{background:#e8641a;color:#fff;font-weight:700;font-size:13px;padding:6px 12px;border-radius:8px;letter-spacing:1px}
+.logo{background:var(--accent);color:#fff;font-weight:700;font-size:13px;padding:6px 12px;border-radius:8px;letter-spacing:1px}
 .header-title{color:#fff;font-size:18px;font-weight:600}
 .header-sub{color:rgba(255,255,255,.5);font-size:12px;margin-top:2px}
-.live-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);font-size:12px;padding:6px 14px;border-radius:20px}
+.live-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);font-size:12px;padding:6px 14px;border-radius:20px}
 .pulse{width:8px;height:8px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
 .main{max-width:1400px;margin:0 auto;padding:24px 20px}
 
 .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:24px}
-.metric{background:#fff;border-radius:12px;padding:16px 18px;border:1px solid #e8eaf0;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.metric-label{font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-weight:500}
+.metric{background:var(--white);border-radius:12px;padding:16px 18px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.metric-label{font-size:11px;color:var(--sub);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-weight:500}
 .metric-value{font-size:28px;font-weight:700;line-height:1}
-.mv-blue{color:#1a1a2e} .mv-green{color:#16a34a} .mv-red{color:#dc2626} .mv-orange{color:#e8641a} .mv-purple{color:#7c3aed}
+.mv-p{color:var(--primary)} .mv-g{color:var(--green)} .mv-r{color:var(--red)} .mv-a{color:var(--accent)} .mv-pu{color:var(--purple)}
 
-.panel{background:#fff;border-radius:14px;border:1px solid #e8eaf0;padding:20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.panel-title{font-size:14px;font-weight:600;color:#1a1a2e;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.panel{background:var(--white);border-radius:14px;border:1px solid var(--border);padding:20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.panel-title{font-size:14px;font-weight:600;color:var(--primary);margin-bottom:16px}
 
 .search-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;align-items:end}
-.field{display:flex;flex-direction:column;gap:5px}
-.field label{font-size:12px;color:#666;font-weight:500}
-.field input{font-size:13px;padding:9px 12px;border-radius:9px;border:1.5px solid #e0e3ea;background:#fafbfc;color:#1a1a2e;outline:none;transition:border-color .15s}
-.field input:focus{border-color:#e8641a}
-.btn-group{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:500;padding:9px 18px;border-radius:9px;border:1.5px solid #e0e3ea;background:#fff;color:#444;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:'Inter',sans-serif}
-.btn:hover{background:#f5f6f8;border-color:#ccc}
-.btn.primary{background:#e8641a;color:#fff;border-color:#e8641a}
-.btn.primary:hover{background:#d45a15}
-.btn.primary:disabled{background:#f4b48a;cursor:not-allowed}
-.btn.sm{font-size:12px;padding:6px 12px}
-.hint{font-size:11.5px;color:#aaa;margin-top:10px;font-style:italic}
+.field label{display:block;font-size:12px;color:#666;font-weight:500;margin-bottom:5px}
+.field input,.field select{width:100%;font-size:13px;padding:9px 12px;border-radius:9px;border:1.5px solid var(--border);background:#fafbfc;color:var(--text);outline:none;transition:border-color .15s;font-family:'Inter',sans-serif}
+.field input:focus,.field select:focus{border-color:var(--primary)}
+.btn-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:500;padding:9px 18px;border-radius:9px;border:1.5px solid var(--border);background:var(--white);color:#444;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:'Inter',sans-serif}
+.btn:hover{background:#f5f6f8}
+.btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn.primary:hover{background:#001f4a}
+.btn.primary:disabled{background:#6685a8;cursor:not-allowed}
+.hint{font-size:11.5px;color:#bbb;margin-top:10px;font-style:italic}
 
 .toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
-.filter-pill{font-size:12px;padding:5px 14px;border-radius:20px;border:1.5px solid #e0e3ea;background:#fff;cursor:pointer;color:#666;font-family:'Inter',sans-serif;transition:all .15s}
-.filter-pill.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
-.search-bar{flex:1;min-width:220px;font-size:13px;padding:7px 13px;border-radius:9px;border:1.5px solid #e0e3ea;outline:none;font-family:'Inter',sans-serif}
-.search-bar:focus{border-color:#e8641a}
-.count-label{font-size:12px;color:#aaa;white-space:nowrap}
+.pill{font-size:12px;padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);cursor:pointer;color:#666;font-family:'Inter',sans-serif;transition:all .15s}
+.pill.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.sbar{flex:1;min-width:220px;font-size:13px;padding:7px 13px;border-radius:9px;border:1.5px solid var(--border);outline:none;font-family:'Inter',sans-serif}
+.sbar:focus{border-color:var(--primary)}
+.clbl{font-size:12px;color:#bbb;white-space:nowrap}
 
-.table-wrap{background:#fff;border-radius:14px;border:1px solid #e8eaf0;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.thead{display:grid;grid-template-columns:1.2fr 1.8fr 1.5fr 1fr 1.2fr 1fr 1fr 0.8fr;padding:11px 18px;background:#f8f9fc;border-bottom:1.5px solid #e8eaf0;font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.5px;gap:10px}
+.table-wrap{background:var(--white);border-radius:14px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.thead{display:grid;grid-template-columns:1.2fr 1.6fr 1.4fr 1fr 1fr 1fr 1fr 0.8fr;padding:11px 18px;background:#f4f6fb;border-bottom:1.5px solid var(--border);font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;gap:10px}
 .trow-wrap{border-top:1px solid #f2f3f7}
-.trow{display:grid;grid-template-columns:1.2fr 1.8fr 1.5fr 1fr 1.2fr 1fr 1fr 0.8fr;padding:13px 18px;align-items:center;gap:10px;cursor:pointer;transition:background .1s}
-.trow:hover{background:#fafbfc}
-.mono{font-family:monospace;font-size:12px;font-weight:700;color:#1a1a2e}
-.sub{font-size:11px;color:#aaa;margin-top:2px}
+.trow{display:grid;grid-template-columns:1.2fr 1.6fr 1.4fr 1fr 1fr 1fr 1fr 0.8fr;padding:13px 18px;align-items:center;gap:10px;cursor:pointer;transition:background .1s}
+.trow:hover{background:#f8f9fc}
+.mono{font-family:monospace;font-size:12px;font-weight:700;color:var(--primary)}
+.sub-txt{font-size:11px;color:var(--sub);margin-top:2px}
+.mag-badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;background:#eef1f8;color:var(--primary);margin-top:3px}
 .dest-name{font-size:13px;font-weight:500}
 .city{font-size:12px;color:#666}
 .badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;white-space:nowrap}
 .b-liv{background:#dcfce7;color:#15803d}
-.b-tr{background:#dbeafe;color:#1d4ed8}
-.b-ano{background:#fee2e2;color:#b91c1c}
+.b-tr{background:#dbeafe;color:var(--blue)}
+.b-ano{background:#fee2e2;color:var(--red)}
 .b-att{background:#f3f4f6;color:#6b7280}
-.prod{font-size:11px;background:#fef3e8;color:#c2520f;padding:3px 8px;border-radius:5px;font-weight:600}
-.poids-cell{font-size:12px;color:#555}
+.prod-tag{font-size:11px;background:#fef3e8;color:#c2520f;padding:3px 8px;border-radius:5px;font-weight:600}
 .eta{font-size:12px;color:#555}
-.eta.ok{color:#16a34a;font-weight:600}
-.mini-btn{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:4px 9px;border-radius:7px;border:1.5px solid #e0e3ea;background:#fff;cursor:pointer;color:#555;transition:all .1s;text-decoration:none;font-family:'Inter',sans-serif}
-.mini-btn:hover{border-color:#e8641a;color:#e8641a;background:#fff8f4}
+.eta.ok{color:var(--green);font-weight:600}
+.mini-btn{display:inline-flex;align-items:center;font-size:11px;padding:4px 9px;border-radius:7px;border:1.5px solid var(--border);background:var(--white);cursor:pointer;color:#555;transition:all .1s;text-decoration:none;font-family:'Inter',sans-serif}
+.mini-btn:hover{border-color:var(--primary);color:var(--primary)}
 
-.detail-panel{padding:18px;background:#f8f9fc;border-top:1px solid #e8eaf0;display:none}
+.detail-panel{padding:18px;background:#f8f9fc;border-top:1px solid var(--border);display:none}
 .detail-panel.open{display:block}
-.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-bottom:16px}
-.dblock{background:#fff;border-radius:10px;border:1px solid #e8eaf0;padding:14px}
-.dblock-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#e8641a;margin-bottom:10px}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:16px}
+.dblock{background:var(--white);border-radius:10px;border:1px solid var(--border);padding:14px}
+.dblock-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--primary);margin-bottom:10px}
 .drow{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid #f5f6f8}
 .drow:last-child{border-bottom:none}
-.dk{color:#999} .dv{font-weight:500;text-align:right;max-width:55%}
-.timeline{display:flex;gap:0;margin-bottom:16px;padding:14px;background:#fff;border-radius:10px;border:1px solid #e8eaf0}
+.dk{color:#aaa} .dv{font-weight:500;text-align:right;max-width:60%}
+.tl{display:flex;margin-bottom:16px;padding:14px;background:var(--white);border-radius:10px;border:1px solid var(--border)}
 .tl-step{flex:1;display:flex;flex-direction:column;align-items:center;position:relative}
-.tl-step:not(:last-child)::after{content:'';position:absolute;top:10px;left:50%;width:100%;height:2px;background:#e8eaf0;z-index:0}
-.tl-step.done:not(:last-child)::after{background:#e8641a}
-.tl-dot{width:20px;height:20px;border-radius:50%;border:2px solid #e8eaf0;background:#fff;z-index:1;display:flex;align-items:center;justify-content:center;font-size:10px}
-.tl-step.done .tl-dot{border-color:#e8641a;background:#e8641a;color:#fff}
-.tl-step.current .tl-dot{border-color:#e8641a;background:#fff8f4}
-.tl-label{font-size:10px;color:#aaa;margin-top:5px;text-align:center;max-width:70px;line-height:1.3}
-.tl-step.done .tl-label,.tl-step.current .tl-label{color:#1a1a2e;font-weight:500}
-.pod-link{display:inline-flex;align-items:center;gap:6px;color:#e8641a;font-size:13px;font-weight:500;text-decoration:none;padding:7px 14px;border:1.5px solid #e8641a;border-radius:8px;transition:all .15s}
-.pod-link:hover{background:#e8641a;color:#fff}
+.tl-step:not(:last-child)::after{content:'';position:absolute;top:10px;left:50%;width:100%;height:2px;background:var(--border);z-index:0}
+.tl-step.done:not(:last-child)::after{background:var(--primary)}
+.tl-dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);background:var(--white);z-index:1;display:flex;align-items:center;justify-content:center;font-size:10px}
+.tl-step.done .tl-dot{border-color:var(--primary);background:var(--primary);color:#fff}
+.tl-step.current .tl-dot{border-color:var(--primary);background:#eef1f8}
+.tl-lbl{font-size:10px;color:var(--sub);margin-top:5px;text-align:center;max-width:70px;line-height:1.3}
+.tl-step.done .tl-lbl,.tl-step.current .tl-lbl{color:var(--text);font-weight:500}
+.action-links{display:flex;gap:10px;flex-wrap:wrap}
+.action-link{display:inline-flex;align-items:center;gap:6px;color:var(--primary);font-size:13px;font-weight:500;text-decoration:none;padding:7px 14px;border:1.5px solid var(--primary);border-radius:8px;transition:all .15s}
+.action-link:hover{background:var(--primary);color:#fff}
 
-.empty{padding:60px;text-align:center;color:#bbb}
+.empty{padding:60px;text-align:center;color:#ccc}
 .empty-icon{font-size:40px;margin-bottom:12px}
-.spinner{display:inline-block;width:18px;height:18px;border:2px solid #f0f0f0;border-top-color:#e8641a;border-radius:50%;animation:spin .7s linear infinite}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid #eef1f8;border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-msg{display:flex;align-items:center;gap:12px;padding:40px;justify-content:center;color:#888;font-size:14px}
-.toast{position:fixed;bottom:24px;right:24px;background:#1a1a2e;color:#fff;padding:11px 20px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:100}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--primary);color:#fff;padding:11px 20px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:100}
 .toast.show{opacity:1}
-.err-box{background:#fef2f2;border:1.5px solid #fca5a5;border-radius:9px;padding:12px 16px;font-size:13px;color:#b91c1c;margin-top:12px;display:none}
+.err-box{background:#fef2f2;border:1.5px solid #fca5a5;border-radius:9px;padding:12px 16px;font-size:13px;color:var(--red);margin-top:12px;display:none}
 .err-box.show{display:block}
-
-@media(max-width:900px){
-  .thead,.trow{grid-template-columns:1.2fr 1.5fr 1fr 1fr 0.8fr}
-  .thead>*:nth-child(4),.thead>*:nth-child(7),.trow>*:nth-child(4),.trow>*:nth-child(7){display:none}
-}
 </style>
 </head>
 <body>
@@ -122,12 +117,12 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:
 
 <div class="main">
   <div class="metrics">
-    <div class="metric"><div class="metric-label">Total envois</div><div class="metric-value mv-blue" id="m-tot">0</div></div>
-    <div class="metric"><div class="metric-label">En transit</div><div class="metric-value mv-purple" id="m-tr">0</div></div>
-    <div class="metric"><div class="metric-label">Livrés</div><div class="metric-value mv-green" id="m-li">0</div></div>
-    <div class="metric"><div class="metric-label">Anomalies</div><div class="metric-value mv-red" id="m-er">0</div></div>
-    <div class="metric"><div class="metric-label">Nb colis</div><div class="metric-value mv-orange" id="m-co">0</div></div>
-    <div class="metric"><div class="metric-label">Poids total</div><div class="metric-value mv-blue" id="m-po" style="font-size:20px">0 kg</div></div>
+    <div class="metric"><div class="metric-label">Total envois</div><div class="metric-value mv-p" id="m-tot">0</div></div>
+    <div class="metric"><div class="metric-label">En transit</div><div class="metric-value mv-pu" id="m-tr">0</div></div>
+    <div class="metric"><div class="metric-label">Livrés</div><div class="metric-value mv-g" id="m-li">0</div></div>
+    <div class="metric"><div class="metric-label">Anomalies</div><div class="metric-value mv-r" id="m-er">0</div></div>
+    <div class="metric"><div class="metric-label">Nb colis</div><div class="metric-value mv-a" id="m-co">0</div></div>
+    <div class="metric"><div class="metric-label">Poids total</div><div class="metric-value mv-p" id="m-po" style="font-size:20px">0 kg</div></div>
   </div>
 
   <div class="panel">
@@ -139,30 +134,30 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:
       <div class="field"><label>Référence</label><input type="text" id="f-ref" placeholder="optionnel"></div>
       <div class="field"><label>Destinataire</label><input type="text" id="f-dest" placeholder="optionnel"></div>
     </div>
-    <div class="btn-group" style="margin-top:14px">
+    <div class="btn-row">
       <button class="btn primary" id="btn-search" onclick="search()">🔍 Rechercher</button>
       <button class="btn" onclick="exportCSV()">📥 Export CSV</button>
       <button class="btn" onclick="setToday()">📅 Aujourd'hui</button>
       <button class="btn" onclick="setWeek()">📅 7 jours</button>
     </div>
     <div class="err-box" id="err-box"></div>
-    <div class="hint">💡 Par défaut les 7 derniers jours. Maximum 1000 envois par recherche.</div>
+    <div class="hint">💡 Par défaut les 7 derniers jours.</div>
   </div>
 
   <div class="toolbar">
-    <button class="filter-pill active" onclick="setFilter('all',this)">Tous</button>
-    <button class="filter-pill" onclick="setFilter('livr',this)">Livrés</button>
-    <button class="filter-pill" onclick="setFilter('tr',this)">En transit</button>
-    <button class="filter-pill" onclick="setFilter('ano',this)">Anomalies</button>
-    <input class="search-bar" type="text" id="search-bar" placeholder="Filtrer par récépissé, destinataire, ville, référence..." oninput="render()">
-    <span class="count-label" id="count-lbl"></span>
+    <button class="pill active" onclick="setFilter('all',this)">Tous</button>
+    <button class="pill" onclick="setFilter('livr',this)">Livrés</button>
+    <button class="pill" onclick="setFilter('tr',this)">En transit</button>
+    <button class="pill" onclick="setFilter('ano',this)">Anomalies</button>
+    <input class="sbar" type="text" id="sbar" placeholder="Filtrer par récépissé, magasin, ville, référence..." oninput="render()">
+    <span class="clbl" id="clbl"></span>
   </div>
 
   <div class="table-wrap">
     <div class="thead">
       <div>N° Récépissé</div>
-      <div>Destinataire</div>
-      <div>Ville / CP</div>
+      <div>Magasin</div>
+      <div>Destinataire / Ville</div>
       <div>Statut</div>
       <div>Livraison</div>
       <div>Produit</div>
@@ -178,27 +173,31 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:
 <div class="toast" id="toast"></div>
 
 <script>
-let allData = [];
-let activeFilter = 'all';
-let openRow = null;
+const MAGASINS = {
+  '61': 'ARVET SARL','142': 'BROUSSEAU VTS','206': 'COME BACK','216': 'COSMOPOLITE','268': 'VEKSLER','318': 'ESPACE GRIFFE B','380': 'DES CERISIERS','437': 'HORS LIGNE','479': 'JS TRADING','507': 'LABAU DIFFUSION','532': 'LECOINTRE HOM','559': 'M.C.S.','566': 'MACASSAR','576': 'MAISON DU VET.','647': 'MORENCE','717': 'SAS PENAUD','724': 'PINEL VET.','851': 'SPORLUX','952': 'VENTE PRIVEE','954': 'VERSO','997': 'JLD DIFFUSION','1009': 'IZAC AUBER','1010': 'IZAC BELLE EPINE','1011': 'IZAC HERRIOT','1028': 'IZAC RUE RENNES','1045': 'IZAC PARINOR','1054': 'TERRE H 72','1055': 'TERRE H 61','1057': 'SHOW ROOM IZAC','1070': 'COTE HOMME','1074': 'IZAC BLAGNAC','1104': 'IZAC CRETEIL','1109': 'IZAC ST DENIS','1198': 'IZAC VELIZY','1199': 'IZAC BEZIERS','1207': 'HOPIUM','1215': 'IZAC ST QUENTIN','1286': 'JASYL','1289': 'MANCEAU','1312': 'ETIQUETTE','1317': 'WILHELEM','1318': 'G. LEMOINE','1330': 'IZAC LYON CONFLUENCE','1331': 'IZAC MONTPELLIER','1334': 'IZAC ROUEN','1335': 'IZAC LILLE','1349': 'BLOOM DAVID','1350': 'IZAC PERPIGNAN','1352': 'IZAC LEVALLOIS','1353': 'IZAC CLAYE SOUILLY','1355': 'IZAC NANTES ATLANTIS','1364': 'LEVY BLUM','1376': 'TNT','1377': 'IZAC PT STE MARIE','1411': 'LOL BY LOUISIANE','1426': 'IZAC BEGLES','1427': 'IZAC CLAIRA','1434': 'AUMACLAIRE','1436': 'BWS','1447': 'WEB','1448': 'IZAC DIJON TOISON','1449': 'IZAC AEROVILLE','1450': 'IZAC RENNES ALMA','1451': 'IZAC CLERMONT JAUDE','1469': 'IZAC MONTARGIS','1470': 'IZAC AVIGNON','1485': 'IZAC MERIGNAC','1486': 'IZAC TERRASSES DU PORT','1487': 'IZAC STRASBOURG','1488': 'IZAC LA VALENTINE','1489': 'IZAC VILLENEUVE LG','1492': 'JACK MOD','1496': 'BUXY','1498': 'IZAC NEW GONESSE','1505': 'I STOCK AVENUE','1512': 'HAVANE','1513': 'IZAC PART DIEU','1518': 'IZAC ECOUFLANT','1526': 'IZAC NIORT','1527': 'MYRYS','1543': 'IZAC A13','1544': 'IZAC EPAGNY','1545': 'IZAC LORMONT','1552': 'IZAC VALEUROPB','1557': 'FC NANTES','1563': 'IZAC SAINT OMER','1567': 'IZAC BORDEAUX','1568': 'IZAC CARRE SENART','1575': 'IZAC LA DEFENSE','1578': 'PRETTY WOMEN','1597': 'IZAC AUXERRE','1598': 'IZAC BASTIA','1603': 'IZAC FENOUILLET','1604': 'IZAC ROSNY2','1608': 'IZAC ANGLET','1609': 'IZAC NIMES','1615': 'IZAC NANTES CREBILLON','1618': 'IZAC EURALILLE','1621': 'IZAC AIX LES BAINS','1627': 'IZAC MIRAMAS','1636': 'IZAC METZ','1637': 'IZAC AJACCIO','1641': 'MHB','1643': 'REZLAND','1645': 'DECOR DE FRANCE','1648': 'IZAC ROUBAIX','1650': 'ESPACE GRIFFES SQ','1651': 'IZAC PAU','1653': 'LUXARGA','1654': 'IZAC PRADO','1655': 'IZAC PARLY','1661': 'SARL LANGLAIS','1665': 'IZAC MONTPARNASSE','1666': 'IZAC CAP3000','1667': 'IZAC GRAND VAR','1668': 'IZAC NOYELLES','1669': 'IZAC VOIRON','1670': 'IZAC BREST','1671': 'IZAC ANDREZIEUX','1672': 'IZAC ST ETIENNE B','1676': 'C3C','1678': 'H2R','1683': 'IZAC ARRAS','1692': 'JS TRADING SARL','1694': 'IZAC MULHOUSE','1696': 'IZAC FORUM DES HALLES','1699': 'GENTLEMEN STEPH','1701': 'MON VESTIAIRE','1703': 'JSR LUXEMBOURG','1704': 'IZAC BLOIS','1708': 'GRAND BAZAR','1710': 'VIVAGO','1711': 'VET. COUPIN','1715': 'MEAROMA','1716': 'IZAC EPINAL','1722': 'SLBO','1724': 'IZAC LES SABLES','1726': 'AJ PROGRESS','1728': 'IZAC CANNES','1729': 'IZAC LILLENIUM','1732': 'IZAC HAGUENAU','1735': 'IZAC VILLEFONTAINE','1737': 'IZAC BORDEAUX LAC','1738': 'IZAC ECULLY','1739': 'IZAC TOULOUSE','1740': 'IZAC ROMANS','1742': 'IZAC THIONVILLE','1745': 'MULTI','1748': 'IZAC BEAUGRENELLE','1749': 'IZAC AIX EN PROVENCE','1755': 'IZAC BESANCON','1756': 'IZAC BOULOGNE','1758': 'WAS ONE','1761': 'WE MADISON','1766': 'BEY FIRST','1776': 'OL SASU','1779': 'IZAC ARCUEIL','1781': 'STADE RENNAIS','1782': 'IZAC CORBEIL','1785': 'IZAC GAP','1787': 'IZAC LA ROCHELLE','1791': 'IZAC TOURS','1792': 'IZAC GRENOBLE','1793': 'IZAC DIJON CV','1800': 'RC LENS','1801': 'IZAC RENNES CV','1816': 'ATVYL','1817': 'GEODIS','1828': 'IZAC CAEN','1830': 'IZAC NEYRPIC','1831': 'IZAC STRAS. CV','1835': 'IZAC ORLEANS','1840': 'AVANT CAP CABRIES','1842': 'IZAC LE MANS','1843': 'IZAC DEAUVILLE','1844': 'IZAC LE POLYGONE','1862': 'IZAC CHAMBERY','1865': 'IZAC GIVERNY','1868': 'IZAC NANCY CV','1873': 'IZAC ST-TROPEZ','1876': 'STOCK DE MARQUES','1879': 'IZAC REIMS CV','1880': 'IZAC ANNECY'
+};
 
-function fmt(d){ return d.toISOString().slice(0,10); }
-function setWeek(){ const e=new Date(),s=new Date(); s.setDate(e.getDate()-7); document.getElementById('date-debut').value=fmt(s); document.getElementById('date-fin').value=fmt(e); }
-function setToday(){ const d=fmt(new Date()); document.getElementById('date-debut').value=d; document.getElementById('date-fin').value=d; }
+function getMagName(codeClient){ return MAGASINS[String(codeClient)] || ''; }
+
+let allData=[], activeFilter='all', openRow=null;
+
+function fmt(d){return d.toISOString().slice(0,10);}
+function setWeek(){const e=new Date(),s=new Date();s.setDate(e.getDate()-7);document.getElementById('date-debut').value=fmt(s);document.getElementById('date-fin').value=fmt(e);}
+function setToday(){const d=fmt(new Date());document.getElementById('date-debut').value=d;document.getElementById('date-fin').value=d;}
 setWeek();
 
-function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800); }
-function showErr(msg){ const b=document.getElementById('err-box'); b.textContent=msg; b.classList.add('show'); }
-function hideErr(){ document.getElementById('err-box').classList.remove('show'); }
-function setFilter(f,btn){ activeFilter=f; document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); render(); }
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+function showErr(msg){const b=document.getElementById('err-box');b.textContent=msg;b.classList.add('show');}
+function hideErr(){document.getElementById('err-box').classList.remove('show');}
+function setFilter(f,btn){activeFilter=f;document.querySelectorAll('.pill').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render();}
 
 async function search(){
   hideErr();
   const debut=document.getElementById('date-debut').value;
   const fin=document.getElementById('date-fin').value;
-  if(!debut||!fin){ showErr('⚠️ Renseigne les dates de début et de fin.'); return; }
+  if(!debut||!fin){showErr('⚠️ Renseigne les dates.');return;}
   const btn=document.getElementById('btn-search');
-  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Chargement...';
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Chargement...';
   document.getElementById('live-txt').textContent='Requête en cours...';
   document.getElementById('list').innerHTML='<div class="loading-msg"><span class="spinner"></span> Récupération des envois Geodis...</div>';
   try{
@@ -206,36 +205,28 @@ async function search(){
     const rec=document.getElementById('f-recep').value.trim();
     const ref=document.getElementById('f-ref').value.trim();
     const dest=document.getElementById('f-dest').value.trim();
-    if(rec) body.noRecepisse=rec;
-    if(ref) body.reference1=ref;
-    if(dest) body.nomDest=dest;
+    if(rec)body.noRecepisse=rec;
+    if(ref)body.reference1=ref;
+    if(dest)body.nomDest=dest;
     const resp=await fetch('/api/envois',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const data=await resp.json();
-    if(data.error){ showErr('❌ Erreur : '+data.error); allData=[]; }
+    if(data.error){showErr('❌ Erreur : '+data.error);allData=[];}
     else if(data.ok){
       allData=data.contenu||[];
-      // Aplatir les envois regroupés
-      const flat=[];
-      allData.forEach(p=>{ flat.push(p); });
-      allData=flat;
       toast('✅ '+allData.length+' envoi(s) trouvé(s)');
       document.getElementById('live-txt').textContent='Mis à jour '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-    } else{ showErr('❌ Réponse inattendue'); allData=[]; }
-  }catch(e){ showErr('❌ Erreur de connexion : '+e.message); allData=[]; }
-  btn.disabled=false; btn.innerHTML='🔍 Rechercher';
+    }else{showErr('❌ Réponse inattendue');allData=[];}
+  }catch(e){showErr('❌ Erreur : '+e.message);allData=[];}
+  btn.disabled=false;btn.innerHTML='🔍 Rechercher';
   render();
 }
 
 function statusBadge(p){
   const s=(p.libelleEtat||'').toLowerCase();
-  if(s.includes('livr')) return '<span class="badge b-liv">✅ '+p.libelleEtat+'</span>';
-  if(s.includes('cours')||s.includes('transit')||s.includes('acheminement')||s.includes('prise en charge')) return '<span class="badge b-tr">🚚 '+p.libelleEtat+'</span>';
-  if(s.includes('anomalie')||s.includes('exception')||s.includes('retard')||s.includes('incident')) return '<span class="badge b-ano">⚠️ '+p.libelleEtat+'</span>';
+  if(s.includes('livr'))return '<span class="badge b-liv">✅ Livré</span>';
+  if(s.includes('cours')||s.includes('transit')||s.includes('acheminement')||s.includes('prise en charge'))return '<span class="badge b-tr">🚚 En transit</span>';
+  if(s.includes('anomalie')||s.includes('exception')||s.includes('retard')||s.includes('incident'))return '<span class="badge b-ano">⚠️ Anomalie</span>';
   return '<span class="badge b-att">'+(p.libelleEtat||'—')+'</span>';
-}
-
-function tlStep(label,done,current){
-  return '<div class="tl-step'+(done?' done':'')+(current?' current':'')+'"><div class="tl-dot">'+(done?'✓':'')+'</div><div class="tl-label">'+label+'</div></div>';
 }
 
 function getTimeline(p){
@@ -243,24 +234,26 @@ function getTimeline(p){
   const liv=s.includes('livr');
   const mis=s.includes('mise en livraison')||s.includes('en cours de livraison');
   const ach=s.includes('cours')||s.includes('acheminement')||s.includes('transit');
-  const pris=s.includes('prise en charge')||!!p.dateDepart;
-  return '<div class="timeline">'+
-    tlStep('Pris en charge',pris&&!ach&&!mis&&!liv,pris&&!ach&&!mis&&!liv)+
-    tlStep('En transit',(ach||mis||liv),ach&&!mis&&!liv)+
-    tlStep('En livraison',(mis||liv),mis&&!liv)+
-    tlStep('Livré',liv,false)+
-  '</div>';
+  const pris=!!p.dateDepart;
+  const steps=[
+    {l:'Pris en charge',done:pris,cur:pris&&!ach&&!mis&&!liv},
+    {l:'En transit',done:ach||mis||liv,cur:ach&&!mis&&!liv},
+    {l:'En livraison',done:mis||liv,cur:mis&&!liv},
+    {l:'Livré',done:liv,cur:false}
+  ];
+  return '<div class="tl">'+steps.map(s=>'<div class="tl-step'+(s.done?' done':'')+(s.cur?' current':'')+'"><div class="tl-dot">'+(s.done?'✓':'')+'</div><div class="tl-lbl">'+s.l+'</div></div>').join('')+'</div>';
 }
 
 function filterMatch(p){
   const s=(p.libelleEtat||'').toLowerCase();
-  if(activeFilter==='livr'&&!s.includes('livr')) return false;
-  if(activeFilter==='tr'&&!s.includes('cours')&&!s.includes('transit')&&!s.includes('acheminement')&&!s.includes('prise en charge')) return false;
-  if(activeFilter==='ano'&&!s.includes('anomalie')&&!s.includes('exception')&&!s.includes('retard')&&!s.includes('incident')) return false;
-  const q=document.getElementById('search-bar').value.toLowerCase();
+  if(activeFilter==='livr'&&!s.includes('livr'))return false;
+  if(activeFilter==='tr'&&!s.includes('cours')&&!s.includes('transit')&&!s.includes('acheminement')&&!s.includes('prise en charge'))return false;
+  if(activeFilter==='ano'&&!s.includes('anomalie')&&!s.includes('exception')&&!s.includes('retard'))return false;
+  const q=document.getElementById('sbar').value.toLowerCase();
   if(q){
-    const hay=[p.noRecepisse,p.reference1,p.reference2,p.nomDest,p.villeDest,p.codePostalDest].join(' ').toLowerCase();
-    if(!hay.includes(q)) return false;
+    const mag=getMagName(p.codeClient);
+    const hay=[p.noRecepisse,p.reference1,p.reference2,p.nomDest,p.villeDest,p.codePostalDest,p.codeClient,mag].join(' ').toLowerCase();
+    if(!hay.includes(q))return false;
   }
   return true;
 }
@@ -271,12 +264,11 @@ function updateMetrics(filtered){
   document.getElementById('m-tr').textContent=filtered.filter(p=>{const s=(p.libelleEtat||'').toLowerCase();return s.includes('cours')||s.includes('transit')||s.includes('acheminement')||s.includes('prise en charge');}).length;
   document.getElementById('m-er').textContent=filtered.filter(p=>{const s=(p.libelleEtat||'').toLowerCase();return s.includes('anomalie')||s.includes('exception')||s.includes('retard');}).length;
   document.getElementById('m-co').textContent=filtered.reduce((a,p)=>a+(p.nbColis||0),0);
-  const poids=filtered.reduce((a,p)=>a+(p.poids||0),0);
-  document.getElementById('m-po').textContent=poids.toFixed(0)+' kg';
-  document.getElementById('count-lbl').textContent=filtered.length+' envoi(s)';
+  document.getElementById('m-po').textContent=filtered.reduce((a,p)=>a+(p.poids||0),0).toFixed(0)+' kg';
+  document.getElementById('clbl').textContent=filtered.length+' envoi(s)';
 }
 
-function toggleRow(id){ openRow=openRow===id?null:id; render(); }
+function toggleRow(id){openRow=openRow===id?null:id;render();}
 
 function render(){
   const filtered=allData.filter(filterMatch);
@@ -287,9 +279,9 @@ function render(){
     return;
   }
   list.innerHTML=filtered.map(p=>{
-    const id=p.noRecepisse||p.refUniExp||Math.random().toString(36).slice(2);
-    const isOpen=openRow===String(id);
-    const eta=p.dateLivraisonFrs||'—';
+    const id=String(p.noRecepisse||p.refUniExp||Math.random().toString(36).slice(2));
+    const isOpen=openRow===id;
+    const mag=getMagName(p.codeClient);
     const isLiv=(p.libelleEtat||'').toLowerCase().includes('livr');
     const poids=p.poids?p.poids.toFixed(1)+' kg':'—';
     const pod=p.urlImageEnlevementLivraison||'';
@@ -300,11 +292,12 @@ function render(){
         '<div class="dblock"><div class="dblock-title">📦 Détails envoi</div>'+
           '<div class="drow"><span class="dk">Récépissé</span><span class="dv">'+(p.noRecepisse||'—')+'</span></div>'+
           '<div class="drow"><span class="dk">Référence</span><span class="dv">'+(p.reference1||'—')+'</span></div>'+
+          '<div class="drow"><span class="dk">Code magasin</span><span class="dv">'+(p.codeClient||'—')+'</span></div>'+
           '<div class="drow"><span class="dk">Produit</span><span class="dv">'+(p.libellePrestation||p.codeProduit||'—')+'</span></div>'+
           '<div class="drow"><span class="dk">Nb colis</span><span class="dv">'+(p.nbColis||'—')+'</span></div>'+
           '<div class="drow"><span class="dk">Poids</span><span class="dv">'+poids+'</span></div>'+
           '<div class="drow"><span class="dk">Date départ</span><span class="dv">'+(p.dateDepartFrs||'—')+'</span></div>'+
-          '<div class="drow"><span class="dk">Livraison prévue</span><span class="dv">'+eta+'</span></div>'+
+          '<div class="drow"><span class="dk">Livraison prévue</span><span class="dv">'+(p.dateLivraisonFrs||'—')+'</span></div>'+
           '<div class="drow"><span class="dk">Statut</span><span class="dv">'+(p.libelleEtat||'—')+'</span></div>'+
         '</div>'+
         '<div class="dblock"><div class="dblock-title">📤 Expéditeur</div>'+
@@ -318,19 +311,23 @@ function render(){
           '<div class="drow"><span class="dk">CP / Ville</span><span class="dv">'+(p.codePostalDest||'')+' '+(p.villeDest||'')+'</span></div>'+
         '</div>'+
       '</div>'+
-      (pod?'<a href="'+pod+'" target="_blank" class="pod-link">🖼️ Voir preuve de livraison</a>':'')+
-      (p.urlSuiviDestinataire?'<a href="'+p.urlSuiviDestinataire+'" target="_blank" class="pod-link" style="margin-left:10px">🔗 Suivi destinataire</a>':'')+
+      '<div class="action-links">'+
+        (pod?'<a href="'+pod+'" target="_blank" class="action-link">🖼️ Preuve de livraison</a>':'')+
+        (p.urlSuiviDestinataire?'<a href="'+p.urlSuiviDestinataire+'" target="_blank" class="action-link">🔗 Suivi destinataire</a>':'')+
+      '</div>'+
     '</div>';
 
     return '<div class="trow-wrap">'+
       '<div class="trow" onclick="toggleRow(\''+id+'\')">'+
-        '<div><div class="mono">'+(p.noRecepisse||'—')+'</div><div class="sub">'+(p.reference1||'')+'</div></div>'+
-        '<div><div class="dest-name">'+(p.nomDest||'—')+'</div></div>'+
-        '<div><div class="city">'+(p.villeDest||'—')+'</div><div class="sub">'+(p.codePostalDest||'')+'</div></div>'+
+        '<div><div class="mono">'+(p.noRecepisse||'—')+'</div><div class="sub-txt">'+(p.reference1||'')+'</div></div>'+
+        '<div>'+
+          (mag?'<div class="mag-badge">'+p.codeClient+' — '+mag+'</div>':'<div class="sub-txt">'+(p.codeClient||'—')+'</div>')+
+        '</div>'+
+        '<div><div class="dest-name">'+(p.nomDest||'—')+'</div><div class="city">'+(p.villeDest||'')+(p.codePostalDest?' ('+p.codePostalDest+')':'')+'</div></div>'+
         '<div>'+statusBadge(p)+'</div>'+
-        '<div><div class="eta'+(isLiv?' ok':'')+'">'+(p.dateLivraisonFrs||'—')+'</div><div class="sub">'+(p.dateEtatFrs||'')+'</div></div>'+
-        '<div><span class="prod">'+(p.codeProduit||'—')+'</span></div>'+
-        '<div><div class="poids-cell">'+poids+'</div><div class="sub">'+(p.nbColis||'—')+' colis</div></div>'+
+        '<div><div class="eta'+(isLiv?' ok':'')+'">'+(p.dateLivraisonFrs||'—')+'</div><div class="sub-txt">'+(p.dateEtatFrs||'')+'</div></div>'+
+        '<div><span class="prod-tag">'+(p.codeProduit||'—')+'</span></div>'+
+        '<div><div style="font-size:12px;color:#555">'+poids+'</div><div class="sub-txt">'+(p.nbColis||'—')+' colis</div></div>'+
         '<div><button class="mini-btn" onclick="event.stopPropagation();toggleRow(\''+id+'\')">📋 Détail</button></div>'+
       '</div>'+
       detail+
@@ -339,9 +336,9 @@ function render(){
 }
 
 function exportCSV(){
-  if(!allData.length){ toast('⚠️ Aucune donnée'); return; }
-  const h=['Récépissé','Référence','Expéditeur','Destinataire','Adresse dest.','CP','Ville','Statut','Produit','Nb colis','Poids','Date départ','Livraison prévue','Date état'];
-  const rows=allData.map(p=>[p.noRecepisse||'',p.reference1||'',p.nomExp||'',p.nomDest||'',p.adresse1Dest||'',p.codePostalDest||'',p.villeDest||'',p.libelleEtat||'',p.codeProduit||'',p.nbColis||'',p.poids?p.poids.toFixed(1):'',p.dateDepartFrs||'',p.dateLivraisonFrs||'',p.dateEtatFrs||'']);
+  if(!allData.length){toast('⚠️ Aucune donnée');return;}
+  const h=['Récépissé','Référence','Code Magasin','Nom Magasin','Expéditeur','Destinataire','Adresse','CP','Ville','Statut','Produit','Nb colis','Poids','Date départ','Livraison prévue'];
+  const rows=allData.map(p=>[p.noRecepisse||'',p.reference1||'',p.codeClient||'',getMagName(p.codeClient),p.nomExp||'',p.nomDest||'',p.adresse1Dest||'',p.codePostalDest||'',p.villeDest||'',p.libelleEtat||'',p.codeProduit||'',p.nbColis||'',p.poids?p.poids.toFixed(1):'',p.dateDepartFrs||'',p.dateLivraisonFrs||'']);
   const csv=[h,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\n');
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
