@@ -9,7 +9,6 @@
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--primary:#002D62;--accent:#E8641A;--bg:#f0f2f5;--white:#fff;--border:#e0e3ea;--text:#1a1a2e;--sub:#888;--green:#16a34a;--red:#dc2626;--blue:#1d4ed8;--purple:#7c3aed}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-
 .header{background:var(--primary);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 10px rgba(0,45,98,.3)}
 .brand{display:flex;align-items:center;gap:14px}
 .logo{background:var(--accent);color:#fff;font-weight:700;font-size:13px;padding:6px 12px;border-radius:8px;letter-spacing:1px}
@@ -18,22 +17,18 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .live-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);font-size:12px;padding:6px 14px;border-radius:20px}
 .pulse{width:8px;height:8px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-
 .main{max-width:1400px;margin:0 auto;padding:24px 20px}
-
 .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:24px}
 .metric{background:var(--white);border-radius:12px;padding:16px 18px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.04)}
 .metric-label{font-size:11px;color:var(--sub);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-weight:500}
 .metric-value{font-size:28px;font-weight:700;line-height:1}
-.mv-p{color:var(--primary)} .mv-g{color:var(--green)} .mv-r{color:var(--red)} .mv-a{color:var(--accent)} .mv-pu{color:var(--purple)}
-
+.mv-p{color:var(--primary)}.mv-g{color:var(--green)}.mv-r{color:var(--red)}.mv-a{color:var(--accent)}.mv-pu{color:var(--purple)}
 .panel{background:var(--white);border-radius:14px;border:1px solid var(--border);padding:20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
 .panel-title{font-size:14px;font-weight:600;color:var(--primary);margin-bottom:16px}
-
 .search-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;align-items:end}
 .field label{display:block;font-size:12px;color:#666;font-weight:500;margin-bottom:5px}
-.field input,.field select{width:100%;font-size:13px;padding:9px 12px;border-radius:9px;border:1.5px solid var(--border);background:#fafbfc;color:var(--text);outline:none;transition:border-color .15s;font-family:'Inter',sans-serif}
-.field input:focus,.field select:focus{border-color:var(--primary)}
+.field input{width:100%;font-size:13px;padding:9px 12px;border-radius:9px;border:1.5px solid var(--border);background:#fafbfc;color:var(--text);outline:none;transition:border-color .15s;font-family:'Inter',sans-serif}
+.field input:focus{border-color:var(--primary)}
 .btn-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:500;padding:9px 18px;border-radius:9px;border:1.5px solid var(--border);background:var(--white);color:#444;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:'Inter',sans-serif}
 .btn:hover{background:#f5f6f8}
@@ -41,14 +36,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .btn.primary:hover{background:#001f4a}
 .btn.primary:disabled{background:#6685a8;cursor:not-allowed}
 .hint{font-size:11.5px;color:#bbb;margin-top:10px;font-style:italic}
-
 .toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
 .pill{font-size:12px;padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);cursor:pointer;color:#666;font-family:'Inter',sans-serif;transition:all .15s}
 .pill.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 .sbar{flex:1;min-width:220px;font-size:13px;padding:7px 13px;border-radius:9px;border:1.5px solid var(--border);outline:none;font-family:'Inter',sans-serif}
 .sbar:focus{border-color:var(--primary)}
 .clbl{font-size:12px;color:#bbb;white-space:nowrap}
-
 .table-wrap{background:var(--white);border-radius:14px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
 .thead{display:grid;grid-template-columns:1.2fr 1.6fr 1.4fr 1fr 1fr 1fr 1fr 0.8fr;padding:11px 18px;background:#f4f6fb;border-bottom:1.5px solid var(--border);font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;gap:10px}
 .trow-wrap{border-top:1px solid #f2f3f7}
@@ -56,7 +49,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .trow:hover{background:#f8f9fc}
 .mono{font-family:monospace;font-size:12px;font-weight:700;color:var(--primary)}
 .sub-txt{font-size:11px;color:var(--sub);margin-top:2px}
-.mag-badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;background:#eef1f8;color:var(--primary);margin-top:3px}
+.mag-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;background:#eef1f8;color:var(--primary);margin-top:3px}
 .dest-name{font-size:13px;font-weight:500}
 .city{font-size:12px;color:#666}
 .badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;white-space:nowrap}
@@ -69,7 +62,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .eta.ok{color:var(--green);font-weight:600}
 .mini-btn{display:inline-flex;align-items:center;font-size:11px;padding:4px 9px;border-radius:7px;border:1.5px solid var(--border);background:var(--white);cursor:pointer;color:#555;transition:all .1s;text-decoration:none;font-family:'Inter',sans-serif}
 .mini-btn:hover{border-color:var(--primary);color:var(--primary)}
-
 .detail-panel{padding:18px;background:#f8f9fc;border-top:1px solid var(--border);display:none}
 .detail-panel.open{display:block}
 .detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:16px}
@@ -77,7 +69,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .dblock-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--primary);margin-bottom:10px}
 .drow{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid #f5f6f8}
 .drow:last-child{border-bottom:none}
-.dk{color:#aaa} .dv{font-weight:500;text-align:right;max-width:60%}
+.dk{color:#aaa}.dv{font-weight:500;text-align:right;max-width:60%}
 .tl{display:flex;margin-bottom:16px;padding:14px;background:var(--white);border-radius:10px;border:1px solid var(--border)}
 .tl-step{flex:1;display:flex;flex-direction:column;align-items:center;position:relative}
 .tl-step:not(:last-child)::after{content:'';position:absolute;top:10px;left:50%;width:100%;height:2px;background:var(--border);z-index:0}
@@ -90,7 +82,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .action-links{display:flex;gap:10px;flex-wrap:wrap}
 .action-link{display:inline-flex;align-items:center;gap:6px;color:var(--primary);font-size:13px;font-weight:500;text-decoration:none;padding:7px 14px;border:1.5px solid var(--primary);border-radius:8px;transition:all .15s}
 .action-link:hover{background:var(--primary);color:#fff}
-
 .empty{padding:60px;text-align:center;color:#ccc}
 .empty-icon{font-size:40px;margin-bottom:12px}
 .spinner{display:inline-block;width:18px;height:18px;border:2px solid #eef1f8;border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
@@ -103,7 +94,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 </style>
 </head>
 <body>
-
 <div class="header">
   <div class="brand">
     <div class="logo">GEODIS</div>
@@ -114,7 +104,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   </div>
   <div class="live-badge"><span class="pulse"></span><span id="live-txt">Prêt</span></div>
 </div>
-
 <div class="main">
   <div class="metrics">
     <div class="metric"><div class="metric-label">Total envois</div><div class="metric-value mv-p" id="m-tot">0</div></div>
@@ -124,7 +113,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="metric"><div class="metric-label">Nb colis</div><div class="metric-value mv-a" id="m-co">0</div></div>
     <div class="metric"><div class="metric-label">Poids total</div><div class="metric-value mv-p" id="m-po" style="font-size:20px">0 kg</div></div>
   </div>
-
   <div class="panel">
     <div class="panel-title">🔍 Recherche des envois</div>
     <div class="search-grid">
@@ -143,20 +131,18 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="err-box" id="err-box"></div>
     <div class="hint">💡 Par défaut les 7 derniers jours.</div>
   </div>
-
   <div class="toolbar">
     <button class="pill active" onclick="setFilter('all',this)">Tous</button>
     <button class="pill" onclick="setFilter('livr',this)">Livrés</button>
     <button class="pill" onclick="setFilter('tr',this)">En transit</button>
     <button class="pill" onclick="setFilter('ano',this)">Anomalies</button>
-    <input class="sbar" type="text" id="sbar" placeholder="Filtrer par récépissé, magasin, ville, référence..." oninput="render()">
+    <input class="sbar" type="text" id="sbar" placeholder="Filtrer par code mag, nom magasin, ville, référence..." oninput="render()">
     <span class="clbl" id="clbl"></span>
   </div>
-
   <div class="table-wrap">
     <div class="thead">
       <div>N° Récépissé</div>
-      <div>Magasin</div>
+      <div>Code Mag / Nom</div>
       <div>Destinataire / Ville</div>
       <div>Statut</div>
       <div>Livraison</div>
@@ -169,15 +155,23 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     </div>
   </div>
 </div>
-
 <div class="toast" id="toast"></div>
-
 <script>
-const MAGASINS = {
-  '61': 'ARVET SARL','142': 'BROUSSEAU VTS','206': 'COME BACK','216': 'COSMOPOLITE','268': 'VEKSLER','318': 'ESPACE GRIFFE B','380': 'DES CERISIERS','437': 'HORS LIGNE','479': 'JS TRADING','507': 'LABAU DIFFUSION','532': 'LECOINTRE HOM','559': 'M.C.S.','566': 'MACASSAR','576': 'MAISON DU VET.','647': 'MORENCE','717': 'SAS PENAUD','724': 'PINEL VET.','851': 'SPORLUX','952': 'VENTE PRIVEE','954': 'VERSO','997': 'JLD DIFFUSION','1009': 'IZAC AUBER','1010': 'IZAC BELLE EPINE','1011': 'IZAC HERRIOT','1028': 'IZAC RUE RENNES','1045': 'IZAC PARINOR','1054': 'TERRE H 72','1055': 'TERRE H 61','1057': 'SHOW ROOM IZAC','1070': 'COTE HOMME','1074': 'IZAC BLAGNAC','1104': 'IZAC CRETEIL','1109': 'IZAC ST DENIS','1198': 'IZAC VELIZY','1199': 'IZAC BEZIERS','1207': 'HOPIUM','1215': 'IZAC ST QUENTIN','1286': 'JASYL','1289': 'MANCEAU','1312': 'ETIQUETTE','1317': 'WILHELEM','1318': 'G. LEMOINE','1330': 'IZAC LYON CONFLUENCE','1331': 'IZAC MONTPELLIER','1334': 'IZAC ROUEN','1335': 'IZAC LILLE','1349': 'BLOOM DAVID','1350': 'IZAC PERPIGNAN','1352': 'IZAC LEVALLOIS','1353': 'IZAC CLAYE SOUILLY','1355': 'IZAC NANTES ATLANTIS','1364': 'LEVY BLUM','1376': 'TNT','1377': 'IZAC PT STE MARIE','1411': 'LOL BY LOUISIANE','1426': 'IZAC BEGLES','1427': 'IZAC CLAIRA','1434': 'AUMACLAIRE','1436': 'BWS','1447': 'WEB','1448': 'IZAC DIJON TOISON','1449': 'IZAC AEROVILLE','1450': 'IZAC RENNES ALMA','1451': 'IZAC CLERMONT JAUDE','1469': 'IZAC MONTARGIS','1470': 'IZAC AVIGNON','1485': 'IZAC MERIGNAC','1486': 'IZAC TERRASSES DU PORT','1487': 'IZAC STRASBOURG','1488': 'IZAC LA VALENTINE','1489': 'IZAC VILLENEUVE LG','1492': 'JACK MOD','1496': 'BUXY','1498': 'IZAC NEW GONESSE','1505': 'I STOCK AVENUE','1512': 'HAVANE','1513': 'IZAC PART DIEU','1518': 'IZAC ECOUFLANT','1526': 'IZAC NIORT','1527': 'MYRYS','1543': 'IZAC A13','1544': 'IZAC EPAGNY','1545': 'IZAC LORMONT','1552': 'IZAC VALEUROPB','1557': 'FC NANTES','1563': 'IZAC SAINT OMER','1567': 'IZAC BORDEAUX','1568': 'IZAC CARRE SENART','1575': 'IZAC LA DEFENSE','1578': 'PRETTY WOMEN','1597': 'IZAC AUXERRE','1598': 'IZAC BASTIA','1603': 'IZAC FENOUILLET','1604': 'IZAC ROSNY2','1608': 'IZAC ANGLET','1609': 'IZAC NIMES','1615': 'IZAC NANTES CREBILLON','1618': 'IZAC EURALILLE','1621': 'IZAC AIX LES BAINS','1627': 'IZAC MIRAMAS','1636': 'IZAC METZ','1637': 'IZAC AJACCIO','1641': 'MHB','1643': 'REZLAND','1645': 'DECOR DE FRANCE','1648': 'IZAC ROUBAIX','1650': 'ESPACE GRIFFES SQ','1651': 'IZAC PAU','1653': 'LUXARGA','1654': 'IZAC PRADO','1655': 'IZAC PARLY','1661': 'SARL LANGLAIS','1665': 'IZAC MONTPARNASSE','1666': 'IZAC CAP3000','1667': 'IZAC GRAND VAR','1668': 'IZAC NOYELLES','1669': 'IZAC VOIRON','1670': 'IZAC BREST','1671': 'IZAC ANDREZIEUX','1672': 'IZAC ST ETIENNE B','1676': 'C3C','1678': 'H2R','1683': 'IZAC ARRAS','1692': 'JS TRADING SARL','1694': 'IZAC MULHOUSE','1696': 'IZAC FORUM DES HALLES','1699': 'GENTLEMEN STEPH','1701': 'MON VESTIAIRE','1703': 'JSR LUXEMBOURG','1704': 'IZAC BLOIS','1708': 'GRAND BAZAR','1710': 'VIVAGO','1711': 'VET. COUPIN','1715': 'MEAROMA','1716': 'IZAC EPINAL','1722': 'SLBO','1724': 'IZAC LES SABLES','1726': 'AJ PROGRESS','1728': 'IZAC CANNES','1729': 'IZAC LILLENIUM','1732': 'IZAC HAGUENAU','1735': 'IZAC VILLEFONTAINE','1737': 'IZAC BORDEAUX LAC','1738': 'IZAC ECULLY','1739': 'IZAC TOULOUSE','1740': 'IZAC ROMANS','1742': 'IZAC THIONVILLE','1745': 'MULTI','1748': 'IZAC BEAUGRENELLE','1749': 'IZAC AIX EN PROVENCE','1755': 'IZAC BESANCON','1756': 'IZAC BOULOGNE','1758': 'WAS ONE','1761': 'WE MADISON','1766': 'BEY FIRST','1776': 'OL SASU','1779': 'IZAC ARCUEIL','1781': 'STADE RENNAIS','1782': 'IZAC CORBEIL','1785': 'IZAC GAP','1787': 'IZAC LA ROCHELLE','1791': 'IZAC TOURS','1792': 'IZAC GRENOBLE','1793': 'IZAC DIJON CV','1800': 'RC LENS','1801': 'IZAC RENNES CV','1816': 'ATVYL','1817': 'GEODIS','1828': 'IZAC CAEN','1830': 'IZAC NEYRPIC','1831': 'IZAC STRAS. CV','1835': 'IZAC ORLEANS','1840': 'AVANT CAP CABRIES','1842': 'IZAC LE MANS','1843': 'IZAC DEAUVILLE','1844': 'IZAC LE POLYGONE','1862': 'IZAC CHAMBERY','1865': 'IZAC GIVERNY','1868': 'IZAC NANCY CV','1873': 'IZAC ST-TROPEZ','1876': 'STOCK DE MARQUES','1879': 'IZAC REIMS CV','1880': 'IZAC ANNECY'
+// Mapping NOM DESTINATAIRE (Geodis) → CODE MAGASIN (Fastmag)
+const MAG_BY_NAME = {
+  'ABC':'1768','AJ PROGRESS':'1726','ARVET SARL - ARNAUD VETEMENTS':'61','ATVYL':'1816','AUMACLAIRE':'1434','AVANT CAP - CABRIES':'1840','BEY FIRST':'1766','BEY FIRST 2':'1852','BLOOM DAVID SARL':'1349','BOY AND GIRL':'1769','BROUSSEAU-STE VENDEENNE DE VTS':'142','BS MODE':'1858','BUXY':'1496','BWS SARL':'1436','C3C':'1676','CHABE':'1854','CHABE GRAND SUD':'1837','CLOTHING DISTRIBUTIONS':'1839','COSMOPOLITE':'216','COTE HOMME':'1070','DECOR DE FRANCE SA':'1645','DES CERISIERS SARL':'380','ESPACE GRIFFE B':'318','ESPACE GRIFFES ST QUENTIN':'1650','ETIQUETTE':'1312','FC NANTES':'1557','G. LEMOINE SAS':'1318','GENTLEMAN':'1875','GENTLEMEN&STEPH':'1699','GEODIS':'1817','H2R':'1678','HAVANE SAS':'1512','HOPIUM':'1207','HORS LIGNE SA':'437','I STOCK AVENUE':'1505','IZAC A13':'1543','IZAC AEROVILLE':'1449','IZAC AIX EN PROVENCE':'1749','IZAC AIX LES BAINS':'1621','IZAC AJACCIO':'1637','IZAC ANDREZIEUX':'1671','IZAC ANGLETB':'1608','IZAC ANNECY':'1880','IZAC ARCUEIL':'1779','IZAC ARRAS':'1683','IZAC AUBER':'1009','IZAC AUXERRE':'1597','IZAC AVIGNON':'1470','IZAC BASTIA':'1598','IZAC BEAUGRENELLE':'1748','IZAC BEGLES':'1426','IZAC BELLE EPINE':'1010','IZAC BESANCON':'1755','IZAC BEZIERS':'1199','IZAC BLAGNAC':'1074','IZAC BLOIS':'1704','IZAC BORDEAUX':'1567','IZAC BORDEAUX LAC':'1737','IZAC BOULOGNE':'1756','IZAC BREST':'1670','IZAC CAEN':'1828','IZAC CANNES':'1728','IZAC CAP3000':'1666','IZAC CARRE SENART':'1568','IZAC CHAMBERY':'1862','IZAC CLAIRA':'1427','IZAC CLAYE SOUILLY':'1353','IZAC CLERMONT JAUDE':'1451','IZAC CORBEIL':'1782','IZAC CRETEIL':'1104','IZAC DEAUVILLE':'1843','IZAC DIJON CV':'1793','IZAC DIJON TOISON':'1448','IZAC ECOUFLANT':'1518','IZAC ECULLY':'1738','IZAC EPAGNY':'1544','IZAC EPINAL':'1716','IZAC EURALILLE':'1618','IZAC FENOUILLET':'1603','IZAC FORUM DES HALLES':'1696','IZAC GAP':'1785','IZAC GIVERNY':'1865','IZAC GRAND VAR':'1667','IZAC GRENOBLE':'1792','IZAC HAGUENAU':'1732','IZAC HERRIOT':'1011','IZAC LA DEFENSE':'1575','IZAC LA ROCHELLE':'1787','IZAC LA VALENTINE':'1488','IZAC LE MANS':'1842','IZAC LE POLYGONE':'1844','IZAC LES SABLES D OLONNE':'1724','IZAC LES TERRASSES DU PORT':'1486','IZAC LEVALLOIS':'1352','IZAC LILLE':'1335','IZAC LILLENIUM':'1729','IZAC LORMONT':'1545','IZAC LYON CONFLUENCE':'1330','IZAC MERIGNAC':'1485','IZAC METZ':'1636','IZAC MIRAMAS':'1627','IZAC MONTARGIS':'1469','IZAC MONTPARNASSE':'1665','IZAC MONTPELLIER':'1331','IZAC MULHOUSE':'1694','IZAC NANCY CV':'1868','IZAC NANTES ATLANTIS':'1355','IZAC NANTES CREBILLON':'1615','IZAC NEW GONESSE':'1498','IZAC NEYRPIC':'1830','IZAC NIMES CAP COSTIERES':'1609','IZAC NIORT':'1526','IZAC NOYELLES':'1668','IZAC ORLEANS':'1835','IZAC PARINOR':'1045','IZAC PARLY':'1655','IZAC PART DIEU':'1513','IZAC PAU':'1651','IZAC PERPIGNAN AUCHAN':'1350','IZAC PRADO':'1654','IZAC PT STE MARIE':'1377','IZAC REIMS CV':'1879','IZAC RENNES ALMA':'1450','IZAC RENNES CV':'1801','IZAC ROMANS':'1740','IZAC ROSNY2':'1604','IZAC ROUBAIX':'1648','IZAC ROUEN':'1334','IZAC RUE RENNES':'1028','IZAC SAINT 0MER':'1563','IZAC SAINT ETIENNE B':'1672','IZAC SAINT-TROPEZ':'1873','IZAC ST DENIS':'1109','IZAC ST QUENTIN':'1215','IZAC STRASBOURG':'1487','IZAC STRASBOURG CENTRE VILLE':'1831','IZAC THIONVILLE':'1742','IZAC TOULOUSE':'1739','IZAC TOURS':'1791','IZAC VALEUROPB':'1552','IZAC VELIZY':'1198','IZAC VILLEFONTAINE':'1735','IZAC VILLENEUVE LA GARENNE':'1489','IZAC VOIRON':'1669','JACK MOD':'1492','JASYL SARL':'1286','JLD DIFFUSION SAS':'997','JS TRADING':'479','JS TRADING SARL':'1692','JSR LUXEMBOURG SARL':'1703','JUMP ATELIER':'1861','LA MAISON DU VETEMENTS':'576','LABAU DIFFUSION':'507','LECOINTRE  HOM SARL':'532','LES GALERIES SAS DU GRAND BAZAR':'1708','LEVY BLUM SAS':'1364','LOL BY LOUISIANE':'1411','LUXARGA':'1653','M.C.S. SARL':'559','MANCEAU EURL':'1289','MARSAN SRL':'1866','MATCO SARL - MACASSAR':'566','MHB':'1641','MON VESTIAIRE':'1701','MORENCE MAGASIN EURL':'647','MOSSIS J. - SARL COME BACK':'206','MULTI':'1745','MYRYS SA':'1527','OL SASU':'1776','PINEL VETEMENTS':'724','PRETTY WOMEN':'1578','RC LENS':'1800','RENOUX MODE':'1812','REZLAND SARL':'1643','SARL LANGLAIS':'1661','SARL LES SECRETS DE BEA':'1760','SARL ROY':'1818','SARL TOULLELAN MAUD':'1805','SAS BARON':'1851','SAS EXPANTOUR':'1815','SAS MB':'1872','SAS MEAROMA / RAPHAEL':'1715','SAS PENAUD':'717','SAS RC STRASBOURG':'1850','SAS WAS ONE':'1758','SHOW ROOM IZAC':'1057','SLBO':'1722','SPORLUX':'851','STADE RENNAIS FOOTBALL CLUB':'1781','STE MEN S':'1807','STOCK DE MARQUES':'1876','TERRE D HOMME 61':'1055','TERRE D HOMME 72':'1054','TEXEA':'1773','TNT':'1376','TOP MODEL':'1784','VEKSLER SARL -':'268','VENTE PRIVEE.COM':'952','VERSO SARL':'954','VETEMENTS COUPIN':'1711','VIVAGO SAS':'1710','VIVALAGO SAS':'1780','WE MADISON':'1761','WEB':'1447','WILHELEM SA':'1317'
 };
 
-function getMagName(codeClient){ return MAGASINS[String(codeClient)] || ''; }
+function getCodeMag(nomDest){
+  if(!nomDest) return '';
+  const n = nomDest.toUpperCase().trim();
+  if(MAG_BY_NAME[n]) return MAG_BY_NAME[n];
+  // Recherche partielle
+  for(const k of Object.keys(MAG_BY_NAME)){
+    if(n.includes(k) || k.includes(n)) return MAG_BY_NAME[k];
+  }
+  return '';
+}
 
 let allData=[], activeFilter='all', openRow=null;
 
@@ -235,12 +229,7 @@ function getTimeline(p){
   const mis=s.includes('mise en livraison')||s.includes('en cours de livraison');
   const ach=s.includes('cours')||s.includes('acheminement')||s.includes('transit');
   const pris=!!p.dateDepart;
-  const steps=[
-    {l:'Pris en charge',done:pris,cur:pris&&!ach&&!mis&&!liv},
-    {l:'En transit',done:ach||mis||liv,cur:ach&&!mis&&!liv},
-    {l:'En livraison',done:mis||liv,cur:mis&&!liv},
-    {l:'Livré',done:liv,cur:false}
-  ];
+  const steps=[{l:'Pris en charge',done:pris,cur:pris&&!ach&&!mis&&!liv},{l:'En transit',done:ach||mis||liv,cur:ach&&!mis&&!liv},{l:'En livraison',done:mis||liv,cur:mis&&!liv},{l:'Livré',done:liv,cur:false}];
   return '<div class="tl">'+steps.map(s=>'<div class="tl-step'+(s.done?' done':'')+(s.cur?' current':'')+'"><div class="tl-dot">'+(s.done?'✓':'')+'</div><div class="tl-lbl">'+s.l+'</div></div>').join('')+'</div>';
 }
 
@@ -251,8 +240,8 @@ function filterMatch(p){
   if(activeFilter==='ano'&&!s.includes('anomalie')&&!s.includes('exception')&&!s.includes('retard'))return false;
   const q=document.getElementById('sbar').value.toLowerCase();
   if(q){
-    const mag=getMagName(p.codeClient);
-    const hay=[p.noRecepisse,p.reference1,p.reference2,p.nomDest,p.villeDest,p.codePostalDest,p.codeClient,mag].join(' ').toLowerCase();
+    const codeMag=getCodeMag(p.nomDest);
+    const hay=[p.noRecepisse,p.reference1,p.reference2,p.nomDest,p.villeDest,p.codePostalDest,codeMag].join(' ').toLowerCase();
     if(!hay.includes(q))return false;
   }
   return true;
@@ -281,7 +270,7 @@ function render(){
   list.innerHTML=filtered.map(p=>{
     const id=String(p.noRecepisse||p.refUniExp||Math.random().toString(36).slice(2));
     const isOpen=openRow===id;
-    const mag=getMagName(p.codeClient);
+    const codeMag=getCodeMag(p.nomDest);
     const isLiv=(p.libelleEtat||'').toLowerCase().includes('livr');
     const poids=p.poids?p.poids.toFixed(1)+' kg':'—';
     const pod=p.urlImageEnlevementLivraison||'';
@@ -292,7 +281,7 @@ function render(){
         '<div class="dblock"><div class="dblock-title">📦 Détails envoi</div>'+
           '<div class="drow"><span class="dk">Récépissé</span><span class="dv">'+(p.noRecepisse||'—')+'</span></div>'+
           '<div class="drow"><span class="dk">Référence</span><span class="dv">'+(p.reference1||'—')+'</span></div>'+
-          '<div class="drow"><span class="dk">Code magasin</span><span class="dv">'+(p.codeClient||'—')+'</span></div>'+
+          '<div class="drow"><span class="dk">Code magasin</span><span class="dv">'+(codeMag||'—')+'</span></div>'+
           '<div class="drow"><span class="dk">Produit</span><span class="dv">'+(p.libellePrestation||p.codeProduit||'—')+'</span></div>'+
           '<div class="drow"><span class="dk">Nb colis</span><span class="dv">'+(p.nbColis||'—')+'</span></div>'+
           '<div class="drow"><span class="dk">Poids</span><span class="dv">'+poids+'</span></div>'+
@@ -320,9 +309,7 @@ function render(){
     return '<div class="trow-wrap">'+
       '<div class="trow" onclick="toggleRow(\''+id+'\')">'+
         '<div><div class="mono">'+(p.noRecepisse||'—')+'</div><div class="sub-txt">'+(p.reference1||'')+'</div></div>'+
-        '<div>'+
-          (mag?'<div class="mag-badge">'+p.codeClient+' — '+mag+'</div>':'<div class="sub-txt">'+(p.codeClient||'—')+'</div>')+
-        '</div>'+
+        '<div>'+(codeMag?'<div class="mag-badge">'+codeMag+'</div><div class="sub-txt">'+(p.nomDest||'')+'</div>':'<div class="sub-txt">'+(p.nomDest||'—')+'</div>')+'</div>'+
         '<div><div class="dest-name">'+(p.nomDest||'—')+'</div><div class="city">'+(p.villeDest||'')+(p.codePostalDest?' ('+p.codePostalDest+')':'')+'</div></div>'+
         '<div>'+statusBadge(p)+'</div>'+
         '<div><div class="eta'+(isLiv?' ok':'')+'">'+(p.dateLivraisonFrs||'—')+'</div><div class="sub-txt">'+(p.dateEtatFrs||'')+'</div></div>'+
@@ -337,8 +324,8 @@ function render(){
 
 function exportCSV(){
   if(!allData.length){toast('⚠️ Aucune donnée');return;}
-  const h=['Récépissé','Référence','Code Magasin','Nom Magasin','Expéditeur','Destinataire','Adresse','CP','Ville','Statut','Produit','Nb colis','Poids','Date départ','Livraison prévue'];
-  const rows=allData.map(p=>[p.noRecepisse||'',p.reference1||'',p.codeClient||'',getMagName(p.codeClient),p.nomExp||'',p.nomDest||'',p.adresse1Dest||'',p.codePostalDest||'',p.villeDest||'',p.libelleEtat||'',p.codeProduit||'',p.nbColis||'',p.poids?p.poids.toFixed(1):'',p.dateDepartFrs||'',p.dateLivraisonFrs||'']);
+  const h=['Récépissé','Référence','Code Magasin','Expéditeur','Destinataire','Adresse','CP','Ville','Statut','Produit','Nb colis','Poids','Date départ','Livraison prévue'];
+  const rows=allData.map(p=>{const cm=getCodeMag(p.nomDest);return[p.noRecepisse||'',p.reference1||'',cm,p.nomExp||'',p.nomDest||'',p.adresse1Dest||'',p.codePostalDest||'',p.villeDest||'',p.libelleEtat||'',p.codeProduit||'',p.nbColis||'',p.poids?p.poids.toFixed(1):'',p.dateDepartFrs||'',p.dateLivraisonFrs||''];});
   const csv=[h,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\n');
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
