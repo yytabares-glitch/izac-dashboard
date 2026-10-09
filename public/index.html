@@ -3,259 +3,506 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IZAC — Dashboard Geodis</title>
+<title>IZAC — Dashboard Transport Unifié</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--primary:#002D62;--accent:#E8641A;--bg:#f0f2f5;--white:#fff;--border:#e0e3ea;--text:#1a1a2e;--sub:#888;--green:#16a34a;--red:#dc2626;--blue:#1d4ed8;--purple:#7c3aed}
+:root{--primary:#002D62;--orange:#E8641A;--green:#16a34a;--red:#dc2626;--blue:#1d4ed8;--purple:#7c3aed;--bg:#f0f2f5;--white:#fff;--border:#e0e3ea;--text:#1a1a2e;--sub:#888}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-.header{background:var(--primary);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 10px rgba(0,45,98,.3)}
-.brand{display:flex;align-items:center;gap:14px}
-.logo{background:var(--accent);color:#fff;font-weight:700;font-size:13px;padding:6px 12px;border-radius:8px;letter-spacing:1px}
-.header-title{color:#fff;font-size:18px;font-weight:600}
-.header-sub{color:rgba(255,255,255,.5);font-size:12px;margin-top:2px}
-.live-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);font-size:12px;padding:6px 14px;border-radius:20px}
-.pulse{width:8px;height:8px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite}
+
+.header{background:var(--primary);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 10px rgba(0,45,98,.3)}
+.brand{display:flex;align-items:center;gap:12px}
+.logos{display:flex;gap:6px}
+.logo{font-weight:700;font-size:11px;padding:4px 8px;border-radius:5px;letter-spacing:1px}
+.logo-geo{background:#1565c0;color:#fff}
+.logo-tnt{background:var(--orange);color:#fff}
+.logo-atv{background:#2e7d32;color:#fff}
+.header-title{color:#fff;font-size:17px;font-weight:600}
+.header-sub{color:rgba(255,255,255,.5);font-size:11px;margin-top:2px}
+.live-badge{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);font-size:12px;padding:6px 12px;border-radius:20px}
+.pulse{width:7px;height:7px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.main{max-width:1400px;margin:0 auto;padding:24px 20px}
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:24px}
-.metric{background:var(--white);border-radius:12px;padding:16px 18px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.metric-label{font-size:11px;color:var(--sub);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-weight:500}
-.metric-value{font-size:28px;font-weight:700;line-height:1}
-.mv-p{color:var(--primary)}.mv-g{color:var(--green)}.mv-r{color:var(--red)}.mv-a{color:var(--accent)}.mv-pu{color:var(--purple)}
-.panel{background:var(--white);border-radius:14px;border:1px solid var(--border);padding:20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.panel-title{font-size:14px;font-weight:600;color:var(--primary);margin-bottom:16px}
-.search-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;align-items:end}
-.field label{display:block;font-size:12px;color:#666;font-weight:500;margin-bottom:5px}
-.field input{width:100%;font-size:13px;padding:9px 12px;border-radius:9px;border:1.5px solid var(--border);background:#fafbfc;color:var(--text);outline:none;transition:border-color .15s;font-family:'Inter',sans-serif}
-.field input:focus{border-color:var(--primary)}
-.btn-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:500;padding:9px 18px;border-radius:9px;border:1.5px solid var(--border);background:var(--white);color:#444;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:'Inter',sans-serif}
+
+.main{max-width:1500px;margin:0 auto;padding:20px}
+
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:20px}
+.metric{background:var(--white);border-radius:10px;padding:14px 16px;border:1px solid var(--border)}
+.metric-label{font-size:11px;color:var(--sub);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;font-weight:500}
+.metric-value{font-size:26px;font-weight:700}
+.mv-p{color:var(--primary)}.mv-g{color:var(--green)}.mv-r{color:var(--red)}.mv-a{color:var(--orange)}.mv-pu{color:var(--purple)}.mv-b{color:var(--blue)}
+
+.panel{background:var(--white);border-radius:12px;border:1px solid var(--border);padding:18px;margin-bottom:18px}
+.panel-title{font-size:13px;font-weight:600;color:var(--primary);margin-bottom:14px}
+
+.drop-zone{border:2px dashed var(--border);border-radius:10px;padding:30px;text-align:center;cursor:pointer;transition:all .2s;background:#fafbfc;margin-bottom:12px}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--primary);background:#f0f4ff}
+.drop-icon{font-size:30px;margin-bottom:8px}
+.drop-text{font-size:13px;color:#555;margin-bottom:4px;font-weight:500}
+.drop-sub{font-size:11px;color:#aaa}
+
+.filter-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.field label{display:block;font-size:11px;color:#666;font-weight:500;margin-bottom:4px}
+.field input,.field select{width:100%;font-size:13px;padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);background:#fafbfc;color:var(--text);outline:none;font-family:'Inter',sans-serif}
+.field input:focus,.field select:focus{border-color:var(--primary)}
+
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;font-size:13px;font-weight:500;padding:8px 16px;border-radius:8px;border:1.5px solid var(--border);background:var(--white);color:#444;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:'Inter',sans-serif}
 .btn:hover{background:#f5f6f8}
 .btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
 .btn.primary:hover{background:#001f4a}
 .btn.primary:disabled{background:#6685a8;cursor:not-allowed}
-.hint{font-size:11.5px;color:#bbb;margin-top:10px;font-style:italic}
-.toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
-.pill{font-size:12px;padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);cursor:pointer;color:#666;font-family:'Inter',sans-serif;transition:all .15s}
+.hint{font-size:11px;color:#bbb;margin-top:8px;font-style:italic}
+
+.progress-wrap{background:#f4f6fb;border-radius:8px;padding:12px;margin-bottom:12px;display:none}
+.progress-wrap.show{display:block}
+.progress-bar-bg{background:#e0e3ea;border-radius:8px;height:6px;overflow:hidden;margin:6px 0}
+.progress-bar-fill{background:var(--primary);height:100%;border-radius:8px;transition:width .3s}
+.progress-text{font-size:12px;color:#555}
+
+.toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.pill{font-size:12px;padding:4px 12px;border-radius:16px;border:1.5px solid var(--border);background:var(--white);cursor:pointer;color:#666;font-family:'Inter',sans-serif;transition:all .15s}
 .pill.active{background:var(--primary);color:#fff;border-color:var(--primary)}
-.sbar{flex:1;min-width:220px;font-size:13px;padding:7px 13px;border-radius:9px;border:1.5px solid var(--border);outline:none;font-family:'Inter',sans-serif}
+.sbar{flex:1;min-width:200px;font-size:13px;padding:6px 12px;border-radius:8px;border:1.5px solid var(--border);outline:none;font-family:'Inter',sans-serif}
 .sbar:focus{border-color:var(--primary)}
 .clbl{font-size:12px;color:#bbb;white-space:nowrap}
-.table-wrap{background:var(--white);border-radius:14px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.thead{display:grid;grid-template-columns:1.2fr 1.4fr 1.5fr 1fr 1fr 1fr 1fr 0.8fr;padding:11px 18px;background:#f4f6fb;border-bottom:1.5px solid var(--border);font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;gap:10px}
+
+.table-wrap{background:var(--white);border-radius:12px;border:1px solid var(--border);overflow:hidden}
+.thead{display:grid;grid-template-columns:90px 1.4fr 1fr 1.6fr 1fr 1fr 1fr 0.8fr 0.7fr;padding:10px 16px;background:#f4f6fb;border-bottom:1.5px solid var(--border);font-size:10px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;gap:8px}
 .trow-wrap{border-top:1px solid #f2f3f7}
-.trow{display:grid;grid-template-columns:1.2fr 1.4fr 1.5fr 1fr 1fr 1fr 1fr 0.8fr;padding:13px 18px;align-items:center;gap:10px;cursor:pointer;transition:background .1s}
+.trow{display:grid;grid-template-columns:90px 1.4fr 1fr 1.6fr 1fr 1fr 1fr 0.8fr 0.7fr;padding:11px 16px;align-items:center;gap:8px;cursor:pointer;transition:background .1s}
 .trow:hover{background:#f8f9fc}
-.mono{font-family:monospace;font-size:12px;font-weight:700;color:var(--primary)}
-.sub-txt{font-size:11px;color:var(--sub);margin-top:2px}
-.mag-badge{display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;background:var(--primary);color:#fff;margin-bottom:3px}
-.dest-name{font-size:13px;font-weight:500}
-.city{font-size:12px;color:#666}
-.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;white-space:nowrap}
+
+.trps-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:.5px}
+.trps-geo{background:#e3f2fd;color:#1565c0}
+.trps-tnt{background:#fff3e0;color:#e65100}
+.trps-atv{background:#e8f5e9;color:#2e7d32}
+.trps-other{background:#f3f4f6;color:#555}
+
+.mono{font-family:monospace;font-size:11px;font-weight:700;color:var(--primary)}
+.sub-txt{font-size:10px;color:var(--sub);margin-top:2px}
+.mag-badge{display:inline-flex;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:var(--primary);color:#fff}
+.dest-name{font-size:12px;font-weight:500}
+.city-txt{font-size:11px;color:#666}
+
+.badge{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;white-space:nowrap}
 .b-liv{background:#dcfce7;color:#15803d}
 .b-tr{background:#dbeafe;color:var(--blue)}
 .b-ano{background:#fee2e2;color:var(--red)}
 .b-att{background:#f3f4f6;color:#6b7280}
-.colis-big{font-size:18px;font-weight:700;color:var(--primary)}
-.poids-small{font-size:11px;color:var(--sub)}
-.date-depart{font-size:12px;color:var(--sub)}
-.date-livr{font-size:12px;font-weight:600;color:var(--text)}
-.date-livr.ok{color:var(--green)}
-.mini-btn{display:inline-flex;align-items:center;font-size:11px;padding:4px 9px;border-radius:7px;border:1.5px solid var(--border);background:var(--white);cursor:pointer;color:#555;transition:all .1s;text-decoration:none;font-family:'Inter',sans-serif}
-.mini-btn:hover{border-color:var(--primary);color:var(--primary)}
-.detail-panel{padding:18px;background:#f8f9fc;border-top:1px solid var(--border);display:none}
+.b-load{background:#fff7ed;color:#c2410c}
+
+.date-cell{font-size:11px;color:#555}
+.date-cell.ok{color:var(--green);font-weight:600}
+.nb-big{font-size:16px;font-weight:700;color:var(--primary)}
+
+.detail-panel{padding:14px 16px;background:#f8f9fc;border-top:1px solid var(--border);display:none}
 .detail-panel.open{display:block}
-.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:16px}
-.dblock{background:var(--white);border-radius:10px;border:1px solid var(--border);padding:14px}
-.dblock-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--primary);margin-bottom:10px}
-.drow{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid #f5f6f8}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px}
+.dblock{background:var(--white);border-radius:8px;border:1px solid var(--border);padding:12px}
+.dblock-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--primary);margin-bottom:8px}
+.drow{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid #f5f6f8}
 .drow:last-child{border-bottom:none}
-.dk{color:#aaa}.dv{font-weight:500;text-align:right;max-width:60%}
-.tl{display:flex;margin-bottom:16px;padding:14px;background:var(--white);border-radius:10px;border:1px solid var(--border)}
-.tl-step{flex:1;display:flex;flex-direction:column;align-items:center;position:relative}
-.tl-step:not(:last-child)::after{content:'';position:absolute;top:10px;left:50%;width:100%;height:2px;background:var(--border);z-index:0}
-.tl-step.done:not(:last-child)::after{background:var(--primary)}
-.tl-dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);background:var(--white);z-index:1;display:flex;align-items:center;justify-content:center;font-size:10px}
-.tl-step.done .tl-dot{border-color:var(--primary);background:var(--primary);color:#fff}
-.tl-step.current .tl-dot{border-color:var(--primary);background:#eef1f8}
-.tl-lbl{font-size:10px;color:var(--sub);margin-top:5px;text-align:center;max-width:70px;line-height:1.3}
-.tl-step.done .tl-lbl,.tl-step.current .tl-lbl{color:var(--text);font-weight:500}
-.action-links{display:flex;gap:10px;flex-wrap:wrap}
-.action-link{display:inline-flex;align-items:center;gap:6px;color:var(--primary);font-size:13px;font-weight:500;text-decoration:none;padding:7px 14px;border:1.5px solid var(--primary);border-radius:8px;transition:all .15s}
+.dk{color:#aaa}.dv{font-weight:500;text-align:right;max-width:55%}
+.action-links{display:flex;gap:8px;flex-wrap:wrap}
+.action-link{display:inline-flex;align-items:center;gap:5px;color:var(--primary);font-size:12px;font-weight:500;text-decoration:none;padding:5px 12px;border:1.5px solid var(--primary);border-radius:7px;transition:all .15s}
 .action-link:hover{background:var(--primary);color:#fff}
-.empty{padding:60px;text-align:center;color:#ccc}
-.empty-icon{font-size:40px;margin-bottom:12px}
-.spinner{display:inline-block;width:18px;height:18px;border:2px solid #eef1f8;border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
+
+.empty{padding:50px;text-align:center;color:#ccc}
+.empty-icon{font-size:36px;margin-bottom:10px}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid #eef1f8;border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.loading-msg{display:flex;align-items:center;gap:12px;padding:40px;justify-content:center;color:#888;font-size:14px}
-.toast{position:fixed;bottom:24px;right:24px;background:var(--primary);color:#fff;padding:11px 20px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:100}
+.loading-msg{display:flex;align-items:center;gap:10px;padding:30px;justify-content:center;color:#888;font-size:13px}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--primary);color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:100}
 .toast.show{opacity:1}
-.err-box{background:#fef2f2;border:1.5px solid #fca5a5;border-radius:9px;padding:12px 16px;font-size:13px;color:var(--red);margin-top:12px;display:none}
+.err-box{background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;padding:10px 14px;font-size:12px;color:var(--red);margin-top:8px;display:none}
 .err-box.show{display:block}
 </style>
 </head>
 <body>
+
 <div class="header">
   <div class="brand">
-    <div class="logo">GEODIS</div>
+    <div class="logos">
+      <span class="logo logo-geo">GEODIS</span>
+      <span class="logo logo-tnt">TNT</span>
+      <span class="logo logo-atv">ATVYL</span>
+    </div>
     <div>
-      <div class="header-title">Dashboard Tracking IZAC</div>
-      <div class="header-sub">Suivi automatique — API Geodis ZoomClient</div>
+      <div class="header-title">Dashboard Transport IZAC</div>
+      <div class="header-sub">Suivi unifié — Toutes expéditions dépôt → magasins</div>
     </div>
   </div>
   <div class="live-badge"><span class="pulse"></span><span id="live-txt">Prêt</span></div>
 </div>
+
 <div class="main">
   <div class="metrics">
-    <div class="metric"><div class="metric-label">Total envois</div><div class="metric-value mv-p" id="m-tot">0</div></div>
-    <div class="metric"><div class="metric-label">En transit</div><div class="metric-value mv-pu" id="m-tr">0</div></div>
+    <div class="metric"><div class="metric-label">Total</div><div class="metric-value mv-p" id="m-tot">0</div></div>
     <div class="metric"><div class="metric-label">Livrés</div><div class="metric-value mv-g" id="m-li">0</div></div>
+    <div class="metric"><div class="metric-label">En transit</div><div class="metric-value mv-pu" id="m-tr">0</div></div>
     <div class="metric"><div class="metric-label">Anomalies</div><div class="metric-value mv-r" id="m-er">0</div></div>
-    <div class="metric"><div class="metric-label">Nb colis</div><div class="metric-value mv-a" id="m-co">0</div></div>
-    <div class="metric"><div class="metric-label">Poids total</div><div class="metric-value mv-p" id="m-po" style="font-size:20px">0 kg</div></div>
+    <div class="metric"><div class="metric-label">Geodis</div><div class="metric-value mv-b" id="m-geo">0</div></div>
+    <div class="metric"><div class="metric-label">TNT</div><div class="metric-value mv-a" id="m-tnt">0</div></div>
+    <div class="metric"><div class="metric-label">ATVYL</div><div class="metric-value mv-g" id="m-atv">0</div></div>
+    <div class="metric"><div class="metric-label">Nb colis</div><div class="metric-value mv-p" id="m-col">0</div></div>
   </div>
+
   <div class="panel">
-    <div class="panel-title">🔍 Recherche des envois</div>
-    <div class="search-grid">
-      <div class="field"><label>Date départ début</label><input type="date" id="date-debut"></div>
-      <div class="field"><label>Date départ fin</label><input type="date" id="date-fin"></div>
-      <div class="field"><label>N° récépissé</label><input type="text" id="f-recep" placeholder="optionnel"></div>
-      <div class="field"><label>Référence</label><input type="text" id="f-ref" placeholder="optionnel"></div>
-      <div class="field"><label>Destinataire</label><input type="text" id="f-dest" placeholder="optionnel"></div>
+    <div class="panel-title">📂 Import Export_ls (fichier Pascal / LOGNC)</div>
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event)">
+      <div class="drop-icon">📄</div>
+      <div class="drop-text">Glisse l'Export_ls ici ou clique pour choisir</div>
+      <div class="drop-sub">Format CSV — colonnes : ID_LS, ID_CLI, TRPS, DT_EXP, NB_COLIS...</div>
     </div>
+    <input type="file" id="file-input" accept=".csv" style="display:none" onchange="handleFile(this.files[0])">
+
+    <div class="filter-row">
+      <div class="field"><label>Date expéd. début</label><input type="date" id="f-debut"></div>
+      <div class="field"><label>Date expéd. fin</label><input type="date" id="f-fin"></div>
+      <div class="field">
+        <label>Transporteur</label>
+        <select id="f-trps">
+          <option value="all">Tous</option>
+          <option value="GEODIS">Geodis</option>
+          <option value="TNT">TNT</option>
+          <option value="ATVYL">ATVYL</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="progress-wrap" id="progress">
+      <div class="progress-text" id="progress-txt">Traitement...</div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-bar" style="width:0%"></div></div>
+    </div>
+
     <div class="btn-row">
-      <button class="btn primary" id="btn-search" onclick="search()">🔍 Rechercher</button>
+      <button class="btn primary" id="btn-track" onclick="startTracking()" disabled>🔍 Lancer le suivi</button>
       <button class="btn" onclick="exportCSV()">📥 Export CSV</button>
-      <button class="btn" onclick="setToday()">📅 Aujourd'hui</button>
-      <button class="btn" onclick="setWeek()">📅 7 jours</button>
+      <button class="btn" onclick="clearAll()">🗑 Vider</button>
     </div>
     <div class="err-box" id="err-box"></div>
-    <div class="hint">💡 Par défaut les 7 derniers jours.</div>
+    <div class="hint">💡 Geodis = API temps réel | TNT = API temps réel (BL uniquement) | ATVYL = données auto toutes les heures</div>
   </div>
+
   <div class="toolbar">
     <button class="pill active" onclick="setFilter('all',this)">Tous</button>
     <button class="pill" onclick="setFilter('livr',this)">Livrés</button>
     <button class="pill" onclick="setFilter('tr',this)">En transit</button>
     <button class="pill" onclick="setFilter('ano',this)">Anomalies</button>
-    <input class="sbar" type="text" id="sbar" placeholder="Filtrer par code mag, nom magasin, ville, référence..." oninput="render()">
+    <button class="pill" onclick="setFilter('pend',this)">En attente</button>
+    <input class="sbar" type="text" id="sbar" placeholder="Filtrer par BL, magasin, destinataire, ville..." oninput="render()">
     <span class="clbl" id="clbl"></span>
   </div>
+
   <div class="table-wrap">
     <div class="thead">
-      <div>N° Récépissé</div>
+      <div>Transport.</div>
+      <div>N° BL / Réf.</div>
       <div>Code Mag</div>
       <div>Destinataire / Ville</div>
       <div>Statut</div>
-      <div>Date départ</div>
+      <div>Date expéd.</div>
       <div>Date livraison</div>
-      <div>Nb colis / Poids</div>
+      <div>Nb colis</div>
       <div>Actions</div>
     </div>
     <div id="list">
-      <div class="empty"><div class="empty-icon">📦</div>Lance une recherche pour afficher tes envois</div>
+      <div class="empty"><div class="empty-icon">📦</div>Importe l'Export_ls pour commencer</div>
     </div>
   </div>
 </div>
+
 <div class="toast" id="toast"></div>
+
 <script>
-const MAG_BY_NAME = {
-  'E. GRIFFE FPN15':'318','IZAC CAP FPN13':'1666','IZAC CLERM. FPN30':'1451','IZAC EURALI. FPN2':'1618','IZAC G. VAR FPN13':'1667','IZAC MONTA. FPN11':'1469','IZAC N CREB FPN38':'1615','IZAC NANTES FPN38':'1355','IZAC NOYELLE FPN2':'1668','IZAC PERP. FPN19':'1350','IZAC PTSTEM FPN15':'1377','IZAC STRASB. FPN3':'1487','MORENCE FPN23':'647','RAPHAEL FPN13':'1715',
-  'ABC':'1768','AJ PROGRESS':'1726','ARVET SARL - ARNAUD VETEMENTS':'61','ATVYL':'1816','AUMACLAIRE':'1434','AVANT CAP - CABRIES':'1840','BEY FIRST':'1766','BEY FIRST 2':'1852','BLOOM DAVID SARL':'1349','BOY AND GIRL':'1769','BROUSSEAU-STE VENDEENNE DE VTS':'142','BS MODE':'1858','BUXY':'1496','BWS SARL':'1436','C3C':'1676','CHABE':'1854','CHABE GRAND SUD':'1837','CLOTHING DISTRIBUTIONS':'1839','COSMOPOLITE':'216','COTE HOMME':'1070','DECOR DE FRANCE SA':'1645','DES CERISIERS SARL':'380','ESPACE GRIFFE B':'318','ESPACE GRIFFES ST QUENTIN':'1650','ETIQUETTE':'1312','FC NANTES':'1557','G. LEMOINE SAS':'1318','GENTLEMAN':'1875','GENTLEMEN&STEPH':'1699','GEODIS':'1817','H2R':'1678','HAVANE SAS':'1512','HOPIUM':'1207','HORS LIGNE SA':'437','I STOCK AVENUE':'1505','IZAC A13':'1543','IZAC AEROVILLE':'1449','IZAC AIX EN PROVENCE':'1749','IZAC AIX LES BAINS':'1621','IZAC AJACCIO':'1637','IZAC ANDREZIEUX':'1671','IZAC ANGLETB':'1608','IZAC ANNECY':'1880','IZAC ARCUEIL':'1779','IZAC ARRAS':'1683','IZAC AUBER':'1009','IZAC AUXERRE':'1597','IZAC AVIGNON':'1470','IZAC BASTIA':'1598','IZAC BEAUGRENELLE':'1748','IZAC BEGLES':'1426','IZAC BELLE EPINE':'1010','IZAC BESANCON':'1755','IZAC BEZIERS':'1199','IZAC BLAGNAC':'1074','IZAC BLOIS':'1704','IZAC BORDEAUX':'1567','IZAC BORDEAUX LAC':'1737','IZAC BOULOGNE':'1756','IZAC BREST':'1670','IZAC CAEN':'1828','IZAC CANNES':'1728','IZAC CAP3000':'1666','IZAC CARRE SENART':'1568','IZAC CHAMBERY':'1862','IZAC CLAIRA':'1427','IZAC CLAYE SOUILLY':'1353','IZAC CLERMONT JAUDE':'1451','IZAC CORBEIL':'1782','IZAC CRETEIL':'1104','IZAC DEAUVILLE':'1843','IZAC DIJON CV':'1793','IZAC DIJON TOISON':'1448','IZAC ECOUFLANT':'1518','IZAC ECULLY':'1738','IZAC EPAGNY':'1544','IZAC EPINAL':'1716','IZAC EURALILLE':'1618','IZAC FENOUILLET':'1603','IZAC FORUM DES HALLES':'1696','IZAC GAP':'1785','IZAC GIVERNY':'1865','IZAC GRAND VAR':'1667','IZAC GRENOBLE':'1792','IZAC HAGUENAU':'1732','IZAC HERRIOT':'1011','IZAC LA DEFENSE':'1575','IZAC LA ROCHELLE':'1787','IZAC LA VALENTINE':'1488','IZAC LE MANS':'1842','IZAC LE POLYGONE':'1844','IZAC LES SABLES D OLONNE':'1724','IZAC LES TERRASSES DU PORT':'1486','IZAC LEVALLOIS':'1352','IZAC LILLE':'1335','IZAC LILLENIUM':'1729','IZAC LORMONT':'1545','IZAC LYON CONFLUENCE':'1330','IZAC MERIGNAC':'1485','IZAC METZ':'1636','IZAC MIRAMAS':'1627','IZAC MONTARGIS':'1469','IZAC MONTPARNASSE':'1665','IZAC MONTPELLIER':'1331','IZAC MULHOUSE':'1694','IZAC NANCY CV':'1868','IZAC NANTES ATLANTIS':'1355','IZAC NANTES CREBILLON':'1615','IZAC NEW GONESSE':'1498','IZAC NEYRPIC':'1830','IZAC NIMES CAP COSTIERES':'1609','IZAC NIORT':'1526','IZAC NOYELLES':'1668','IZAC ORLEANS':'1835','IZAC PARINOR':'1045','IZAC PARLY':'1655','IZAC PART DIEU':'1513','IZAC PAU':'1651','IZAC PERPIGNAN AUCHAN':'1350','IZAC PRADO':'1654','IZAC PT STE MARIE':'1377','IZAC REIMS CV':'1879','IZAC RENNES ALMA':'1450','IZAC RENNES CV':'1801','IZAC ROMANS':'1740','IZAC ROSNY2':'1604','IZAC ROUBAIX':'1648','IZAC ROUEN':'1334','IZAC RUE RENNES':'1028','IZAC SAINT 0MER':'1563','IZAC SAINT ETIENNE B':'1672','IZAC SAINT-TROPEZ':'1873','IZAC ST DENIS':'1109','IZAC ST QUENTIN':'1215','IZAC STRASBOURG':'1487','IZAC STRASBOURG CENTRE VILLE':'1831','IZAC THIONVILLE':'1742','IZAC TOULOUSE':'1739','IZAC TOURS':'1791','IZAC VALEUROPB':'1552','IZAC VELIZY':'1198','IZAC VILLEFONTAINE':'1735','IZAC VILLENEUVE LA GARENNE':'1489','IZAC VOIRON':'1669','JACK MOD':'1492','JASYL SARL':'1286','JLD DIFFUSION SAS':'997','JS TRADING':'479','JS TRADING SARL':'1692','JSR LUXEMBOURG SARL':'1703','JUMP ATELIER':'1861','LA MAISON DU VETEMENTS':'576','LABAU DIFFUSION':'507','LECOINTRE  HOM SARL':'532','LES GALERIES SAS DU GRAND BAZAR':'1708','LEVY BLUM SAS':'1364','LOL BY LOUISIANE':'1411','LUXARGA':'1653','M.C.S. SARL':'559','MANCEAU EURL':'1289','MARSAN SRL':'1866','MATCO SARL - MACASSAR':'566','MHB':'1641','MON VESTIAIRE':'1701','MORENCE MAGASIN EURL':'647','MOSSIS J. - SARL COME BACK':'206','MULTI':'1745','MYRYS SA':'1527','OL SASU':'1776','PINEL VETEMENTS':'724','PRETTY WOMEN':'1578','RC LENS':'1800','RENOUX MODE':'1812','REZLAND SARL':'1643','SARL LANGLAIS':'1661','SARL LES SECRETS DE BEA':'1760','SARL ROY':'1818','SARL TOULLELAN MAUD':'1805','SAS BARON':'1851','SAS EXPANTOUR':'1815','SAS MB':'1872','SAS MEAROMA / RAPHAEL':'1715','SAS PENAUD':'717','SAS RC STRASBOURG':'1850','SAS WAS ONE':'1758','SHOW ROOM IZAC':'1057','SLBO':'1722','SPORLUX':'851','STADE RENNAIS FOOTBALL CLUB':'1781','STE MEN S':'1807','STOCK DE MARQUES':'1876','TERRE D HOMME 61':'1055','TERRE D HOMME 72':'1054','TEXEA':'1773','TNT':'1376','TOP MODEL':'1784','VEKSLER SARL -':'268','VENTE PRIVEE.COM':'952','VERSO SARL':'954','VETEMENTS COUPIN':'1711','VIVAGO SAS':'1710','VIVALAGO SAS':'1780','WE MADISON':'1761','WEB':'1447','WILHELEM SA':'1317'
+const API = 'https://izac-dashboard.yytabares.workers.dev';
+const ATVYL_DATA_URL = 'https://raw.githubusercontent.com/timotamir92-cmd/izac-tracking/main/data.json';
+
+const MAG_NAMES = {
+  '1009':'IZAC AUBER','1010':'IZAC BELLE EPINE','1011':'IZAC HERRIOT','1028':'IZAC RUE RENNES','1045':'IZAC PARINOR','1057':'SHOW ROOM IZAC','1074':'IZAC BLAGNAC','1104':'IZAC CRETEIL','1109':'IZAC ST DENIS','1198':'IZAC VELIZY','1199':'IZAC BEZIERS','1207':'HOPIUM','1215':'IZAC ST QUENTIN','1286':'JASYL','1289':'MANCEAU','1317':'WILHELEM','1318':'G. LEMOINE','1330':'IZAC LYON CONFLUENCE','1331':'IZAC MONTPELLIER','1334':'IZAC ROUEN','1335':'IZAC LILLE','1349':'BLOOM DAVID','1350':'IZAC PERPIGNAN','1352':'IZAC LEVALLOIS','1353':'IZAC CLAYE SOUILLY','1355':'IZAC NANTES ATLANTIS','1364':'LEVY BLUM','1377':'IZAC PT STE MARIE','1411':'LOL BY LOUISIANE','1426':'IZAC BEGLES','1427':'IZAC CLAIRA','1434':'AUMACLAIRE','1447':'WEB','1448':'IZAC DIJON TOISON','1449':'IZAC AEROVILLE','1450':'IZAC RENNES ALMA','1451':'IZAC CLERMONT JAUDE','1469':'IZAC MONTARGIS','1470':'IZAC AVIGNON','1485':'IZAC MERIGNAC','1486':'IZAC TERRASSES DU PORT','1487':'IZAC STRASBOURG','1488':'IZAC LA VALENTINE','1489':'IZAC VILLENEUVE LG','1492':'JACK MOD','1496':'BUXY','1498':'IZAC NEW GONESSE','1505':'I STOCK AVENUE','1512':'HAVANE','1513':'IZAC PART DIEU','1518':'IZAC ECOUFLANT','1526':'IZAC NIORT','1527':'MYRYS','1543':'IZAC A13','1544':'IZAC EPAGNY','1545':'IZAC LORMONT','1552':'IZAC VALEUROPB','1557':'FC NANTES','1563':'IZAC SAINT OMER','1567':'IZAC BORDEAUX','1568':'IZAC CARRE SENART','1575':'IZAC LA DEFENSE','1597':'IZAC AUXERRE','1598':'IZAC BASTIA','1603':'IZAC FENOUILLET','1604':'IZAC ROSNY2','1608':'IZAC ANGLET','1609':'IZAC NIMES','1615':'IZAC NANTES CREBILLON','1618':'IZAC EURALILLE','1621':'IZAC AIX LES BAINS','1627':'IZAC MIRAMAS','1636':'IZAC METZ','1637':'IZAC AJACCIO','1641':'MHB','1648':'IZAC ROUBAIX','1650':'ESPACE GRIFFES','1651':'IZAC PAU','1654':'IZAC PRADO','1655':'IZAC PARLY','1661':'SARL LANGLAIS','1665':'IZAC MONTPARNASSE','1666':'IZAC CAP3000','1667':'IZAC GRAND VAR','1668':'IZAC NOYELLES','1669':'IZAC VOIRON','1670':'IZAC BREST','1671':'IZAC ANDREZIEUX','1672':'IZAC ST ETIENNE','1678':'H2R','1683':'IZAC ARRAS','1694':'IZAC MULHOUSE','1696':'IZAC FORUM DES HALLES','1699':'GENTLEMEN','1704':'IZAC BLOIS','1710':'VIVAGO','1711':'VET COUPIN','1715':'RAPHAEL','1716':'IZAC EPINAL','1722':'SLBO','1724':'IZAC LES SABLES','1726':'AJ PROGRESS','1728':'IZAC CANNES','1729':'IZAC LILLENIUM','1732':'IZAC HAGUENAU','1735':'IZAC VILLEFONTAINE','1737':'IZAC BORDEAUX LAC','1738':'IZAC ECULLY','1739':'IZAC TOULOUSE','1740':'IZAC ROMANS','1742':'IZAC THIONVILLE','1745':'MULTI','1748':'IZAC BEAUGRENELLE','1749':'IZAC AIX EN PROVENCE','1755':'IZAC BESANCON','1756':'IZAC BOULOGNE','1758':'WAS ONE','1761':'WE MADISON','1766':'BEY FIRST','1776':'OL SASU','1779':'IZAC ARCUEIL','1781':'STADE RENNAIS','1782':'IZAC CORBEIL','1785':'IZAC GAP','1787':'IZAC LA ROCHELLE','1791':'IZAC TOURS','1792':'IZAC GRENOBLE','1793':'IZAC DIJON CV','1800':'RC LENS','1801':'IZAC RENNES CV','1828':'IZAC CAEN','1830':'IZAC NEYRPIC','1831':'IZAC STRAS CV','1835':'IZAC ORLEANS','1840':'AVANT CAP CABRIES','1842':'IZAC LE MANS','1843':'IZAC DEAUVILLE','1844':'IZAC LE POLYGONE','1862':'IZAC CHAMBERY','1865':'IZAC GIVERNY','1868':'IZAC NANCY CV','1873':'IZAC ST TROPEZ','1876':'STOCK DE MARQUES','1879':'IZAC REIMS CV','1880':'IZAC ANNECY'
 };
 
-function getCodeMag(nomDest){
-  if(!nomDest) return '';
-  const n=nomDest.toUpperCase().trim();
-  if(MAG_BY_NAME[n]) return MAG_BY_NAME[n];
-  for(const k of Object.keys(MAG_BY_NAME)){
-    if(n.includes(k)||k.includes(n)) return MAG_BY_NAME[k];
-  }
-  return '';
+function getMagCode(idCli){
+  if(!idCli) return '';
+  return idCli.replace(/^IZ/,'').replace(/^BL/,'');
+}
+function getMagName(idCli){
+  const code=getMagCode(idCli);
+  return MAG_NAMES[code]||idCli||'';
 }
 
-let allData=[], activeFilter='all', openRow=null;
-
-function fmt(d){return d.toISOString().slice(0,10);}
-function setWeek(){const e=new Date(),s=new Date();s.setDate(e.getDate()-7);document.getElementById('date-debut').value=fmt(s);document.getElementById('date-fin').value=fmt(e);}
-function setToday(){const d=fmt(new Date());document.getElementById('date-debut').value=d;document.getElementById('date-fin').value=d;}
-setWeek();
+let allData=[], activeFilter='all', openRow=null, processing=false;
+let atvylData=[];
 
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
 function showErr(msg){const b=document.getElementById('err-box');b.textContent=msg;b.classList.add('show');}
 function hideErr(){document.getElementById('err-box').classList.remove('show');}
 function setFilter(f,btn){activeFilter=f;document.querySelectorAll('.pill').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render();}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function fmt(d){return d.toISOString().slice(0,10);}
 
-async function search(){
-  hideErr();
-  const debut=document.getElementById('date-debut').value;
-  const fin=document.getElementById('date-fin').value;
-  if(!debut||!fin){showErr('⚠️ Renseigne les dates.');return;}
-  const btn=document.getElementById('btn-search');
-  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Chargement...';
-  document.getElementById('live-txt').textContent='Requête en cours...';
-  document.getElementById('list').innerHTML='<div class="loading-msg"><span class="spinner"></span> Récupération des envois Geodis...</div>';
+// Load ATVYL data
+async function loadAtvyl(){
   try{
-    const body={dateDebut:debut,dateFin:fin};
-    const rec=document.getElementById('f-recep').value.trim();
-    const ref=document.getElementById('f-ref').value.trim();
-    const dest=document.getElementById('f-dest').value.trim();
-    if(rec)body.noRecepisse=rec;
-    if(ref)body.reference1=ref;
-    if(dest)body.nomDest=dest;
-    const resp=await fetch('/api/envois',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const resp=await fetch(ATVYL_DATA_URL);
     const data=await resp.json();
-    if(data.error){showErr('❌ Erreur : '+data.error);allData=[];}
-    else if(data.ok){
-      allData=data.contenu||[];
-      toast('✅ '+allData.length+' envoi(s) trouvé(s)');
-      document.getElementById('live-txt').textContent='Mis à jour '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-    }else{showErr('❌ Réponse inattendue');allData=[];}
-  }catch(e){showErr('❌ Erreur : '+e.message);allData=[];}
-  btn.disabled=false;btn.innerHTML='🔍 Rechercher';
+    atvylData=data.expeditions||[];
+    console.log('ATVYL loaded:', atvylData.length, 'expeditions');
+  }catch(e){
+    console.warn('ATVYL load failed:', e.message);
+  }
+}
+loadAtvyl();
+
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('dragover');
+  const file=e.dataTransfer.files[0];
+  if(file) handleFile(file);
+}
+
+function parseExportLs(text){
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
+  if(!lines.length) return [];
+  const sep=lines[0].includes(';')?';':',';
+  const headers=lines[0].split(sep).map(h=>h.replace(/^["']|["']$/g,'').trim());
+  return lines.slice(1).map(line=>{
+    const cols=line.split(sep).map(c=>c.replace(/^["']|["']$/g,'').trim());
+    const obj={};
+    headers.forEach((h,i)=>obj[h]=cols[i]||'');
+    return obj;
+  }).filter(r=>r['ID_LS']&&r['TRPS']);
+}
+
+function handleFile(file){
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    try{
+      let rows=parseExportLs(e.target.result);
+      if(!rows.length){showErr('❌ Aucune ligne valide trouvée dans ce fichier.');return;}
+
+      // Filter by date if set
+      const debut=document.getElementById('f-debut').value;
+      const fin=document.getElementById('f-fin').value;
+      const trps=document.getElementById('f-trps').value;
+
+      if(debut||fin){
+        rows=rows.filter(r=>{
+          if(!r['DT_EXP']) return true;
+          const d=r['DT_EXP'].slice(0,10).split('/').reverse().join('-');
+          if(debut&&d<debut) return false;
+          if(fin&&d>fin) return false;
+          return true;
+        });
+      }
+      if(trps!=='all') rows=rows.filter(r=>r['TRPS']===trps);
+
+      allData=rows.map(r=>{
+        const idLs=r['ID_LS']||'';
+        const trpsVal=r['TRPS']||'';
+        const isBL=idLs.startsWith('IZBL');
+        const blRef=isBL?idLs.replace(/^IZ/,''):'';
+        const idCli=r['ID_CLI']||'';
+        const magCode=getMagCode(idCli);
+        const magName=getMagName(idCli);
+        const dtExp=r['DT_EXP']||'';
+        const nbColis=parseInt(r['NB_COLIS'])||0;
+
+        return {
+          id:idLs,
+          trps:trpsVal,
+          isBL,
+          blRef,
+          idCli,
+          magCode,
+          magName,
+          dtExp,
+          nbColis,
+          status:'pending',
+          statut:'',
+          destinataire:'',
+          ville:'',
+          dtLivraison:'',
+          podUrl:'',
+          detail:{}
+        };
+      });
+
+      // Match ATVYL immediately
+      allData.forEach(p=>{
+        if(p.trps==='ATVYL'){
+          const match=atvylData.find(a=>{
+            const aCode=a.destinataire?.match(/^(\d+)/)?.[1]||'';
+            return aCode===p.magCode;
+          });
+          if(match){
+            p.status='done';
+            p.statut=match.statut||'';
+            p.destinataire=match.destinataire||'';
+            p.ville=match.ville||'';
+            p.dtLivraison=match.dateLivraison&&match.dateLivraison!=='nan'?match.dateLivraison:'';
+            p.detail=match;
+          }
+        }
+      });
+
+      document.getElementById('btn-track').disabled=false;
+      toast('✅ '+allData.length+' lignes chargées');
+      render();
+    }catch(err){
+      showErr('❌ Erreur lecture : '+err.message);
+    }
+  };
+  reader.readAsText(file,'utf-8');
+}
+
+async function startTracking(){
+  if(processing||!allData.length) return;
+  processing=true;
+  const btn=document.getElementById('btn-track');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> En cours...';
+  document.getElementById('progress').classList.add('show');
+
+  // Get lines to process (Geodis and TNT only)
+  const toProcess=allData.filter(p=>p.trps==='TNT'||p.trps==='GEODIS');
+  const total=toProcess.length;
+  let done=0;
+
+  // Process Geodis by date ranges
+  const geoLines=allData.filter(p=>p.trps==='GEODIS');
+  if(geoLines.length){
+    const dates=[...new Set(geoLines.map(p=>p.dtExp.slice(0,10).split('/').reverse().join('-')))].filter(Boolean);
+    for(const date of dates){
+      try{
+        const resp=await fetch(API+'/api/envois',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dateDebut:date,dateFin:date})});
+        const data=await resp.json();
+        if(data.ok&&data.contenu){
+          data.contenu.forEach(geo=>{
+            const match=geoLines.find(p=>{
+              const pMag=p.magCode;
+              const geoMag=getCodeMagFromGeoName(geo.nomDest);
+              return pMag===geoMag;
+            });
+            if(match){
+              match.status='done';
+              match.statut=geo.libelleEtat||'';
+              match.destinataire=geo.nomDest||'';
+              match.ville=geo.villeDest||'';
+              match.dtLivraison=geo.dateLivraisonFrs||'';
+              match.podUrl=geo.urlImageEnlevementLivraison||'';
+              match.detail=geo;
+            }
+          });
+        }
+      }catch(e){}
+      done+=geoLines.filter(p=>p.dtExp.slice(0,10).split('/').reverse().join('-')===date).length;
+      updateProgress(done,total);
+      render();
+      await sleep(300);
+    }
+  }
+
+  // Process TNT by batch
+  const tntBL=allData.filter(p=>p.trps==='TNT'&&p.isBL);
+  const BATCH=10;
+  for(let i=0;i<tntBL.length;i+=BATCH){
+    const batch=tntBL.slice(i,i+BATCH);
+    const refs=batch.map(p=>p.blRef);
+    try{
+      const resp=await fetch(API+'/api/tnt/batch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({references:refs})});
+      const data=await resp.json();
+      data.results.forEach((r,idx)=>{
+        const p=batch[idx];
+        p.status='done';
+        if(r.found){
+          p.statut=r.shortStatus||'';
+          p.destinataire=r.receiverName||'';
+          p.ville=r.receiverCity||'';
+          p.dtLivraison=r.deliveryDate?r.deliveryDate.slice(0,16):'';
+          p.podUrl=r.primaryPODUrl||'';
+          p.detail=r;
+        }
+      });
+    }catch(e){
+      batch.forEach(p=>p.status='done');
+    }
+    done+=batch.length;
+    updateProgress(done,total);
+    render();
+    await sleep(200);
+  }
+
+  // Mark remaining as done
+  allData.filter(p=>p.status==='pending'&&p.trps!=='ATVYL').forEach(p=>p.status='done');
+
+  processing=false;
+  btn.disabled=false;btn.innerHTML='🔍 Lancer le suivi';
+  document.getElementById('progress').classList.remove('show');
+  toast('✅ Suivi terminé !');
   render();
 }
 
-function statusBadge(p){
-  const s=(p.libelleEtat||'').toLowerCase();
-  if(s.includes('livr'))return '<span class="badge b-liv">✅ Livré</span>';
-  if(s.includes('cours')||s.includes('transit')||s.includes('acheminement')||s.includes('prise en charge'))return '<span class="badge b-tr">🚚 En transit</span>';
-  if(s.includes('anomalie')||s.includes('exception')||s.includes('retard')||s.includes('incident'))return '<span class="badge b-ano">⚠️ Anomalie</span>';
-  return '<span class="badge b-att">'+(p.libelleEtat||'—')+'</span>';
+function updateProgress(done,total){
+  const pct=total?Math.round(done/total*100):100;
+  document.getElementById('progress-bar').style.width=pct+'%';
+  document.getElementById('progress-txt').textContent=done+' / '+total+' traités ('+pct+'%)';
 }
 
-function getTimeline(p){
-  const s=(p.libelleEtat||'').toLowerCase();
-  const liv=s.includes('livr');
-  const mis=s.includes('mise en livraison')||s.includes('en cours de livraison');
-  const ach=s.includes('cours')||s.includes('acheminement')||s.includes('transit');
-  const pris=!!p.dateDepart;
-  const steps=[{l:'Pris en charge',done:pris,cur:pris&&!ach&&!mis&&!liv},{l:'En transit',done:ach||mis||liv,cur:ach&&!mis&&!liv},{l:'En livraison',done:mis||liv,cur:mis&&!liv},{l:'Livré',done:liv,cur:false}];
-  return '<div class="tl">'+steps.map(s=>'<div class="tl-step'+(s.done?' done':'')+(s.cur?' current':'')+'"><div class="tl-dot">'+(s.done?'✓':'')+'</div><div class="tl-lbl">'+s.l+'</div></div>').join('')+'</div>';
+const GEO_MAG_MAP={};
+function getCodeMagFromGeoName(nomDest){
+  if(!nomDest) return '';
+  const n=nomDest.toUpperCase().trim();
+  for(const [code,name] of Object.entries(MAG_NAMES)){
+    if(n.includes(name.toUpperCase())||name.toUpperCase().includes(n)) return code;
+  }
+  // Try partial match with leading number
+  const match=n.match(/^(\d+)/);
+  if(match) return match[1];
+  return '';
+}
+
+function statusBadge(p){
+  if(p.status==='pending') return '<span class="badge b-att">⏳ En attente</span>';
+  if(!p.statut) return '<span class="badge b-att">—</span>';
+  const s=p.statut.toLowerCase();
+  if(s.includes('livr')||s.includes('conforme')) return '<span class="badge b-liv">✅ Livré</span>';
+  if(s.includes('cours')||s.includes('transit')||s.includes('acheminement')||s.includes('prise en charge')) return '<span class="badge b-tr">🚚 Transit</span>';
+  if(s.includes('anomalie')||s.includes('exception')||s.includes('retard')||s.includes('incident')) return '<span class="badge b-ano">⚠️ Anomalie</span>';
+  return '<span class="badge b-att">'+p.statut+'</span>';
+}
+
+function trpsBadge(trps){
+  if(trps==='GEODIS') return '<span class="trps-badge trps-geo">GEODIS</span>';
+  if(trps==='TNT') return '<span class="trps-badge trps-tnt">TNT</span>';
+  if(trps==='ATVYL') return '<span class="trps-badge trps-atv">ATVYL</span>';
+  return '<span class="trps-badge trps-other">'+trps+'</span>';
 }
 
 function filterMatch(p){
-  const s=(p.libelleEtat||'').toLowerCase();
-  if(activeFilter==='livr'&&!s.includes('livr'))return false;
-  if(activeFilter==='tr'&&!s.includes('cours')&&!s.includes('transit')&&!s.includes('acheminement')&&!s.includes('prise en charge'))return false;
-  if(activeFilter==='ano'&&!s.includes('anomalie')&&!s.includes('exception')&&!s.includes('retard'))return false;
+  const s=p.statut.toLowerCase();
+  if(activeFilter==='livr'&&!s.includes('livr')&&!s.includes('conforme')) return false;
+  if(activeFilter==='tr'&&!s.includes('cours')&&!s.includes('transit')&&!s.includes('acheminement')&&!s.includes('prise en charge')) return false;
+  if(activeFilter==='ano'&&!s.includes('anomalie')&&!s.includes('exception')&&!s.includes('retard')) return false;
+  if(activeFilter==='pend'&&p.status!=='pending') return false;
   const q=document.getElementById('sbar').value.toLowerCase();
   if(q){
-    const codeMag=getCodeMag(p.nomDest);
-    const hay=[p.noRecepisse,p.reference1,p.nomDest,p.villeDest,p.codePostalDest,codeMag].join(' ').toLowerCase();
-    if(!hay.includes(q))return false;
+    const hay=[p.id,p.blRef,p.magCode,p.magName,p.destinataire,p.ville,p.trps].join(' ').toLowerCase();
+    if(!hay.includes(q)) return false;
   }
   return true;
 }
 
-function updateMetrics(filtered){
-  document.getElementById('m-tot').textContent=filtered.length;
-  document.getElementById('m-li').textContent=filtered.filter(p=>(p.libelleEtat||'').toLowerCase().includes('livr')).length;
-  document.getElementById('m-tr').textContent=filtered.filter(p=>{const s=(p.libelleEtat||'').toLowerCase();return s.includes('cours')||s.includes('transit')||s.includes('acheminement')||s.includes('prise en charge');}).length;
-  document.getElementById('m-er').textContent=filtered.filter(p=>{const s=(p.libelleEtat||'').toLowerCase();return s.includes('anomalie')||s.includes('exception')||s.includes('retard');}).length;
-  document.getElementById('m-co').textContent=filtered.reduce((a,p)=>a+(p.nbColis||0),0);
-  document.getElementById('m-po').textContent=filtered.reduce((a,p)=>a+(p.poids||0),0).toFixed(0)+' kg';
-  document.getElementById('clbl').textContent=filtered.length+' envoi(s)';
+function updateMetrics(f){
+  document.getElementById('m-tot').textContent=f.length;
+  document.getElementById('m-li').textContent=f.filter(p=>{const s=p.statut.toLowerCase();return s.includes('livr')||s.includes('conforme');}).length;
+  document.getElementById('m-tr').textContent=f.filter(p=>{const s=p.statut.toLowerCase();return s.includes('cours')||s.includes('transit')||s.includes('acheminement');}).length;
+  document.getElementById('m-er').textContent=f.filter(p=>{const s=p.statut.toLowerCase();return s.includes('anomalie')||s.includes('exception')||s.includes('retard');}).length;
+  document.getElementById('m-geo').textContent=f.filter(p=>p.trps==='GEODIS').length;
+  document.getElementById('m-tnt').textContent=f.filter(p=>p.trps==='TNT').length;
+  document.getElementById('m-atv').textContent=f.filter(p=>p.trps==='ATVYL').length;
+  document.getElementById('m-col').textContent=f.reduce((a,p)=>a+(p.nbColis||0),0);
+  document.getElementById('clbl').textContent=f.length+' ligne(s)';
 }
 
 function toggleRow(id){openRow=openRow===id?null:id;render();}
@@ -265,75 +512,112 @@ function render(){
   updateMetrics(filtered);
   const list=document.getElementById('list');
   if(!filtered.length){
-    list.innerHTML='<div class="empty"><div class="empty-icon">📦</div>'+(allData.length?'Aucun envoi ne correspond':'Lance une recherche pour afficher tes envois')+'</div>';
+    list.innerHTML='<div class="empty"><div class="empty-icon">📦</div>'+(allData.length?'Aucun résultat':'Importe l\'Export_ls pour commencer')+'</div>';
     return;
   }
   list.innerHTML=filtered.map(p=>{
-    const id=String(p.noRecepisse||p.refUniExp||Math.random().toString(36).slice(2));
+    const id=p.id;
     const isOpen=openRow===id;
-    const codeMag=getCodeMag(p.nomDest);
-    const isLiv=(p.libelleEtat||'').toLowerCase().includes('livr');
-    const poids=p.poids?p.poids.toFixed(1)+' kg':'—';
-    const pod=p.urlImageEnlevementLivraison||'';
-
-    const detail='<div class="detail-panel'+(isOpen?' open':'')+'">'+
-      getTimeline(p)+
-      '<div class="detail-grid">'+
-        '<div class="dblock"><div class="dblock-title">📦 Détails envoi</div>'+
-          '<div class="drow"><span class="dk">Récépissé</span><span class="dv">'+(p.noRecepisse||'—')+'</span></div>'+
-          '<div class="drow"><span class="dk">Référence</span><span class="dv">'+(p.reference1||'—')+'</span></div>'+
-          '<div class="drow"><span class="dk">Code magasin</span><span class="dv">'+(codeMag||'—')+'</span></div>'+
-          '<div class="drow"><span class="dk">Produit</span><span class="dv">'+(p.libellePrestation||p.codeProduit||'—')+'</span></div>'+
-          '<div class="drow"><span class="dk">Nb colis</span><span class="dv">'+(p.nbColis||'—')+'</span></div>'+
-          '<div class="drow"><span class="dk">Poids</span><span class="dv">'+poids+'</span></div>'+
-          '<div class="drow"><span class="dk">Date départ</span><span class="dv">'+(p.dateDepartFrs||'—')+'</span></div>'+
-          '<div class="drow"><span class="dk">Livraison prévue</span><span class="dv">'+(p.dateLivraisonFrs||'—')+'</span></div>'+
-          '<div class="drow"><span class="dk">Statut</span><span class="dv">'+(p.libelleEtat||'—')+'</span></div>'+
-        '</div>'+
-        '<div class="dblock"><div class="dblock-title">📤 Expéditeur</div>'+
-          '<div class="drow"><span class="dk">Nom</span><span class="dv">'+(p.nomExp||'—')+'</span></div>'+
-          '<div class="drow"><span class="dk">Adresse</span><span class="dv">'+(p.adresse1Exp||'—')+'</span></div>'+
-          '<div class="drow"><span class="dk">CP / Ville</span><span class="dv">'+(p.codePostalExp||'')+' '+(p.villeExp||'')+'</span></div>'+
-        '</div>'+
-        '<div class="dblock"><div class="dblock-title">📥 Destinataire</div>'+
-          '<div class="drow"><span class="dk">Nom</span><span class="dv">'+(p.nomDest||'—')+'</span></div>'+
-          '<div class="drow"><span class="dk">Adresse</span><span class="dv">'+(p.adresse1Dest||'—')+'</span></div>'+
-          '<div class="drow"><span class="dk">CP / Ville</span><span class="dv">'+(p.codePostalDest||'')+' '+(p.villeDest||'')+'</span></div>'+
-        '</div>'+
-      '</div>'+
-      '<div class="action-links">'+
-        (pod?'<a href="'+pod+'" target="_blank" class="action-link">🖼️ Preuve de livraison</a>':'')+
-        (p.urlSuiviDestinataire?'<a href="'+p.urlSuiviDestinataire+'" target="_blank" class="action-link">🔗 Suivi destinataire</a>':'')+
-      '</div>'+
-    '</div>';
-
-    return '<div class="trow-wrap">'+
-      '<div class="trow" onclick="toggleRow(\''+id+'\')">'+
-        '<div><div class="mono">'+(p.noRecepisse||'—')+'</div><div class="sub-txt">'+(p.reference1||'')+'</div></div>'+
-        '<div>'+(codeMag?'<div class="mag-badge">'+codeMag+'</div><div class="sub-txt">'+(p.nomDest||'')+'</div>':'<div class="sub-txt">'+(p.nomDest||'—')+'</div>')+'</div>'+
-        '<div><div class="dest-name">'+(p.nomDest||'—')+'</div><div class="city">'+(p.villeDest||'')+(p.codePostalDest?' ('+p.codePostalDest+')':'')+'</div></div>'+
-        '<div>'+statusBadge(p)+'</div>'+
-        '<div><div class="date-depart">'+(p.dateDepartFrs||'—')+'</div></div>'+
-        '<div><div class="date-livr'+(isLiv?' ok':'')+'">'+(p.dateLivraisonFrs||'—')+'</div></div>'+
-        '<div><div class="colis-big">'+(p.nbColis||'—')+'</div><div class="poids-small">'+poids+'</div></div>'+
-        '<div><button class="mini-btn" onclick="event.stopPropagation();toggleRow(\''+id+'\')">📋 Détail</button></div>'+
-      '</div>'+
-      detail+
-    '</div>';
+    const isLiv=p.statut.toLowerCase().includes('livr')||p.statut.toLowerCase().includes('conforme');
+    const dtExpFmt=p.dtExp?p.dtExp.slice(0,10):'—';
+    
+    const detailHtml=buildDetail(p,isOpen);
+    
+    return '<div class="trow-wrap"><div class="trow" onclick="toggleRow(\''+id.replace(/'/g,"\\'")+'\')">'
+      +'<div>'+trpsBadge(p.trps)+'</div>'
+      +'<div><div class="mono">'+(p.isBL?p.blRef:p.id)+'</div>'+(p.isBL&&p.trps==='TNT'?'':'<div class="sub-txt">'+p.id+'</div>')+'</div>'
+      +'<div><span class="mag-badge">'+p.magCode+'</span><div class="sub-txt">'+p.magName+'</div></div>'
+      +'<div><div class="dest-name">'+(p.destinataire||p.magName||'—')+'</div><div class="city-txt">'+(p.ville||'')+'</div></div>'
+      +'<div>'+statusBadge(p)+'</div>'
+      +'<div><div class="date-cell">'+dtExpFmt+'</div></div>'
+      +'<div><div class="date-cell'+(isLiv?' ok':'')+'">'+(p.dtLivraison||'—')+'</div></div>'
+      +'<div><div class="nb-big">'+(p.nbColis||'—')+'</div></div>'
+      +'<div><button class="btn" style="font-size:11px;padding:4px 8px" onclick="event.stopPropagation();toggleRow(\''+id.replace(/'/g,"\\'")+'\')">📋</button></div>'
+      +'</div>'+detailHtml+'</div>';
   }).join('');
+}
+
+function buildDetail(p,isOpen){
+  if(!isOpen) return '<div class="detail-panel"></div>';
+  let inner='';
+  if(p.trps==='TNT'&&p.detail?.found){
+    const d=p.detail;
+    inner='<div class="detail-grid">'
+      +'<div class="dblock"><div class="dblock-title">📦 TNT</div>'
+      +'<div class="drow"><span class="dk">BL Ref.</span><span class="dv">'+p.blRef+'</span></div>'
+      +'<div class="drow"><span class="dk">Bon transport</span><span class="dv">'+(d.consignmentNumber||'—')+'</span></div>'
+      +'<div class="drow"><span class="dk">Compte</span><span class="dv">'+(d.account||'—')+'</span></div>'
+      +'<div class="drow"><span class="dk">Service</span><span class="dv">'+(d.service||'—')+'</span></div>'
+      +'<div class="drow"><span class="dk">Poids</span><span class="dv">'+(d.weight?d.weight+' kg':'—')+'</span></div>'
+      +'<div class="drow"><span class="dk">Statut</span><span class="dv">'+(d.longStatus||'—')+'</span></div>'
+      +'</div>'
+      +'<div class="dblock"><div class="dblock-title">📥 Destinataire</div>'
+      +'<div class="drow"><span class="dk">Nom</span><span class="dv">'+(d.receiverName||'—')+'</span></div>'
+      +'<div class="drow"><span class="dk">Adresse</span><span class="dv">'+(d.receiverAddress||'—')+'</span></div>'
+      +'<div class="drow"><span class="dk">CP/Ville</span><span class="dv">'+(d.receiverZip||'')+' '+(d.receiverCity||'')+'</span></div>'
+      +'</div>'
+      +'</div>';
+    if(d.primaryPODUrl) inner+='<div class="action-links"><a href="'+d.primaryPODUrl+'" target="_blank" class="action-link">🖼️ Preuve de livraison</a></div>';
+  } else if(p.trps==='GEODIS'&&p.detail?.noRecepisse){
+    const d=p.detail;
+    inner='<div class="detail-grid">'
+      +'<div class="dblock"><div class="dblock-title">📦 Geodis</div>'
+      +'<div class="drow"><span class="dk">Récépissé</span><span class="dv">'+(d.noRecepisse||'—')+'</span></div>'
+      +'<div class="drow"><span class="dk">Produit</span><span class="dv">'+(d.codeProduit||'—')+'</span></div>'
+      +'<div class="drow"><span class="dk">Poids</span><span class="dv">'+(d.poids?d.poids.toFixed(1)+' kg':'—')+'</span></div>'
+      +'<div class="drow"><span class="dk">Nb colis</span><span class="dv">'+(d.nbColis||'—')+'</span></div>'
+      +'<div class="drow"><span class="dk">Statut</span><span class="dv">'+(d.libelleEtat||'—')+'</span></div>'
+      +'</div>'
+      +'<div class="dblock"><div class="dblock-title">📥 Destinataire</div>'
+      +'<div class="drow"><span class="dk">Nom</span><span class="dv">'+(d.nomDest||'—')+'</span></div>'
+      +'<div class="drow"><span class="dk">Adresse</span><span class="dv">'+(d.adresse1Dest||'—')+'</span></div>'
+      +'<div class="drow"><span class="dk">CP/Ville</span><span class="dv">'+(d.codePostalDest||'')+' '+(d.villeDest||'')+'</span></div>'
+      +'</div>'
+      +'</div>';
+    if(d.urlImageEnlevementLivraison) inner+='<div class="action-links"><a href="'+d.urlImageEnlevementLivraison+'" target="_blank" class="action-link">🖼️ Preuve de livraison</a></div>';
+  } else if(p.trps==='ATVYL'&&p.detail?.recepisse){
+    const d=p.detail;
+    inner='<div class="detail-grid">'
+      +'<div class="dblock"><div class="dblock-title">📦 ATVYL</div>'
+      +'<div class="drow"><span class="dk">Récépissé</span><span class="dv">'+(d.recepisse||'—')+'</span></div>'
+      +'<div class="drow"><span class="dk">Votre réf.</span><span class="dv">'+(d.votreReference||'—')+'</span></div>'
+      +'<div class="drow"><span class="dk">Nb colis</span><span class="dv">'+(d.nbColis||'—')+'</span></div>'
+      +'<div class="drow"><span class="dk">Poids</span><span class="dv">'+(d.poids||'—')+'</span></div>'
+      +'<div class="drow"><span class="dk">Dept</span><span class="dv">'+(d.dept||'—')+'</span></div>'
+      +'</div>'
+      +'</div>';
+  } else {
+    inner='<div style="font-size:12px;color:#aaa;padding:8px">Données non disponibles — lancez le suivi</div>';
+  }
+  return '<div class="detail-panel open">'+inner+'</div>';
+}
+
+function clearAll(){
+  allData=[];
+  openRow=null;
+  document.getElementById('btn-track').disabled=true;
+  document.getElementById('progress').classList.remove('show');
+  render();
 }
 
 function exportCSV(){
   if(!allData.length){toast('⚠️ Aucune donnée');return;}
-  const h=['Récépissé','Référence','Code Magasin','Expéditeur','Destinataire','Adresse','CP','Ville','Statut','Nb colis','Poids','Date départ','Livraison prévue'];
-  const rows=allData.map(p=>{const cm=getCodeMag(p.nomDest);return[p.noRecepisse||'',p.reference1||'',cm,p.nomExp||'',p.nomDest||'',p.adresse1Dest||'',p.codePostalDest||'',p.villeDest||'',p.libelleEtat||'',p.nbColis||'',p.poids?p.poids.toFixed(1):'',p.dateDepartFrs||'',p.dateLivraisonFrs||''];});
-  const csv=[h,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\n');
+  const h=['Transporteur','N° BL / Réf.','Code Magasin','Nom Magasin','Destinataire','Ville','Statut','Date expéd.','Date livraison','Nb colis'];
+  const rows=allData.map(p=>[p.trps,p.isBL?p.blRef:p.id,p.magCode,p.magName,p.destinataire,p.ville,p.statut,p.dtExp.slice(0,10),p.dtLivraison,p.nbColis]);
+  const csv=[h,...rows].map(r=>r.map(c=>'"'+String(c||'').replace(/"/g,'""')+'"').join(';')).join('\n');
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
-  a.download='geodis_izac_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.download='transport_izac_'+new Date().toISOString().slice(0,10)+'.csv';
   a.click();
-  toast('📥 Export CSV téléchargé');
+  toast('📥 Export téléchargé');
 }
+
+// Set default dates to this week
+const today=new Date();
+const monday=new Date(today);
+monday.setDate(today.getDate()-today.getDay()+1);
+document.getElementById('f-debut').value=fmt(monday);
+document.getElementById('f-fin').value=fmt(today);
 </script>
 </body>
 </html>
