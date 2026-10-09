@@ -280,7 +280,9 @@ function handleFile(file){
   reader.onload=(e)=>{
     try{
       let rows=parseExportLs(e.target.result);
-      if(!rows.length){showErr('❌ Aucune ligne valide trouvée dans ce fichier.');return;}
+      console.log('Total rows parsed:', rows.length);
+      console.log('First row:', rows[0]);
+      if(!rows.length){showErr('❌ Aucune ligne valide trouvée dans ce fichier. Vérifiez que le fichier est bien un Export_ls CSV.');return;}
 
       // Filter by date if set
       const debut=document.getElementById('f-debut').value;
@@ -354,7 +356,13 @@ function handleFile(file){
       showErr('❌ Erreur lecture : '+err.message);
     }
   };
+  // Try UTF-8 first, fallback to latin-1
   reader.readAsText(file,'utf-8');
+  reader.onerror = () => {
+    const r2 = new FileReader();
+    r2.onload = (e) => processCSV(e.target.result);
+    r2.readAsText(file, 'latin-1');
+  };
 }
 
 async function startTracking(){
