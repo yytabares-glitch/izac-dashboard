@@ -6,6 +6,7 @@
 <title>Transport — IZAC</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   :root{
     --navy:#0D2750; --navy2:#0C447C; --blue:#0C5AB8;
@@ -183,6 +184,7 @@
     </div>
     <div class="hdr-right">
       <div class="hdr-period" id="period">—</div>
+      <button class="btn-import" id="exportXlsx">Exporter Excel</button>
       <button class="btn-import" id="openImport">Importer un fichier</button>
     </div>
   </div>
@@ -673,6 +675,132 @@ document.getElementById('qClear').addEventListener('click',clearLineSearch);
 document.getElementById('qBL').addEventListener('keydown',e=>{ if(e.key==='Enter') runLineSearch(); });
 document.getElementById('qMag').addEventListener('keydown',e=>{ if(e.key==='Enter') runLineSearch(); });
 document.getElementById('qDate').addEventListener('change',runLineSearch);
+
+// ===== export Excel : clients par transporteur (transporteur le plus récent) =====
+function xlsxSheetName(s, used){
+  let n = String(s||'—').replace(/[\[\]:*?\/\\]/g,' ').trim().slice(0,31) || 'Sans nom';
+  const base = n; let i = 2;
+  while(used.has(n.toLowerCase())){ const suf=' ('+i+')'; n = base.slice(0,31-suf.length)+suf; i++; }
+  used.add(n.toLowerCase()); return n;
+}
+function isoToFR(iso){ return iso ? iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4) : ''; }
+function daysBetween(a,b){ return Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000); }
+
+function buildClientCarriers(){
+  const byCli = {};
+  ALL_ROWS.forEach(r=>{ if(!r.cli || !r.dexpISO) return; (byCli[r.cli]=byCli[r.cli]||[]).push(r); });
+  const out = [];
+  Object.entries(byCli).forEach(([cli, rows])=>{
+    // tri chronologique : date d'expédition puis n° de BL
+    rows.sort((a,b)=> a.dexpISO!==b.dexpISO ? a.dexpISO.localeCompare(b.dexpISO) : (a.id_ls||'').localeCompare(b.id_ls||''));
+    const last = rows[rows.length-1];
+    const lastDay = last.dexpISO;
+    const cur = last.trps || '—';
+    // début de la série actuelle : on remonte tant que c'est le même transporteur
+    let k = rows.length-1;
+    while(k>0 && (rows[k-1].trps||'—')===cur) k--;
+    const since = rows[k].dexpISO;
+    const prev = k>0 ? (rows[k-1].trps||'—') : '';
+    const prevLast = k>0 ? rows[k-1].dexpISO : '';
+    const alerts = [];
+    const sameDay = new Set(rows.filter(r=>r.dexpISO===lastDay).map(r=>r.trps||'—'));
+    if(sameDay.size>1) alerts.push('Plusieurs transporteurs le dernier jour ('+[...sameDay].join(', ')+')');
+    const recent = new Set(rows.filter(r=>daysBetween(r.dexpISO,lastDay)<=30).map(r=>r.trps||'—'));
+    if(recent.size>1 && sameDay.size<=1) alerts.push('Plusieurs transporteurs sur les 30 derniers jours ('+[...recent].join(', ')+')');
+    const code = cli.replace(/^IZ/,'');
+    const name = cli==='WEBIZ' ? 'E-commerce (WEBIZ)' : (MAG_NAMES[code] || '');
+    if(!name) alerts.push('Nom inconnu');
+    const all = {}; rows.forEach(r=>{ const t=r.trps||'—'; all[t]=(all[t]||0)+1; });
+    out.push({
+      code: cli==='WEBIZ' ? '' : code, cli, name,
+      typeCli: last.typeCli||'', type: last.type||'',
+      cur, since, lastDay, streak: rows.length-k, total: rows.length,
+      colisCur: rows.slice(k).reduce((s,r)=>s+r.colis,0),
+      colisTot: rows.reduce((s,r)=>s+r.colis,0), qpTot: rows.reduce((s,r)=>s+r.qp,0), qaTot: rows.reduce((s,r)=>s+r.qa,0), firstDay: rows[0].dexpISO,
+      prev, prevLast,
+      hist: Object.entries(all).sort((a,b)=>b[1]-a[1]).map(([t,n])=>t+' ('+n+')').join(', '),
+      alert: alerts.join(' · ')
+    });
+  });
+  return out;
+}
+function clientRow(c){
+  return {
+    'Code mag': c.code,
+    'Code client': c.cli,
+    'Nom': c.name,
+    'Type client': c.typeCli,
+    'Type commande (dernière)': c.type,
+    'Transporteur actuel': c.cur,
+    'Depuis le': isoToFR(c.since),
+    'Dernière expédition': isoToFR(c.lastDay),
+    'Expés avec transporteur actuel': c.streak,
+    'Colis avec transporteur actuel': c.colisCur,
+    'Transporteur précédent': c.prev,
+    'Dernière expé avec le précédent': isoToFR(c.prevLast),
+    'Expés totales': c.total,
+    'Historique transporteurs (nb expés)': c.hist,
+    'À vérifier': c.alert
+  };
+}
+function exportXlsx(){
+  if(typeof XLSX==='undefined'){ alert('Le module Excel ne s\'est pas chargé. Recharge la page.'); return; }
+  if(!ALL_ROWS.length){ alert('Aucune donnée à exporter.'); return; }
+  const list = buildClientCarriers().sort((a,b)=> a.cur.localeCompare(b.cur) || (a.name||a.cli).localeCompare(b.name||b.cli));
+  const wb = XLSX.utils.book_new(); const used = new Set();
+  const addSheet = (name, rows) => {
+    const ws = XLSX.utils.json_to_sheet(rows);
+    if(rows.length){
+      const heads = Object.keys(rows[0]);
+      ws['!cols'] = heads.map(h=>({ wch: Math.min(50, Math.max(h.length, ...rows.map(r=>String(r[h]==null?'':r[h]).length)) + 2) }));
+      ws['!autofilter'] = { ref: ws['!ref'] };
+    }
+    XLSX.utils.book_append_sheet(wb, ws, xlsxSheetName(name, used));
+  };
+  // Synthèse par transporteur actuel
+  const carriers = {};
+  list.forEach(c=>{ const m=carriers[c.cur]||(carriers[c.cur]={n:0,exp:0,chg:0,al:0}); m.n++; m.exp+=c.streak; if(c.prev) m.chg++; if(c.alert) m.al++; });
+  const order = Object.entries(carriers).sort((a,b)=>b[1].n-a[1].n);
+  const synth = order.map(([t,m])=>({
+    'Transporteur actuel': t, 'Nb clients': m.n, 'Expés avec ce transporteur': m.exp,
+    'Dont clients ayant changé de transporteur': m.chg, 'Clients à vérifier': m.al }));
+  synth.push({ 'Transporteur actuel':'TOTAL', 'Nb clients':list.length,
+    'Expés avec ce transporteur': list.reduce((s,c)=>s+c.streak,0),
+    'Dont clients ayant changé de transporteur': list.filter(c=>c.prev).length,
+    'Clients à vérifier': list.filter(c=>c.alert).length });
+  addSheet('Synthèse', synth);
+  // Classement des magasins : du plus gros au plus petit (colis reçus, puis pièces reçues)
+  const mags = list.filter(c=>c.cli!=='WEBIZ');
+  const totColis = mags.reduce((s,c)=>s+c.colisTot,0) || 1;
+  const byPieces = mags.slice().sort((a,b)=> b.qpTot-a.qpTot || b.colisTot-a.colisTot);
+  const rangPieces = new Map(byPieces.map((c,i)=>[c.cli,i+1]));
+  const ranking = mags.slice().sort((a,b)=> b.colisTot-a.colisTot || b.qpTot-a.qpTot).map((c,i)=>({
+    'Rang colis': i+1,
+    'Rang pièces': rangPieces.get(c.cli),
+    'Code mag': c.code,
+    'Code client': c.cli,
+    'Nom': c.name,
+    'Type client': c.typeCli,
+    'Transporteur actuel': c.cur,
+    'Colis reçus': c.colisTot,
+    'Pièces reçues': c.qpTot,
+    'Pièces demandées': c.qaTot,
+    'Expéditions': c.total,
+    'Colis / expé': c.total ? Math.round(c.colisTot/c.total*10)/10 : 0,
+    'Pièces / colis': c.colisTot ? Math.round(c.qpTot/c.colisTot*10)/10 : 0,
+    'Part des colis (%)': Math.round(c.colisTot/totColis*1000)/10,
+    'Première expédition': isoToFR(c.firstDay),
+    'Dernière expédition': isoToFR(c.lastDay)
+  }));
+  addSheet('Classement magasins', ranking);
+  addSheet('Tous les clients', list.map(clientRow));
+  order.forEach(([t])=> addSheet(t, list.filter(c=>c.cur===t).map(clientRow)));
+  const changes = list.filter(c=>c.prev).sort((a,b)=>b.since.localeCompare(a.since));
+  addSheet('Changements', changes.map(clientRow));
+  const today = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, 'IZAC_clients_par_transporteur_'+today+'.xlsx');
+}
+document.getElementById('exportXlsx').addEventListener('click', exportXlsx);
 
 // ===== authentification =====
 async function sha256(s){
