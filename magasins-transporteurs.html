@@ -21,6 +21,7 @@ header{display:flex;flex-wrap:wrap;gap:12px 32px;align-items:flex-end;justify-co
 h1{font-size:28px;line-height:1.15;margin:0;font-weight:700;letter-spacing:-.01em}
 h1 small{display:block;font-size:15px;font-weight:400;color:var(--muted);margin-top:6px}
 h2{font-size:18px;margin:0 0 14px;font-weight:600}
+.state.busy{color:var(--focus)} .state.err{color:var(--warn)}
 .state{color:var(--muted);font-size:14px;text-align:right}
 input,select,button{font:inherit;color:inherit}
 input[type=search],select{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 10px}
@@ -77,11 +78,33 @@ tr.changed td{background:color-mix(in srgb, var(--focus) 7%, transparent)}
 .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
 textarea{width:100%;min-height:160px;margin-top:12px;font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:10px;display:none}
 .note{color:var(--muted);font-size:13px;margin:10px 0 0;max-width:80ch}
+.gate{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px}
+.gate .login{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:32px 28px;width:100%;max-width:340px;text-align:center}
+.gate .lg{width:52px;height:52px;border-radius:10px;background:var(--ink);color:var(--bg);font-weight:700;font-size:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.gate h1{font-size:22px;margin:0 0 6px}
+.gate p{color:var(--muted);font-size:14px;margin:0 0 18px}
+.gate input{width:100%;text-align:center;font-size:18px;letter-spacing:.2em;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);margin-bottom:12px}
+.gate button{width:100%;padding:10px}
+.gate .err{color:var(--warn);font-size:14px;min-height:20px;margin-top:10px}
+.app-hidden{display:none}
+td.act{text-align:right}
+button.del{border:1px solid transparent;background:transparent;color:var(--muted);padding:3px 8px;font-size:13px}
+button.del:hover,button.del:focus-visible{border-color:var(--warn);color:var(--warn)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="gate" id="gate">
+  <div class="login">
+    <div class="lg">IZ</div>
+    <h1>Magasins par transporteur</h1>
+    <p>Accès réservé : code du siège.</p>
+    <input id="pin-in" type="password" autocomplete="current-password" placeholder="••••" aria-label="Code d'accès">
+    <button class="primary" id="loginBtn">Entrer</button>
+    <div class="err" id="loginErr" role="alert"></div>
+  </div>
+</div>
+<div class="wrap app-hidden" id="appWrap">
 <header>
   <h1>Magasins par transporteur<small>Réseau JSR IZAC, livraisons depuis le dépôt LOGNC</small></h1>
   <div class="state" id="state"></div>
@@ -100,17 +123,14 @@ textarea{width:100%;min-height:160px;margin-top:12px;font:12px/1.4 ui-monospace,
     <div class="filters">
       <input type="search" id="q" placeholder="Nom ou code client" aria-label="Rechercher un magasin">
       <select id="fT" aria-label="Transporteur"></select>
-      <select id="fN" aria-label="Nom"><option value="">Tous</option><option value="vide">Sans nom</option><option value="modif">Modifiés dans la page</option></select>
+      <select id="fN" aria-label="Nom"><option value="">Tous</option><option value="vide">Sans nom</option><option value="modif">Modifiés aujourd'hui</option></select>
       <span class="count" id="count"></span>
     </div>
     <div class="tbl-scroll"><table id="detail"></table></div>
     <div class="actions">
-      <button class="primary" id="btnCode">Copier les données pour GitHub</button>
       <button id="btnCsv">Exporter en CSV</button>
-      <button id="btnReset">Revenir aux données du fichier</button>
     </div>
-    <p class="note">Change le transporteur ou le nom directement dans le tableau : tout se met à jour et reste enregistré dans ce navigateur. Pour que la version à jour s'affiche partout, clique sur « Copier les données pour GitHub » et colle le résultat à la place du bloc DATA dans le fichier.</p>
-    <textarea id="codeOut" readonly aria-label="Données à coller dans le fichier"></textarea>
+    <p class="note">Change le transporteur ou le nom directement dans le tableau : la modification est enregistrée tout de suite. En rouvrant la page, sur n'importe quel poste, tu retrouves la dernière version.</p>
   </div>
   <aside class="panel side">
     <h2>Magasins par transporteur</h2>
@@ -122,13 +142,18 @@ textarea{width:100%;min-height:160px;margin-top:12px;font:12px/1.4 ui-monospace,
 </section>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
 <script>
 /* =====================================================================
-   PARAMÈTRES
+   Magasins par transporteur – JSR IZAC
+   Les données sont enregistrées dans Supabase (table tm_magasins) :
+   chaque modification faite dans la page est sauvegardée immédiatement.
+   Le code d'accès est vérifié côté serveur.
    ===================================================================== */
+const SUPABASE_URL = "https://imurxmsglmpgxdbavalk.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltdXJ4bXNnbG1wZ3hkYmF2YWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNDg5NDMsImV4cCI6MjA5NTgyNDk0M30.GdmfOH-bG0ivzz8rFr83pZTBOjZecPgX_WXepAiuYo8";
 
 // Transporteurs : nom affiché et couleur. L'ordre ici est l'ordre d'affichage.
-// Pour ajouter un transporteur, ajoute une ligne (le code en majuscules sert dans DATA).
 const TRANSPORTEURS = {
   CHRONOPOST:  { nom: "Chronopost",  couleur: "#2457C5" },
   TNT:         { nom: "TNT",         couleur: "#E8590C" },
@@ -136,278 +161,49 @@ const TRANSPORTEURS = {
   ATVYL:       { nom: "ATVYL",       couleur: "#8B5CF6" },
   EUROPA:      { nom: "Europa",      couleur: "#B8870A" },
   TRANSITAIRE: { nom: "Transitaire", couleur: "#6B7685" },
-  INTERCEPTE:  { nom: "Intercepté",  couleur: "#D23F57" },
 };
 
-/* =====================================================================
-   DONNÉES : une ligne par code client
-   transporteur = transporteur qui livre le magasin aujourd'hui
-   maj = date du dernier changement de transporteur (jj/mm/aaaa, ou "" si aucun)
-   ===================================================================== */
-const DATA = [
-  { rang:   1, nom: "La Defense", code: "IZ1575", transporteur: "ATVYL", maj: "" },
-  { rang:   2, nom: "Val D'europe", code: "IZ1552", transporteur: "ATVYL", maj: "" },
-  { rang:   3, nom: "Forum Des Halles", code: "IZ1696", transporteur: "ATVYL", maj: "" },
-  { rang:   4, nom: "Nantes Crebillons", code: "IZ1355", transporteur: "GEODIS", maj: "" },
-  { rang:   5, nom: "R Alma", code: "IZ1450", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:   6, nom: "Auber", code: "IZ1009", transporteur: "ATVYL", maj: "" },
-  { rang:   7, nom: "Miramas", code: "IZ1627", transporteur: "TNT", maj: "" },
-  { rang:   8, nom: "Roubaix", code: "IZ1648", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:   9, nom: "Creteil", code: "IZ1104", transporteur: "ATVYL", maj: "" },
-  { rang:  10, nom: "Velizy", code: "IZ1198", transporteur: "ATVYL", maj: "" },
-  { rang:  11, nom: "Cap", code: "IZ1666", transporteur: "GEODIS", maj: "" },
-  { rang:  12, nom: "Beaugrenelle", code: "IZ1748", transporteur: "ATVYL", maj: "" },
-  { rang:  13, nom: "Ptstem", code: "IZ1377", transporteur: "GEODIS", maj: "" },
-  { rang:  14, nom: "Blagnac", code: "IZ1074", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  15, nom: "Aeroville", code: "IZ1449", transporteur: "ATVYL", maj: "" },
-  { rang:  16, nom: "La Valentine", code: "IZ1488", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  17, nom: "Part Dieu", code: "IZ1513", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  18, nom: "Villefontaine", code: "IZ1735", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  19, nom: "G. Var", code: "IZ1667", transporteur: "GEODIS", maj: "" },
-  { rang:  20, nom: "Montpellier", code: "IZ1331", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  21, nom: "Aix En Provence", code: "IZ1749", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  22, nom: "Bord.", code: "IZ1567", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  23, nom: "B. Epin", code: "IZ1010", transporteur: "ATVYL", maj: "" },
-  { rang:  24, nom: "Begles", code: "IZ1426", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  25, nom: "Parly 2", code: "IZ1655", transporteur: "ATVYL", maj: "" },
-  { rang:  26, nom: "Carre Senart", code: "IZ1568", transporteur: "ATVYL", maj: "" },
-  { rang:  27, nom: "Terrasses Du Port", code: "IZ1486", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  28, nom: "Euralille", code: "IZ1618", transporteur: "GEODIS", maj: "" },
-  { rang:  29, nom: "Perpignan Auchan", code: "IZ1350", transporteur: "GEODIS", maj: "" },
-  { rang:  30, nom: "Levallois", code: "IZ1352", transporteur: "ATVYL", maj: "" },
-  { rang:  31, nom: "Rosny 2", code: "IZ1604", transporteur: "ATVYL", maj: "" },
-  { rang:  32, nom: "Neyrpic", code: "IZ1830", transporteur: "GEODIS", maj: "" },
-  { rang:  33, nom: "Noyelles", code: "IZ1668", transporteur: "GEODIS", maj: "" },
-  { rang:  34, nom: "Gonesse", code: "IZ1498", transporteur: "ATVYL", maj: "" },
-  { rang:  35, nom: "Corbeil", code: "IZ1782", transporteur: "ATVYL", maj: "" },
-  { rang:  36, nom: "Strasb.", code: "IZ1487", transporteur: "GEODIS", maj: "" },
-  { rang:  37, nom: "Merignac", code: "IZ1485", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  38, nom: "Bastia", code: "IZ1598", transporteur: "GEODIS", maj: "19/10/2026" },
-  { rang:  39, nom: "Nimes", code: "IZ1609", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  40, nom: "Rue Ren", code: "IZ1028", transporteur: "ATVYL", maj: "" },
-  { rang:  41, nom: "Quartz", code: "IZ1489", transporteur: "ATVYL", maj: "" },
-  { rang:  42, nom: "Cannes", code: "IZ1728", transporteur: "GEODIS", maj: "" },
-  { rang:  43, nom: "Clermont", code: "IZ1451", transporteur: "GEODIS", maj: "" },
-  { rang:  44, nom: "Lille", code: "IZ1335", transporteur: "GEODIS", maj: "" },
-  { rang:  45, nom: "Tours", code: "IZ1791", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  46, nom: "Dijon", code: "IZ1448", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  47, nom: "Beziers", code: "IZ1199", transporteur: "GEODIS", maj: "" },
-  { rang:  48, nom: "Thionville", code: "IZ1742", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  49, nom: "Confluence", code: "IZ1330", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  50, nom: "Montparnasse", code: "IZ1665", transporteur: "ATVYL", maj: "" },
-  { rang:  51, nom: "Grenoble", code: "IZ1792", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  52, nom: "Herriot", code: "IZ1011", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  53, nom: "Toulouse", code: "IZ1739", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  54, nom: "St Quentin", code: "IZ1215", transporteur: "ATVYL", maj: "" },
-  { rang:  55, nom: "Romans", code: "IZ1740", transporteur: "GEODIS", maj: "" },
-  { rang:  56, nom: "Luxembourg", code: "IZ1703", transporteur: "EUROPA", maj: "" },
-  { rang:  58, nom: "Avignon", code: "IZ1470", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  59, nom: "Ecouf.", code: "IZ1518", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  60, nom: "A13", code: "IZ1543", transporteur: "ATVYL", maj: "" },
-  { rang:  61, nom: "N Creb", code: "IZ1615", transporteur: "GEODIS", maj: "" },
-  { rang:  62, nom: "Dijon Cv", code: "IZ1793", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  63, nom: "Rennes Cv", code: "IZ1801", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  64, nom: "Mulhou.", code: "IZ1694", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  65, nom: "Bordeaux Lac", code: "IZ1737", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  66, nom: "Parinor", code: "IZ1045", transporteur: "ATVYL", maj: "" },
-  { rang:  67, nom: "Cabries", code: "IZ1840", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  68, nom: "Fenouillet", code: "IZ1603", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  69, nom: "La Rochelle", code: "IZ1787", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  70, nom: "Rouen", code: "IZ1334", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  71, nom: "Strasbourg Centre Ville", code: "IZ1831", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  72, nom: "Claye Souilly", code: "IZ1353", transporteur: "ATVYL", maj: "" },
-  { rang:  73, nom: "Orleans", code: "IZ1835", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  74, nom: "Perpignan Claira", code: "IZ1427", transporteur: "GEODIS", maj: "" },
-  { rang:  75, nom: "Caen", code: "IZ1828", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  76, nom: "Metz", code: "IZ1636", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  77, nom: "Siege", code: "IZ1057", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  78, nom: "St Denis", code: "IZ1109", transporteur: "ATVYL", maj: "" },
-  { rang:  79, nom: "Lormont", code: "IZ1545", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  80, nom: "Ecully", code: "IZ1738", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  81, nom: "Polygone", code: "IZ1844", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  82, nom: "Talang", code: "IZ1505", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  83, nom: "Prado", code: "IZ1654", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  84, nom: "Olonne", code: "IZ1724", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  85, nom: "Arras", code: "IZ1683", transporteur: "GEODIS", maj: "" },
-  { rang:  86, nom: "Le Mans", code: "IZ1842", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  87, nom: "Deauville", code: "IZ1843", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  88, nom: "Lillenium", code: "IZ1729", transporteur: "GEODIS", maj: "" },
-  { rang:  90, nom: "Ajacc.", code: "IZ1637", transporteur: "GEODIS", maj: "19/10/2026" },
-  { rang:  91, nom: "Epagny", code: "IZ1544", transporteur: "GEODIS", maj: "" },
-  { rang:  92, nom: "Anglet", code: "IZ1608", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  93, nom: "St Eti.", code: "IZ1672", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  94, nom: "Boulogne", code: "IZ1756", transporteur: "ATVYL", maj: "" },
-  { rang:  95, nom: "Epinal", code: "IZ1716", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  96, nom: "Blois", code: "IZ1704", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  97, nom: "Giverny", code: "IZ1865", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  98, nom: "Pau", code: "IZ1651", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang:  99, nom: "Besancon", code: "IZ1755", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang: 100, nom: "Aix", code: "IZ1621", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang: 101, nom: "St Omer", code: "IZ1563", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang: 102, nom: "Andrezieux", code: "IZ1671", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang: 103, nom: "Gap", code: "IZ1785", transporteur: "GEODIS", maj: "" },
-  { rang: 105, nom: "Abc", code: "IZ1768", transporteur: "TRANSITAIRE", maj: "" },
-  { rang: 106, nom: "Haguenau", code: "IZ1732", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang: 107, nom: "Arcueil", code: "IZ1779", transporteur: "ATVYL", maj: "" },
-  { rang: 108, nom: "Niort", code: "IZ1526", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang: 109, nom: "Auxer.", code: "IZ1597", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang: 110, nom: "Brest", code: "IZ1670", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang: 111, nom: "Monta.", code: "IZ1469", transporteur: "GEODIS", maj: "" },
-  { rang: 112, nom: "Voiron", code: "IZ1669", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang: 113, nom: "Nancy Cv", code: "IZ1868", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang: 114, nom: "Nancy", code: "IZ1354", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang: 115, nom: "Vente Privee.Com", code: "IZ952", transporteur: "TRANSITAIRE", maj: "" },
-  { rang: 116, nom: "Mont De Marsan", code: "IZ1743", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang: 117, nom: "Trading", code: "IZ1692", transporteur: "ATVYL", maj: "" },
-  { rang: 118, nom: "Auberv.", code: "IZ1254", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang: 119, nom: "Chambery", code: "IZ1862", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang: 120, nom: "Cosmopolite", code: "IZ216", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang: 121, nom: "St Tropez", code: "IZ1873", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang: 122, nom: "Colmar", code: "IZ1592", transporteur: "INTERCEPTE", maj: "" },
-  { rang: 123, nom: "Js Trading", code: "IZ479", transporteur: "ATVYL", maj: "" },
-  { rang: 124, nom: "Pretty Women", code: "IZ1578", transporteur: "TRANSITAIRE", maj: "" },
-  { rang: 125, nom: "Matco Sarl", code: "IZ566", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang: 126, nom: "Le Gendre Ideal", code: "IZ532", transporteur: "CHRONOPOST", maj: "19/10/2026" },
-  { rang: 127, nom: "Hors Ligne", code: "IZ437", transporteur: "TNT", maj: "" },
-  { rang: 128, nom: "Bey First 2", code: "IZ1852", transporteur: "TNT", maj: "" },
-  { rang: 129, nom: "Place Aux Hommes", code: "IZ1699", transporteur: "TNT", maj: "" },
-  { rang: 130, nom: "Sarl Roy", code: "IZ1818", transporteur: "TNT", maj: "" },
-  { rang: 131, nom: "Beauv.", code: "IZ1566", transporteur: "GEODIS", maj: "" },
-  { rang: 132, nom: "Boutique Mr", code: "IZ1710", transporteur: "TNT", maj: "" },
-  { rang: 134, nom: "", code: "IZ1877", transporteur: "TRANSITAIRE", maj: "" },
-  { rang: 135, nom: "Boutique Monsieur", code: "IZ1780", transporteur: "TNT", maj: "" },
-  { rang: 136, nom: "Gentlemen", code: "IZ380", transporteur: "TNT", maj: "" },
-  { rang: 137, nom: "Espace Griff", code: "IZ318", transporteur: "TNT", maj: "" },
-  { rang: 138, nom: "Sporlux", code: "IZ851", transporteur: "TNT", maj: "" },
-  { rang: 139, nom: "Brousseau", code: "IZ142", transporteur: "TNT", maj: "" },
-  { rang: 140, nom: "Aumaclaire", code: "IZ1434", transporteur: "TNT", maj: "" },
-  { rang: 141, nom: "Somajy", code: "IZ1291", transporteur: "TRANSITAIRE", maj: "" },
-  { rang: 142, nom: "", code: "IZ1880", transporteur: "TNT", maj: "" },
-  { rang: 143, nom: "T. D H. 72", code: "IZ1054", transporteur: "TNT", maj: "" },
-  { rang: 144, nom: "Iconik Store Chez We Are Selec", code: "IZ1766", transporteur: "GEODIS", maj: "" },
-  { rang: 145, nom: "Ol Sasu / Att Florence Dams Et", code: "IZ1776", transporteur: "TNT", maj: "" },
-  { rang: 146, nom: "Tdh 61", code: "IZ1055", transporteur: "TNT", maj: "" },
-  { rang: 148, nom: "Sas Racing Club De Lens / Arth", code: "IZ1800", transporteur: "TNT", maj: "" },
-  { rang: 149, nom: "H. Dhomme", code: "IZ1678", transporteur: "TNT", maj: "" },
-  { rang: 150, nom: "Rennes Alma", code: "IZ1781", transporteur: "TNT", maj: "" },
-  { rang: 151, nom: "Hopium", code: "IZ1207", transporteur: "TNT", maj: "" },
-  { rang: 152, nom: "Show Room", code: "IZ1645", transporteur: "TNT", maj: "" },
-  { rang: 153, nom: "Boutique Raphael", code: "IZ1715", transporteur: "GEODIS", maj: "" },
-  { rang: 154, nom: "We Are Select / Was", code: "IZ1758", transporteur: "TNT", maj: "" },
-  { rang: 155, nom: "Labau", code: "IZ507", transporteur: "TNT", maj: "" },
-  { rang: 156, nom: "Sas Baron", code: "IZ1851", transporteur: "TNT", maj: "" },
-  { rang: 157, nom: "Verso Sarl", code: "IZ954", transporteur: "TNT", maj: "" },
-  { rang: 158, nom: "E. Griffe", code: "IZ1650", transporteur: "GEODIS", maj: "" },
-  { rang: 159, nom: "Abv Service", code: "IZ1557", transporteur: "TNT", maj: "" },
-  { rang: 160, nom: "Rezland", code: "IZ1643", transporteur: "TNT", maj: "" },
-  { rang: 161, nom: "Driver", code: "IZ1805", transporteur: "TNT", maj: "" },
-  { rang: 162, nom: "Pinel", code: "IZ724", transporteur: "CHRONOPOST", maj: "" },
-  { rang: 163, nom: "Chabe", code: "IZ1837", transporteur: "TNT", maj: "" },
-  { rang: 164, nom: "Mossis J. - Sarl Come Back", code: "IZ206", transporteur: "ATVYL", maj: "" },
-  { rang: 165, nom: "Buxy", code: "IZ1496", transporteur: "TNT", maj: "" },
-  { rang: 166, nom: "Sas Rc Strasbourg", code: "IZ1850", transporteur: "TNT", maj: "" },
-  { rang: 167, nom: "Côte Homme", code: "IZ1070", transporteur: "TNT", maj: "" },
-  { rang: 168, nom: "Manceau Eurl", code: "IZ1289", transporteur: "TNT", maj: "" },
-  { rang: 169, nom: "Jack Mod", code: "IZ1492", transporteur: "TNT", maj: "" },
-  { rang: 170, nom: "Griffe Rouge", code: "IZ1784", transporteur: "TNT", maj: "" },
-  { rang: 171, nom: "Lol By L.", code: "IZ1411", transporteur: "ATVYL", maj: "" },
-  { rang: 172, nom: "Affaire D'Homme", code: "IZ1812", transporteur: "TNT", maj: "" },
-  { rang: 173, nom: "Fashion R.", code: "IZ1527", transporteur: "EUROPA", maj: "" },
-  { rang: 174, nom: "Wilhelem Sa", code: "IZ1317", transporteur: "TNT", maj: "" },
-  { rang: 175, nom: "O Masculin", code: "IZ1722", transporteur: "TNT", maj: "" },
-  { rang: 176, nom: "Donald Bout.", code: "IZ268", transporteur: "TNT", maj: "" },
-  { rang: 177, nom: "Mon Vestaire", code: "IZ1701", transporteur: "TRANSITAIRE", maj: "" },
-  { rang: 178, nom: "Penaud", code: "IZ717", transporteur: "TNT", maj: "" },
-  { rang: 179, nom: "Coupin", code: "IZ1711", transporteur: "TNT", maj: "" },
-  { rang: 180, nom: "Arvet Sarl", code: "IZ61", transporteur: "TNT", maj: "" },
-  { rang: 181, nom: "Bloom David", code: "IZ1349", transporteur: "TNT", maj: "" },
-  { rang: 182, nom: "G. Lemoine", code: "IZ1318", transporteur: "TNT", maj: "" },
-  { rang: 183, nom: "Jld Diff.", code: "IZ997", transporteur: "TNT", maj: "" },
-  { rang: 186, nom: "Langlais", code: "IZ1661", transporteur: "TNT", maj: "" },
-  { rang: 187, nom: "Cloane Square", code: "IZ1726", transporteur: "TNT", maj: "" },
-  { rang: 188, nom: "Boy And Girl", code: "IZ1769", transporteur: "TNT", maj: "" },
-  { rang: 189, nom: "Marco Men", code: "IZ1204", transporteur: "TNT", maj: "" },
-  { rang: 190, nom: "Dress Code", code: "IZ1823", transporteur: "TRANSITAIRE", maj: "" },
-  { rang: 191, nom: "Xavier Men'S Wear", code: "IZ1773", transporteur: "TNT", maj: "" },
-  { rang: 192, nom: "Les Galeries Sas Du Grand Baza", code: "IZ1708", transporteur: "TNT", maj: "" },
-  { rang: 193, nom: "Morence", code: "IZ647", transporteur: "GEODIS", maj: "" },
-  { rang: 194, nom: "Havane", code: "IZ1512", transporteur: "TNT", maj: "" },
-  { rang: 195, nom: "Clothing Distributions", code: "IZ1839", transporteur: "TRANSITAIRE", maj: "" },
-  { rang: 196, nom: "Mhb / Benjamin Terme", code: "IZ1641", transporteur: "TNT", maj: "" },
-  { rang: 197, nom: "", code: "IZ1872", transporteur: "TNT", maj: "" },
-  { rang: 198, nom: "Mickelson", code: "IZ626", transporteur: "TNT", maj: "" },
-  { rang: 200, nom: "La Maison", code: "IZ576", transporteur: "TNT", maj: "" },
-  { rang: 201, nom: "G3M Diffusion / Printemps Le H", code: "IZ1783", transporteur: "TNT", maj: "" },
-  { rang: 202, nom: "Printemps Caen / Jel Diffusion", code: "IZ1799", transporteur: "TNT", maj: "" },
-  { rang: 205, nom: "M.C.S. Sarl", code: "IZ559", transporteur: "ATVYL", maj: "" },
-  { rang: 207, nom: "Montal Sarl", code: "IZ1841", transporteur: "TRANSITAIRE", maj: "" },
-  { rang: 208, nom: "Sas Expentour", code: "IZ1815", transporteur: "TNT", maj: "" },
-  { rang: 209, nom: "", code: "IZ1858", transporteur: "TNT", maj: "" },
-  { rang: 210, nom: "Basile Boutique", code: "IZ1646", transporteur: "EUROPA", maj: "" },
-  { rang: 215, nom: "Boutik Homme", code: "IZ1511", transporteur: "TNT", maj: "" },
-  { rang: 217, nom: "Pont Ste Marie", code: "IZ1807", transporteur: "TRANSITAIRE", maj: "" },
-  { rang: 218, nom: "", code: "IZ1364", transporteur: "TNT", maj: "" },
-  { rang: 219, nom: "Jasyl Sarl", code: "IZ1286", transporteur: "TNT", maj: "" },
-  { rang: 221, nom: "Senso", code: "IZ1510", transporteur: "TNT", maj: "" },
-  { rang: 222, nom: "Boutique Hom", code: "IZ1777", transporteur: "TRANSITAIRE", maj: "" },
-  { rang: 225, nom: "", code: "IZ1875", transporteur: "TRANSITAIRE", maj: "" },
-  { rang: 230, nom: "", code: "IZ1876", transporteur: "TRANSITAIRE", maj: "" },
-  { rang: 238, nom: "B. Engelyc", code: "IZ1461", transporteur: "TNT", maj: "" },
-  { rang: 241, nom: "Les Sables", code: "IZ1760", transporteur: "TNT", maj: "" },
-  { rang: 242, nom: "Firex", code: "IZ1549", transporteur: "TRANSITAIRE", maj: "" },
-  { rang: 251, nom: "Vanni.O", code: "IZ1581", transporteur: "TNT", maj: "" },
-  { rang: 281, nom: "Le 10 Coffy Distribution", code: "IZ1833", transporteur: "TNT", maj: "" },
-  { rang: 288, nom: "Escale", code: "IZ1718", transporteur: "TNT", maj: "" },
-  { rang: 314, nom: "Jump Atelier", code: "IZ1861", transporteur: "TNT", maj: "" },
-  { rang: 329, nom: "", code: "IZ1436", transporteur: "TNT", maj: "" },
-  { rang: 347, nom: "As St Etienne Att. Valerie Sem", code: "IZ1224", transporteur: "GEODIS", maj: "" },
-  { rang: 367, nom: "Tarantola", code: "IZ1834", transporteur: "TNT", maj: "" },
-  { rang: 384, nom: "", code: "IZ1854", transporteur: "TNT", maj: "" },
-  { rang: 403, nom: "Le 18 Sarl", code: "IZ1820", transporteur: "TNT", maj: "" },
-  { rang: 416, nom: "Rackstore M.", code: "IZ1546", transporteur: "EUROPA", maj: "" },
-  { rang: 472, nom: "Bethune", code: "IZ1721", transporteur: "GEODIS", maj: "" },
-  { rang: 527, nom: "Showroom Formen", code: "IZ1845", transporteur: "TNT", maj: "" },
-  { rang: 540, nom: "", code: "IZ1859", transporteur: "TRANSITAIRE", maj: "" },
-  { rang: 565, nom: "Hotel Le Grand Mazarin / Att.", code: "IZ1795", transporteur: "TRANSITAIRE", maj: "" },
-  { rang: 570, nom: "", code: "IZ1874", transporteur: "TNT", maj: "" },
-  { rang: 622, nom: "", code: "IZ1676", transporteur: "TNT", maj: "" },
-  { rang: 640, nom: "", code: "IZ1853", transporteur: "TNT", maj: "" },
-  { rang: 728, nom: "Losc", code: "IZ1675", transporteur: "GEODIS", maj: "" }];
-
-/* =====================================================================
-   FONCTIONNEMENT (pas besoin de modifier en dessous)
-   ===================================================================== */
-const clone = o => JSON.parse(JSON.stringify(o));
-const ORIGINAL = clone(DATA);
-let rows = clone(DATA);
-let filtreT = "", tri = { k: "rang", asc: true };
+/* ---------- Fonctionnement ---------- */
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+let HASH = "", rows = [], filtreT = "", tri = { k: "rang", asc: true };
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
 const tInfo = k => TRANSPORTEURS[k] || { nom: k, couleur: "#999999" };
 const keys = () => { const k = Object.keys(TRANSPORTEURS); return k.concat([...new Set(rows.map(r => r.transporteur))].filter(x => !k.includes(x))); };
 const today = () => new Date().toLocaleDateString("fr-FR");
 const toSort = d => d ? d.split("/").reverse().join("") : "";
+const isToday = r => r.maj === today();
+function setState(t, cls) { const s = $("#state"); s.textContent = t; s.className = "state " + (cls || ""); }
 
-/* Sauvegarde dans le navigateur (ignorée si le bloc DATA du fichier a changé) */
-const STORE = "izac-mag-transporteur-v1";
-const sig = JSON.stringify(ORIGINAL).length + ":" + ORIGINAL.length;
-function save() { try { localStorage.setItem(STORE, JSON.stringify({ sig, rows })); } catch (e) {} }
-function load() { try { const s = JSON.parse(localStorage.getItem(STORE) || "null"); if (s && s.sig === sig) rows = s.rows; } catch (e) {} }
-const isChanged = r => { const o = ORIGINAL.find(x => x.code === r.code); return !o || o.transporteur !== r.transporteur || o.nom !== r.nom; };
+async function sha256(s) { const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join(""); }
 
-function counts() { const c = {}; keys().forEach(k => c[k] = 0); rows.forEach(r => c[r.transporteur]++); return c; }
-
-function renderOverview() {
-  const c = counts(), tot = rows.length, ks = keys().filter(k => c[k] > 0);
-  $("#tot").textContent = tot;
-  $("#bar").innerHTML = ks.map(k => { const p = c[k] / tot * 100;
-    return `<button style="width:${p}%;background:${tInfo(k).couleur}" data-t="${esc(k)}" title="${esc(tInfo(k).nom)} : ${c[k]} (${p.toFixed(0)} %)" aria-label="Filtrer ${esc(tInfo(k).nom)}">${p >= 7 ? c[k] : ""}</button>`; }).join("");
-  $("#tiles").innerHTML = ks.map(k => `<button class="tile${filtreT === k ? " active" : ""}" style="--c:${tInfo(k).couleur}" data-t="${esc(k)}">
-      <div class="n">${c[k]}</div><div class="l">${esc(tInfo(k).nom)}</div><div class="p">${(c[k] / tot * 100).toFixed(1).replace(".", ",")} %</div></button>`).join("");
-  const nmod = rows.filter(isChanged).length;
-  $("#state").innerHTML = nmod ? `${nmod} modification${nmod > 1 ? "s" : ""} pas encore reportée${nmod > 1 ? "s" : ""} dans le fichier` : "Version du fichier";
+async function fetchRows() {
+  const { data, error } = await sb.rpc("tm_list", { p_hash: HASH });
+  if (error) throw error;
+  rows = (data || []).map(r => ({ rang: r.rang, nom: r.nom || "", code: r.code, transporteur: r.transporteur, maj: r.maj || "" }));
+}
+async function saveRow(r) {
+  setState("Enregistrement…", "busy");
+  const { error } = await sb.rpc("tm_save", { p_hash: HASH, p_code: r.code, p_rang: r.rang, p_nom: r.nom, p_transporteur: r.transporteur, p_maj: r.maj });
+  if (error) { setState("Échec de l'enregistrement, réessaie.", "err"); return false; }
+  setState("Enregistré à " + new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })); return true;
+}
+async function deleteRow(code) {
+  setState("Suppression…", "busy");
+  const { error } = await sb.rpc("tm_delete", { p_hash: HASH, p_code: code });
+  if (error) { setState("Échec de la suppression, réessaie.", "err"); return false; }
+  setState("Supprimé"); return true;
 }
 
+function counts() { const c = {}; keys().forEach(k => c[k] = 0); rows.forEach(r => c[r.transporteur]++); return c; }
+function renderOverview() {
+  const c = counts(), tot = rows.length || 1, ks = keys().filter(k => c[k] > 0);
+  $("#tot").textContent = rows.length;
+  $("#bar").innerHTML = ks.map(k => { const p = c[k] / tot * 100;
+    return `<button style="width:${p}%;background:${tInfo(k).couleur}" data-t="${esc(k)}" title="${esc(tInfo(k).nom)} : ${c[k]}" aria-label="Filtrer ${esc(tInfo(k).nom)}">${p >= 7 ? c[k] : ""}</button>`; }).join("");
+  $("#tiles").innerHTML = ks.map(k => `<button class="tile${filtreT === k ? " active" : ""}" style="--c:${tInfo(k).couleur}" data-t="${esc(k)}">
+      <div class="n">${c[k]}</div><div class="l">${esc(tInfo(k).nom)}</div><div class="p">${(c[k] / tot * 100).toFixed(1).replace(".", ",")} %</div></button>`).join("");
+}
 function renderSide() {
   const c = counts();
   $("#carriers").innerHTML = keys().filter(k => c[k] > 0).map(k => {
@@ -415,68 +211,91 @@ function renderSide() {
     return `<details class="carrier" style="--c:${tInfo(k).couleur}"><summary><i></i>${esc(tInfo(k).nom)}<span class="n">${c[k]}</span></summary>
       <ol>${list.map(r => `<li>${esc(r.nom || r.code)}</li>`).join("")}</ol></details>`;
   }).join("");
-  const rec = rows.filter(r => r.maj).sort((a, b) => (isChanged(b) - isChanged(a)) || toSort(b.maj).localeCompare(toSort(a.maj)) || a.rang - b.rang).slice(0, 12);
+  const rec = rows.filter(r => r.maj).sort((a, b) => toSort(b.maj).localeCompare(toSort(a.maj)) || a.rang - b.rang).slice(0, 12);
   $("#recent").innerHTML = rec.length ? rec.map(r => `<li><span>${esc(r.nom || r.code)} → ${esc(tInfo(r.transporteur).nom)}</span><span>${esc(r.maj)}</span></li>`).join("") : "<li><span>Aucun changement enregistré</span></li>";
   const vides = rows.filter(r => !r.nom.trim()).length;
-  $("#alert").textContent = vides ? `${vides} code${vides > 1 ? "s" : ""} client sans nom : filtre « Sans nom » dans le tableau pour les compléter.` : "";
+  $("#alert").textContent = vides ? `${vides} code${vides > 1 ? "s" : ""} client sans nom : choisis « Sans nom » dans le tableau pour les compléter.` : "";
 }
-
 function renderDetail() {
   const q = $("#q").value.trim().toLowerCase(), fn = $("#fN").value;
   let vis = rows.map((r, i) => ({ r, i })).filter(({ r }) =>
     (!q || r.nom.toLowerCase().includes(q) || r.code.toLowerCase().includes(q)) &&
-    (!filtreT || r.transporteur === filtreT) &&
-    (!fn || (fn === "vide" ? !r.nom.trim() : isChanged(r))));
+    (!filtreT || r.transporteur === filtreT) && (!fn || (fn === "vide" ? !r.nom.trim() : isToday(r))));
   const get = { rang: r => r.rang, nom: r => r.nom.toLowerCase() || "~", code: r => r.code, transporteur: r => tInfo(r.transporteur).nom, maj: r => toSort(r.maj) };
   vis.sort((a, b) => { const x = get[tri.k](a.r), y = get[tri.k](b.r); return (x < y ? -1 : x > y ? 1 : 0) * (tri.asc ? 1 : -1); });
   const th = (k, t, cls = "") => `<th class="${cls}" data-sort="${k}" aria-sort="${tri.k === k ? (tri.asc ? "ascending" : "descending") : "none"}">${t}${tri.k === k ? (tri.asc ? " ▲" : " ▼") : ""}</th>`;
-  let h = `<thead><tr>${th("rang", "Rang colis", "num")}${th("nom", "Magasin")}${th("code", "Code client")}${th("transporteur", "Transporteur")}${th("maj", "Dernier changement")}</tr></thead><tbody>`;
+  let h = `<thead><tr>${th("rang", "Rang colis", "num")}${th("nom", "Magasin")}${th("code", "Code client")}${th("transporteur", "Transporteur")}${th("maj", "Dernier changement")}<th><span style="position:absolute;left:-9999px">Actions</span></th></tr></thead><tbody>`;
   vis.forEach(({ r, i }) => {
-    h += `<tr${isChanged(r) ? ' class="changed"' : ""}><td class="num">${r.rang}</td>
+    h += `<tr${isToday(r) ? ' class="changed"' : ""}><td class="num">${r.rang}</td>
       <td><input class="nom${r.nom.trim() ? "" : " vide"}" data-i="${i}" data-f="nom" value="${esc(r.nom)}" placeholder="Nom à compléter" aria-label="Nom du magasin ${r.code}"></td>
       <td>${r.code}</td>
       <td><select data-i="${i}" data-f="transporteur" style="--c:${tInfo(r.transporteur).couleur}" aria-label="Transporteur ${esc(r.nom || r.code)}">${keys().map(k => `<option value="${esc(k)}"${k === r.transporteur ? " selected" : ""}>${esc(tInfo(k).nom)}</option>`).join("")}</select></td>
-      <td class="muted">${esc(r.maj) || "–"}</td></tr>`;
+      <td class="muted">${esc(r.maj) || "–"}</td>
+      <td class="act"><button class="del" data-del="${esc(r.code)}" aria-label="Supprimer ${esc(r.nom || r.code)}">Supprimer</button></td></tr>`;
   });
   $("#detail").innerHTML = h + "</tbody>";
   $("#count").textContent = `${vis.length} sur ${rows.length}`;
   $("#fT").value = filtreT;
 }
-
 function fillFilter() { $("#fT").innerHTML = `<option value="">Tous les transporteurs</option>` + keys().map(k => `<option value="${esc(k)}">${esc(tInfo(k).nom)}</option>`).join(""); }
-function renderAll() { renderOverview(); renderSide(); renderDetail(); }
+function renderAll() { fillFilter(); renderOverview(); renderSide(); renderDetail(); }
 function setFilter(k) { filtreT = filtreT === k ? "" : k; renderOverview(); renderDetail(); }
 
-function dataAsCode() {
-  const q = s => JSON.stringify(s);
-  return "const DATA = [\n" + [...rows].sort((a, b) => a.rang - b.rang).map(r =>
-    `  { rang: ${String(r.rang).padStart(3)}, nom: ${q(r.nom)}, code: ${q(r.code)}, transporteur: ${q(r.transporteur)}, maj: ${q(r.maj)} },`).join("\n") + "\n];";
+/* ---------- Connexion ---------- */
+function openApp() { $("#gate").style.display = "none"; $("#appWrap").classList.remove("app-hidden"); }
+async function tryLogin(hash, silent) {
+  HASH = hash;
+  try { await fetchRows(); }
+  catch (e) {
+    HASH = "";
+    if (!silent) $("#loginErr").textContent = String(e.message || e).includes("code_incorrect") ? "Code incorrect." : "Connexion impossible, réessaie.";
+    try { sessionStorage.removeItem("izac-mt-h"); } catch (x) {}
+    return false;
+  }
+  try { sessionStorage.setItem("izac-mt-h", hash); } catch (x) {}
+  openApp(); renderAll(); setState("À jour"); return true;
+}
+async function doLogin() {
+  const v = ($("#pin-in").value || "").trim();
+  if (!v) { $("#loginErr").textContent = "Entre le code."; return; }
+  $("#loginBtn").disabled = true; $("#loginErr").textContent = "";
+  await tryLogin(await sha256(v), false);
+  $("#loginBtn").disabled = false;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  load(); fillFilter(); renderAll();
+document.addEventListener("DOMContentLoaded", async () => {
+  $("#loginBtn").addEventListener("click", doLogin);
+  $("#pin-in").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+  let h = ""; try { h = sessionStorage.getItem("izac-mt-h") || ""; } catch (e) {}
+  if (!(h && await tryLogin(h, true))) $("#pin-in").focus();
+
   $("#q").addEventListener("input", renderDetail);
   $("#fN").addEventListener("input", renderDetail);
   $("#fT").addEventListener("input", e => { filtreT = e.target.value; renderOverview(); renderDetail(); });
   $("#bar").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (b) setFilter(b.dataset.t); });
   $("#tiles").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (b) setFilter(b.dataset.t); });
-  $("#detail").addEventListener("click", e => { const t = e.target.closest("th[data-sort]"); if (!t) return;
-    tri = { k: t.dataset.sort, asc: tri.k === t.dataset.sort ? !tri.asc : true }; renderDetail(); });
-  $("#detail").addEventListener("change", e => {
+  $("#detail").addEventListener("click", async e => {
+    const d = e.target.closest("button[data-del]");
+    if (d) {
+      const r = rows.find(x => x.code === d.dataset.del);
+      if (r && confirm(`Supprimer ${r.nom || r.code} (${r.code}) de la liste ?`) && await deleteRow(r.code)) {
+        rows = rows.filter(x => x !== r); renderAll();
+      }
+      return;
+    }
+    const t = e.target.closest("th[data-sort]"); if (!t) return;
+    tri = { k: t.dataset.sort, asc: tri.k === t.dataset.sort ? !tri.asc : true }; renderDetail();
+  });
+  $("#detail").addEventListener("change", async e => {
     const el = e.target, f = el.dataset.f; if (!f) return;
-    const r = rows[+el.dataset.i];
-    if (f === "transporteur") { r.transporteur = el.value; r.maj = today(); }
-    else r.nom = el.value.trim();
-    save(); renderOverview(); renderSide();
-    if (f === "transporteur") renderDetail(); else { el.classList.toggle("vide", !r.nom); el.closest("tr").classList.toggle("changed", isChanged(r)); }
+    const r = rows[+el.dataset.i], before = { ...r };
+    if (f === "transporteur") { if (r.transporteur === el.value) return; r.transporteur = el.value; r.maj = today(); }
+    else { const v = el.value.trim(); if (r.nom === v) return; r.nom = v; }
+    renderOverview(); renderSide();
+    if (f === "transporteur") renderDetail(); else el.classList.toggle("vide", !r.nom);
+    if (!(await saveRow(r))) { Object.assign(r, before); renderAll(); }
   });
   $("#detail").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.classList.contains("nom")) e.target.blur(); });
-  $("#btnCode").addEventListener("click", async () => {
-    const t = $("#codeOut"); t.value = dataAsCode(); t.style.display = "block";
-    try { await navigator.clipboard.writeText(t.value); $("#btnCode").textContent = "Copié : colle-le dans GitHub"; }
-    catch (e) { t.select(); $("#btnCode").textContent = "Sélectionne le texte et copie-le"; }
-    setTimeout(() => $("#btnCode").textContent = "Copier les données pour GitHub", 3000);
-  });
   $("#btnCsv").addEventListener("click", () => {
     const e2 = v => `"${String(v).replace(/"/g, '""')}"`;
     const csv = ["Rang colis;Magasin;Code client;Transporteur;Dernier changement"].concat([...rows].sort((a, b) => a.rang - b.rang)
@@ -485,10 +304,8 @@ document.addEventListener("DOMContentLoaded", () => {
     a.href = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }));
     a.download = "magasins_par_transporteur.csv"; a.click();
   });
-  $("#btnReset").addEventListener("click", () => {
-    if (!confirm("Revenir aux données du fichier et effacer les modifications faites dans ce navigateur ?")) return;
-    rows = clone(ORIGINAL); try { localStorage.removeItem(STORE); } catch (e) {} renderAll();
-  });
+  // Recharge les données quand on revient sur l'onglet (modifs faites depuis un autre poste)
+  window.addEventListener("focus", async () => { if (!HASH) return; try { await fetchRows(); renderAll(); } catch (e) {} });
 });
 </script>
 </body>
