@@ -63,6 +63,7 @@ td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
     <select id="sessionSel"></select>
     <span class="mute" id="meta"></span>
     <button class="btn" id="refreshBtn" style="margin-left:auto">↻ Rafraîchir</button>
+    <button class="btn" id="resetBtn" style="background:#b91c1c">Vider ce comptage</button>
   </div>
 
   <div class="card">
@@ -182,6 +183,14 @@ document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{filter=c.dataset.f;
 $('search').oninput=render;
 $('sessionSel').onchange=e=>{session=e.target.value;resetCounts();render();fetchSessions();poll();};
 $('refreshBtn').onclick=poll;
+$('resetBtn').onclick=async()=>{
+  if(!confirm('Vider TOUS les scans du comptage « '+session+' » ?\nRemise à zéro. Irréversible.'))return;
+  try{
+    await fetch(SB_URL+'/rest/v1/inv_scans?session=eq.'+encodeURIComponent(session),{method:'DELETE',headers:SB_H});
+    await fetch(SB_URL+'/rest/v1/inv_sessions?session=eq.'+encodeURIComponent(session),{method:'PATCH',headers:{...SB_H,'Content-Type':'application/json'},body:JSON.stringify({total:0,statut:'en cours'})});
+    resetCounts();render();poll();alert('Comptage vidé.');
+  }catch(e){alert('Erreur : '+e);}
+};
 
 function start(){fetchSessions();poll();if(timer)clearInterval(timer);timer=setInterval(()=>{poll();fetchSessions();},5000);render();}
 </script>
