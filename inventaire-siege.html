@@ -147,7 +147,7 @@ let session=DEFAULT_SESSION,counts={},unknown={},lastId=0,total=0,timer=null,fil
 function resetCounts(){counts={};unknown={};lastId=0;total=0;}
 
 async function fetchSessions(){
-  try{const r=await fetch(SB_URL+'/rest/v1/inv_sessions?select=session,magasin,operateur,statut,total,updated_at&order=updated_at.desc',{headers:SB_H});
+  try{const r=await fetch(SB_URL+'/rest/v1/inv_sessions?select=session,magasin,operateur,statut,total,updated_at&order=updated_at.desc&apikey='+SB_KEY);
     if(!r.ok)return;const rows=await r.json();
     const opts=rows.map(s=>`<option value="${esc(s.session)}">${esc(s.session)}${s.statut==='termine'?' ✓ terminé':''}</option>`);
     if(!rows.find(s=>s.session===DEFAULT_SESSION))opts.unshift(`<option value="${esc(DEFAULT_SESSION)}">${esc(DEFAULT_SESSION)}</option>`);
@@ -160,7 +160,7 @@ async function poll(){
   try{
     let more=true,got=0;
     while(more){
-      const r=await fetch(SB_URL+`/rest/v1/inv_scans?session=eq.${encodeURIComponent(session)}&id=gt.${lastId}&select=id,gencod,qte&order=id.asc&limit=1000`,{headers:SB_H});
+      const r=await fetch(SB_URL+`/rest/v1/inv_scans?session=eq.${encodeURIComponent(session)}&id=gt.${lastId}&select=id,gencod,qte&order=id.asc&limit=1000&apikey=${SB_KEY}`);
       if(!r.ok){setLive(false,'Erreur '+r.status);return;}
       const rows=await r.json();
       for(const x of rows){const k=norm(x.gencod);if(TMAP[k]){counts[k]=(counts[k]||0)+x.qte;}else{unknown[k]=unknown[k]||{code:x.gencod,q:0};unknown[k].q+=x.qte;}total+=x.qte;lastId=x.id;}
