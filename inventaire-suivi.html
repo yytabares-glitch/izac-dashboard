@@ -137,9 +137,9 @@ let THEO=[],TMAP={};
 /* ---- mot de passe ---- */
 async function sha(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
 (function(){let ok=false;try{ok=localStorage.getItem(UK)===PW_HASH}catch(e){}
-  if(ok){$('lock').hidden=true;start();}else{setTimeout(()=>$('pw').focus(),50);}
+  if(ok){$('lock').hidden=true;setTimeout(start,0);}else{setTimeout(()=>$('pw').focus(),50);}
   $('lockForm').addEventListener('submit',async e=>{e.preventDefault();let g=false;try{g=(await sha($('pw').value.trim()))===PW_HASH;}catch(err){}
-    if(g){try{localStorage.setItem(UK,PW_HASH)}catch(e){}$('lock').hidden=true;start();}else{$('pwErr').hidden=false;$('pw').value='';}});
+    if(g){try{localStorage.setItem(UK,PW_HASH)}catch(e){}$('lock').hidden=true;setTimeout(start,0);}else{$('pwErr').hidden=false;$('pw').value='';}});
 })();
 
 /* ---- état live ---- */
