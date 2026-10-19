@@ -106,7 +106,6 @@ body.simple #bigCount{display:block}
       <div id="reader"></div>
       <button class="btn red" id="camStop" style="margin-top:8px;width:100%">Arrêter la caméra</button>
     </div>
-    <div id="focusBar" class="flash ko hide" style="cursor:pointer;text-align:center">⛔ SCAN EN PAUSE : touche ici pour reprendre (les scans ne sont pas enregistrés)</div>
     <div id="flash" class="flash"></div>
     <div id="syncBar" class="flash" style="min-height:0;padding:8px;font-size:13px">Connexion…</div>
     <div id="backupBar" class="flash warn hide">💾 <span id="backupN"></span> scans depuis la dernière sauvegarde. Envoie un fichier intermédiaire par sécurité.<br><button class="btn" id="backupBtn" style="margin-top:6px">Envoyer une sauvegarde intermédiaire</button></div>
@@ -119,8 +118,9 @@ body.simple #bigCount{display:block}
   </div>
   <div class="card" style="margin-top:14px;border:2px solid var(--ok)">
     <h2 id="endTitle">Fin du comptage</h2>
-    <p class="mute" id="endMute">Quand tout le magasin est scanné : appuie ici. Le fichier des codes-barres scannés est créé et peut être envoyé (mail, WhatsApp, Teams…). Le comptage reste enregistré sur l'appareil.</p>
-    <button class="btn" id="sendBtn" style="width:100%;background:#15803d;font-size:17px;padding:14px">✅ Terminer et envoyer le comptage</button>
+    <p class="mute" id="endMute">Tes scans remontent déjà en direct au siège. Quand tout est scanné, appuie sur Terminer : le siège est prévenu que le comptage est clos.</p>
+    <button class="btn" id="sendBtn" style="width:100%;background:#15803d;font-size:17px;padding:14px">✅ Terminer le comptage</button>
+    <button class="btn sec" id="dlBtn" style="width:100%;margin-top:8px">⬇ Télécharger une sauvegarde (CSV)</button>
   </div>
 
   <div class="card" style="margin-top:14px" id="lastScans">
@@ -423,12 +423,7 @@ function checkBackup(){
 
 /* Champ de scan verrouillé */
 function focusScan(){if(!modalOpen&&!$('tab-scan').classList.contains('hide'))setTimeout(()=>$('scanInput').focus(),0);}
-function focusState(){const lost=!modalOpen&&!$('tab-scan').classList.contains('hide')&&document.activeElement!==$('scanInput')&&!['qtyInput','zoneSel'].includes(document.activeElement?.id);$('focusBar').classList.toggle('hide',!lost);}
-$('scanInput').addEventListener('focus',focusState);
-$('scanInput').addEventListener('blur',()=>setTimeout(focusState,50));
-['qtyInput','zoneSel'].forEach(id=>$(id).addEventListener('blur',()=>setTimeout(focusState,50)));
 $('qtyInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();focusScan();}});
-$('focusBar').onclick=focusScan;
 // Si la douchette tape alors que le curseur est ailleurs (ex. après un clic), on rattrape les caractères
 document.addEventListener('keydown',e=>{
   if(modalOpen||$('tab-scan').classList.contains('hide'))return;
@@ -624,27 +619,26 @@ function comptageCSV(kind){
   const rej=nRej?[[],['CODES REFUSÉS (non comptés)'],['Horodatage','Zone','Code lu','Motif']].concat(S.rejets.map(r=>[new Date(r.t).toLocaleString('fr-FR'),r.zone,'="'+r.code+'"',r.motif])):[];
   return csv(head.concat(rows,journal,rej));
 }
-async function sendFile(kind){
-  if(!live().length){notify('Aucun scan.');return false;}
-  if(!S.meta.mag){const m=await askText('Nom du magasin ?','GRENOBLECV');if(m===null)return false;S.meta.mag=m.trim();$('mMag').value=S.meta.mag;}
-  if(!S.meta.op){const o=await askText('Ton nom (personne qui a compté) ?','');if(o){S.meta.op=o.trim();$('mOp').value=S.meta.op;}}
-  save();renderHdr();
-  const name=`comptage_${kind==='FINAL'?'FINAL':'intermediaire'}_${slug()}_${new Date().toTimeString().slice(0,5).replace(':','h')}.csv`;
-  const content=comptageCSV(kind);
-  const ok=()=>{S.lastBackupAt=live().length;save();checkBackup();focusScan();if(kind==='FINAL')sbSessionStatus('termine');};
-  try{
-    const file=new File([content],name,{type:'text/csv'});
-    if(!window.claude&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name,text:`Comptage ${S.meta.mag} (${kind}) – ${tot()} pièces`});flashMsg('Fichier partagé ✔','ok');ok();return true;}
-  }catch(e){if(e.name==='AbortError'){focusScan();return false;}}
-  const saved=await dl(name,content,'text/csv');if(!saved){flashMsg('Fichier non enregistré.','warn');return false;}ok();
-  flashMsg(`Fichier « ${esc(name)} » enregistré. Envoie-le par mail en pièce jointe.`,'ok');return true;
-}
+// Terminer : prévient le siège que le comptage est clos. Ne télécharge rien, ne bloque pas le scan.
 $('sendBtn').onclick=async()=>{
-  if(!live().length){notify('Aucun scan.');return;}
-  if(!(await ask(`Terminer le comptage ?\n${tot()} pièces scannées.\n\nTu pourras continuer à scanner ensuite et renvoyer un nouveau fichier.`,'Terminer et envoyer'))){return;}
-  sendFile('FINAL');
+  if(!live().length){flashMsg('Aucun scan à terminer.','warn');focusScan();return;}
+  const okBtn=await ask(`Terminer le comptage ?\n${tot()} pièces scannées, déjà remontées au siège.`,'Terminer','Continuer à scanner');
+  if(!okBtn){focusScan();return;}
+  await sbFlush();                 // on pousse ce qui reste en file
+  await sbSessionStatus('termine');
+  flashMsg('✅ Comptage terminé. Le siège a reçu toutes les pièces en direct.','ok');
+  focusScan();
 };
-$('backupBtn').onclick=()=>sendFile('INTERMEDIAIRE');
+// Téléchargement d'une sauvegarde CSV (optionnel, non bloquant)
+async function downloadBackup(){
+  if(!live().length){flashMsg('Aucun scan.','warn');focusScan();return;}
+  const name=`comptage_${slug()}_${new Date().toTimeString().slice(0,5).replace(':','h')}.csv`;
+  const okd=await dl(name,comptageCSV('SAUVEGARDE'),'text/csv');
+  if(okd){S.lastBackupAt=live().length;save();checkBackup();flashMsg('Sauvegarde téléchargée.','ok');}
+  focusScan();
+}
+$('dlBtn').onclick=downloadBackup;
+$('backupBtn').onclick=downloadBackup;
 $('cptIn').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async()=>{
   let rows=parseCSV(r.result);const hi=rows.findIndex(x=>/^(gencod|ean|code|code.?barre|code-barres)$/i.test((x[0]||'').trim())&&x.some(c=>/quantit|qt/i.test(c)));const stop=rows.findIndex((x,k)=>k>hi&&/^(JOURNAL D|CODES REFUS)/i.test((x[0]||'').trim()));if(hi>=0&&stop>hi)rows=rows.slice(0,stop);
   if(hi<0){notify('Format non reconnu : il faut une colonne Gencod et une colonne Quantité.');return;}
