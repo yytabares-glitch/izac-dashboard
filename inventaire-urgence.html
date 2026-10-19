@@ -73,6 +73,17 @@ body.simple #bigCount{display:block}
 </style>
 </head>
 <body>
+<script>
+/* Anti-cache : neutralise un ancien service worker qui resservirait une vieille version */
+(function(){try{if('serviceWorker' in navigator && !sessionStorage.getItem('_swk')){
+  navigator.serviceWorker.getRegistrations().then(function(rs){ if(rs && rs.length){
+    sessionStorage.setItem('_swk','1');
+    if(window.caches){caches.keys().then(function(ks){ks.forEach(function(k){caches.delete(k);});});}
+    Promise.all(rs.map(function(r){return r.unregister();})).then(function(){location.reload();});
+  }});
+}}catch(e){}})();
+</script>
+
 <header style="position:relative">
   <h1>Inventaire d'urgence</h1>
   <div class="sub" id="hdrSub">—</div>

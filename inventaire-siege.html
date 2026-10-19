@@ -45,6 +45,17 @@ td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
+<script>
+/* Anti-cache : neutralise un ancien service worker qui resservirait une vieille version */
+(function(){try{if('serviceWorker' in navigator && !sessionStorage.getItem('_swk')){
+  navigator.serviceWorker.getRegistrations().then(function(rs){ if(rs && rs.length){
+    sessionStorage.setItem('_swk','1');
+    if(window.caches){caches.keys().then(function(ks){ks.forEach(function(k){caches.delete(k);});});}
+    Promise.all(rs.map(function(r){return r.unregister();})).then(function(){location.reload();});
+  }});
+}}catch(e){}})();
+</script>
+
 <div id="lock"><form class="box" id="lockForm" autocomplete="off">
   <h2 style="margin:0 0 6px">Suivi inventaire — Siège</h2>
   <p class="mute" style="margin:0 0 12px">Accès réservé au siège.</p>
