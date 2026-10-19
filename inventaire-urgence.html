@@ -59,7 +59,8 @@ td.n,th.n{text-align:right;white-space:nowrap}
 .x{background:none;border:0;color:var(--ko);font-size:16px;cursor:pointer}
 /* Mode inventoriste : écran de scan dépouillé */
 body.simple nav{display:none}
-body.simple #scanControls,body.simple #camBtn,body.simple #backupBar,body.simple #lastScans,body.simple #endTitle,body.simple #endMute{display:none!important}
+body.simple #scanControls,body.simple #camBtn,body.simple #backupBar,body.simple #endTitle,body.simple #endMute{display:none!important}
+body.simple #lastScans .tblwrap{max-height:34vh}
 body.simple #scanInput{font-size:30px;padding:20px;text-align:center}
 body.simple #flash{font-size:17px;min-height:70px;display:flex;align-items:center;justify-content:center;text-align:center}
 body.simple #tab-scan .kpis{display:none}
@@ -91,7 +92,7 @@ body.simple #bigCount{display:block}
       <div><label>Zone</label><select id="zoneSel"></select></div>
       <div style="max-width:110px"><label>Quantité</label><input id="qtyInput" type="number" min="1" value="1"></div>
     </div>
-    <div id="bigCount"><div class="v" id="bigN">0</div><div class="l">pièces scannées — scanne chaque article une fois</div></div>
+    <div id="bigCount"><div class="v" id="bigN">0</div><div class="l">pièces scannées</div><div style="height:10px;border-radius:6px;background:var(--soft);overflow:hidden;margin:9px auto 4px;max-width:340px"><div id="bigProg" style="height:100%;background:var(--ok);width:0%;transition:width .3s"></div></div><div class="l" id="bigProgTxt">—</div></div>
     <div style="margin-top:10px">
       <label>Scanne les articles ici (douchette)</label>
       <input id="scanInput" autocomplete="off" autocapitalize="off" inputmode="text" placeholder="Scanner ici…">
@@ -442,6 +443,7 @@ document.addEventListener('click',e=>{if(!e.target.closest('#modal,input,select,
 function renderScan(){
   const L=live();
   $('kScans').textContent=tot();$('bigN').textContent=tot();
+  if($('bigProg')){const theoTot=S.theo.reduce((s,a)=>s+(a.hors?0:a.qte),0);const matched=live().reduce((s,x)=>s+((x.i!==null&&S.theo[x.i]&&!S.theo[x.i].hors)?x.qty:0),0);const pct=theoTot?Math.min(100,Math.round(matched/theoTot*100)):0;$('bigProg').style.width=pct+'%';$('bigProgTxt').textContent=theoTot?`${matched} / ${theoTot} pièces du stock retrouvées (${pct}%)`:`${tot()} pièces`;}
   $('kZone').textContent=L.filter(x=>x.zone===S.zone).reduce((s,x)=>s+x.qty,0);
   $('kUnk').textContent=S.theo.length?L.filter(x=>x.i===null).reduce((s,x)=>s+x.qty,0):'—';
   $('logBody').innerHTML=S.scans.slice(-60).reverse().map(x=>`<tr style="${x.del?'text-decoration:line-through;color:var(--mute)':''}">
