@@ -63,6 +63,7 @@ td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
     <select id="sessionSel"></select>
     <span class="mute" id="meta"></span>
     <button class="btn" id="refreshBtn" style="margin-left:auto">↻ Rafraîchir</button>
+    <button class="btn" id="exportBtn" style="background:#15803d">⬇ Exporter (Excel)</button>
     <button class="btn" id="resetBtn" style="background:#b91c1c">Vider ce comptage</button>
   </div>
 
@@ -118,7 +119,7 @@ const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 let THEO=[],TMAP={};
 (function(){const raw=window.STOCK_RAW;if(!raw)return;const L=raw.split('\n');
   for(let i=0;i<L.length;i++){const p=L[i].split('\t');if(!p[0])continue;
-    const a={code:p[0],ref:p[1]||'',des:p[2]||'',coul:p[3]||'',taille:p[4]||'',qte:parseInt(p[5])||0,fam:p[6]||'(sans famille)'};
+    const a={code:p[0],ref:p[1]||'',des:p[2]||'',coul:p[3]||'',taille:p[4]||'',qte:parseInt(p[5])||0,fam:p[6]||'(sans famille)',saison:p[7]||''};
     THEO.push(a);TMAP[norm(p[0])]=a;}
 })();
 
@@ -183,6 +184,18 @@ document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{filter=c.dataset.f;
 $('search').oninput=render;
 $('sessionSel').onchange=e=>{session=e.target.value;resetCounts();render();fetchSessions();poll();};
 $('refreshBtn').onclick=poll;
+function csvCell(v){v=String(v==null?'':v);return /[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+$('exportBtn').onclick=()=>{
+  const rows=[['Statut','Gencod','Famille','Saison','Référence','Désignation','Taille','Couleur','Théorique','Compté','Écart']];
+  let theoQ=0,cptQ=0,manq=0,sur=0;
+  THEO.forEach(a=>{const k=norm(a.code),c=counts[k]||0,ec=c-a.qte;theoQ+=a.qte;cptQ+=c;if(ec<0)manq+=-ec;else if(ec>0)sur+=ec;
+    rows.push([ec<0?'Manquant':ec>0?'Surplus':'Conforme','="'+a.code+'"',a.fam,a.saison,a.ref,a.des,a.taille,a.coul,a.qte,c,ec]);});
+  let unkQ=0;Object.values(unknown).filter(u=>u.q!==0).forEach(u=>{unkQ+=u.q;rows.push(['Inconnu','="'+u.code+'"','','','','Hors état de stock','','',0,u.q,u.q]);});
+  const meta=[['Inventaire',session],['Date export',new Date().toLocaleString('fr-FR')],['Pièces théoriques',theoQ],['Pièces comptées',cptQ],['Manquants',manq],['Surplus',sur],['Inconnus',unkQ],[]];
+  const csv='\uFEFF'+meta.concat(rows).map(r=>r.map(csvCell).join(';')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='inventaire_'+session+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+};
 $('resetBtn').onclick=async()=>{
   if(!confirm('Vider TOUS les scans du comptage « '+session+' » ?\nRemise à zéro. Irréversible.'))return;
   try{
