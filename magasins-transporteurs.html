@@ -46,6 +46,11 @@ section{margin-top:24px}
 .tile .n{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
 .tile .l{font-size:14px}
 .tile .p{font-size:13px;color:var(--muted)}
+.subhead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+.subhead h3{font-size:15px;font-weight:600;margin:0}
+.subhead span{font-size:13px;color:var(--muted)}
+.subhead + .tiles{margin-top:10px}
+.cat-tag{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:999px;border:1px solid var(--c);color:var(--ink);background:color-mix(in srgb, var(--c) 12%, transparent)}
 .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,340px);gap:20px}
 @media (max-width:900px){.grid2{grid-template-columns:1fr}}
 .filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
@@ -112,9 +117,11 @@ button.del:hover,button.del:focus-visible{border-color:var(--warn);color:var(--w
 
 <section class="panel overview" style="margin-top:0" aria-labelledby="t-ov">
   <h2 id="t-ov" style="position:absolute;left:-9999px">Vue d'ensemble</h2>
-  <div class="total"><b id="tot"></b><span>codes clients livrés</span></div>
+  <div class="total"><b id="tot"></b><span id="totLbl">codes clients livrés</span></div>
   <div class="bar" id="bar"></div>
   <div class="tiles" id="tiles"></div>
+  <div class="subhead"><h3>Par catégorie de magasin</h3><span id="catHint">Clique une catégorie pour voir sa répartition par transporteur</span></div>
+  <div class="tiles" id="ctiles"></div>
 </section>
 
 <section class="grid2">
@@ -122,6 +129,7 @@ button.del:hover,button.del:focus-visible{border-color:var(--warn);color:var(--w
     <h2>Détail par magasin</h2>
     <div class="filters">
       <input type="search" id="q" placeholder="Nom ou code client" aria-label="Rechercher un magasin">
+      <select id="fC" aria-label="Catégorie"></select>
       <select id="fT" aria-label="Transporteur"></select>
       <select id="fN" aria-label="Nom"><option value="">Tous</option><option value="vide">Sans nom</option><option value="modif">Modifiés aujourd'hui</option></select>
       <span class="count" id="count"></span>
@@ -130,7 +138,7 @@ button.del:hover,button.del:focus-visible{border-color:var(--warn);color:var(--w
     <div class="actions">
       <button id="btnCsv">Exporter en CSV</button>
     </div>
-    <p class="note">Change le transporteur ou le nom directement dans le tableau : la modification est enregistrée tout de suite. En rouvrant la page, sur n'importe quel poste, tu retrouves la dernière version.</p>
+    <p class="note">Change le transporteur ou le nom directement dans le tableau : la modification est enregistrée tout de suite. En rouvrant la page, sur n'importe quel poste, tu retrouves la dernière version. La catégorie vient de Fastmag (champ Groupe) : elle se modifie dans la liste CATEGORIES en haut du code.</p>
   </div>
   <aside class="panel side">
     <h2>Magasins par transporteur</h2>
@@ -163,16 +171,34 @@ const TRANSPORTEURS = {
   TRANSITAIRE: { nom: "Transitaire", couleur: "#6B7685" },
 };
 
+// Catégories de magasin (groupe Fastmag). Codes clients séparés par un espace.
+// Tout code absent des trois premières listes est classé MULTI
+// (groupes Fastmag DEPOTS, FRANCHISE ou vide).
+const CATEGORIES = {
+  MAG:      { nom: "MAG IZAC",        couleur: "#1D4ED8", codes: "1009 1010 1011 1028 1045 1074 1104 1198 1199 1215 1330 1331 1334 1335 1350 1352 1353 1355 1426 1427 1448 1449 1450 1451 1485 1486 1487 1488 1489 1513 1518 1544 1552 1567 1568 1575 1603 1604 1608 1609 1615 1618 1654 1655 1666 1667 1668 1696 1724 1737 1738 1739 1748 1749 1787 1791 1792 1793 1801 1828 1830 1831 1835 1840 1842 1843 1844 1868 1873" },
+  OUTLET:   { nom: "MAG IZAC OUTLET", couleur: "#DB2777", codes: "1109 1377 1498 1543 1545 1627 1648 1665 1729 1740 1782 1865" },
+  AFFILIES: { nom: "AFFILIES",        couleur: "#059669", codes: "1469 1470 1526 1563 1597 1598 1621 1636 1637 1651 1669 1670 1671 1672 1683 1694 1704 1716 1732 1742 1755 1756 1779 1785 1862" },
+  MULTI:    { nom: "MULTI",           couleur: "#64748B", codes: "" },
+};
+
 /* ---------- Fonctionnement ---------- */
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-let HASH = "", rows = [], filtreT = "", tri = { k: "rang", asc: true };
+let HASH = "", rows = [], filtreT = "", filtreC = "", tri = { k: "rang", asc: true };
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
 const tInfo = k => TRANSPORTEURS[k] || { nom: k, couleur: "#999999" };
 const keys = () => { const k = Object.keys(TRANSPORTEURS); return k.concat([...new Set(rows.map(r => r.transporteur))].filter(x => !k.includes(x))); };
+const CODE2CAT = {};
+Object.entries(CATEGORIES).forEach(([k, c]) => c.codes.split(/\s+/).filter(Boolean).forEach(code => CODE2CAT[code] = k));
+const catOf = code => CODE2CAT[String(code ?? "").trim().replace(/^0+(?=\d)/, "")] || "MULTI";
+const cInfo = k => CATEGORIES[k] || CATEGORIES.MULTI;
+const catKeys = () => Object.keys(CATEGORIES);
+const inCat = r => !filtreC || catOf(r.code) === filtreC;
+const inT = r => !filtreT || r.transporteur === filtreT;
 const today = () => new Date().toLocaleDateString("fr-FR");
 const toSort = d => d ? d.split("/").reverse().join("") : "";
 const isToday = r => r.maj === today();
+const pct = (n, t) => (n / (t || 1) * 100).toFixed(1).replace(".", ",") + " %";
 function setState(t, cls) { const s = $("#state"); s.textContent = t; s.className = "state " + (cls || ""); }
 
 async function sha256(s) { const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join(""); }
@@ -195,19 +221,26 @@ async function deleteRow(code) {
   setState("Supprimé"); return true;
 }
 
-function counts() { const c = {}; keys().forEach(k => c[k] = 0); rows.forEach(r => c[r.transporteur]++); return c; }
+// Les compteurs transporteurs tiennent compte de la catégorie choisie, et inversement.
+function counts() { const c = {}; keys().forEach(k => c[k] = 0); rows.filter(inCat).forEach(r => c[r.transporteur]++); return c; }
+function catCounts() { const c = {}; catKeys().forEach(k => c[k] = 0); rows.filter(inT).forEach(r => c[catOf(r.code)]++); return c; }
 function renderOverview() {
-  const c = counts(), tot = rows.length || 1, ks = keys().filter(k => c[k] > 0);
-  $("#tot").textContent = rows.length;
+  const base = rows.filter(inCat), c = counts(), tot = base.length || 1, ks = keys().filter(k => c[k] > 0);
+  $("#tot").textContent = base.length;
+  $("#totLbl").textContent = filtreC ? `codes clients livrés · ${cInfo(filtreC).nom} (sur ${rows.length})` : "codes clients livrés";
   $("#bar").innerHTML = ks.map(k => { const p = c[k] / tot * 100;
     return `<button style="width:${p}%;background:${tInfo(k).couleur}" data-t="${esc(k)}" title="${esc(tInfo(k).nom)} : ${c[k]}" aria-label="Filtrer ${esc(tInfo(k).nom)}">${p >= 7 ? c[k] : ""}</button>`; }).join("");
   $("#tiles").innerHTML = ks.map(k => `<button class="tile${filtreT === k ? " active" : ""}" style="--c:${tInfo(k).couleur}" data-t="${esc(k)}">
-      <div class="n">${c[k]}</div><div class="l">${esc(tInfo(k).nom)}</div><div class="p">${(c[k] / tot * 100).toFixed(1).replace(".", ",")} %</div></button>`).join("");
+      <div class="n">${c[k]}</div><div class="l">${esc(tInfo(k).nom)}</div><div class="p">${pct(c[k], tot)}</div></button>`).join("");
+  const cc = catCounts(), ctot = rows.filter(inT).length;
+  $("#catHint").textContent = filtreT ? `Chez ${tInfo(filtreT).nom} : ${ctot} codes` : "Clique une catégorie pour voir sa répartition par transporteur";
+  $("#ctiles").innerHTML = catKeys().map(k => `<button class="tile${filtreC === k ? " active" : ""}" style="--c:${cInfo(k).couleur}" data-c="${k}" aria-pressed="${filtreC === k}">
+      <div class="n">${cc[k]}</div><div class="l">${esc(cInfo(k).nom)}</div><div class="p">${pct(cc[k], ctot)}</div></button>`).join("");
 }
 function renderSide() {
   const c = counts();
   $("#carriers").innerHTML = keys().filter(k => c[k] > 0).map(k => {
-    const list = rows.filter(r => r.transporteur === k).sort((a, b) => a.rang - b.rang);
+    const list = rows.filter(r => r.transporteur === k && inCat(r)).sort((a, b) => a.rang - b.rang);
     return `<details class="carrier" style="--c:${tInfo(k).couleur}"><summary><i></i>${esc(tInfo(k).nom)}<span class="n">${c[k]}</span></summary>
       <ol>${list.map(r => `<li>${esc(r.nom || r.code)}</li>`).join("")}</ol></details>`;
   }).join("");
@@ -219,16 +252,18 @@ function renderSide() {
 function renderDetail() {
   const q = $("#q").value.trim().toLowerCase(), fn = $("#fN").value;
   let vis = rows.map((r, i) => ({ r, i })).filter(({ r }) =>
-    (!q || r.nom.toLowerCase().includes(q) || r.code.toLowerCase().includes(q)) &&
-    (!filtreT || r.transporteur === filtreT) && (!fn || (fn === "vide" ? !r.nom.trim() : isToday(r))));
-  const get = { rang: r => r.rang, nom: r => r.nom.toLowerCase() || "~", code: r => r.code, transporteur: r => tInfo(r.transporteur).nom, maj: r => toSort(r.maj) };
-  vis.sort((a, b) => { const x = get[tri.k](a.r), y = get[tri.k](b.r); return (x < y ? -1 : x > y ? 1 : 0) * (tri.asc ? 1 : -1); });
+    (!q || r.nom.toLowerCase().includes(q) || String(r.code).toLowerCase().includes(q)) &&
+    inT(r) && inCat(r) && (!fn || (fn === "vide" ? !r.nom.trim() : isToday(r))));
+  const get = { rang: r => r.rang, nom: r => r.nom.toLowerCase() || "~", code: r => r.code, cat: r => catKeys().indexOf(catOf(r.code)), transporteur: r => tInfo(r.transporteur).nom, maj: r => toSort(r.maj) };
+  vis.sort((a, b) => { const x = get[tri.k](a.r), y = get[tri.k](b.r); return (x < y ? -1 : x > y ? 1 : 0) * (tri.asc ? 1 : -1) || a.r.rang - b.r.rang; });
   const th = (k, t, cls = "") => `<th class="${cls}" data-sort="${k}" aria-sort="${tri.k === k ? (tri.asc ? "ascending" : "descending") : "none"}">${t}${tri.k === k ? (tri.asc ? " ▲" : " ▼") : ""}</th>`;
-  let h = `<thead><tr>${th("rang", "Rang colis", "num")}${th("nom", "Magasin")}${th("code", "Code client")}${th("transporteur", "Transporteur")}${th("maj", "Dernier changement")}<th><span style="position:absolute;left:-9999px">Actions</span></th></tr></thead><tbody>`;
+  let h = `<thead><tr>${th("rang", "Rang colis", "num")}${th("nom", "Magasin")}${th("code", "Code client")}${th("cat", "Catégorie")}${th("transporteur", "Transporteur")}${th("maj", "Dernier changement")}<th><span style="position:absolute;left:-9999px">Actions</span></th></tr></thead><tbody>`;
   vis.forEach(({ r, i }) => {
+    const ci = cInfo(catOf(r.code));
     h += `<tr${isToday(r) ? ' class="changed"' : ""}><td class="num">${r.rang}</td>
-      <td><input class="nom${r.nom.trim() ? "" : " vide"}" data-i="${i}" data-f="nom" value="${esc(r.nom)}" placeholder="Nom à compléter" aria-label="Nom du magasin ${r.code}"></td>
-      <td>${r.code}</td>
+      <td><input class="nom${r.nom.trim() ? "" : " vide"}" data-i="${i}" data-f="nom" value="${esc(r.nom)}" placeholder="Nom à compléter" aria-label="Nom du magasin ${esc(r.code)}"></td>
+      <td>${esc(r.code)}</td>
+      <td><span class="cat-tag" style="--c:${ci.couleur}">${esc(ci.nom)}</span></td>
       <td><select data-i="${i}" data-f="transporteur" style="--c:${tInfo(r.transporteur).couleur}" aria-label="Transporteur ${esc(r.nom || r.code)}">${keys().map(k => `<option value="${esc(k)}"${k === r.transporteur ? " selected" : ""}>${esc(tInfo(k).nom)}</option>`).join("")}</select></td>
       <td class="muted">${esc(r.maj) || "–"}</td>
       <td class="act"><button class="del" data-del="${esc(r.code)}" aria-label="Supprimer ${esc(r.nom || r.code)}">Supprimer</button></td></tr>`;
@@ -236,10 +271,15 @@ function renderDetail() {
   $("#detail").innerHTML = h + "</tbody>";
   $("#count").textContent = `${vis.length} sur ${rows.length}`;
   $("#fT").value = filtreT;
+  $("#fC").value = filtreC;
 }
-function fillFilter() { $("#fT").innerHTML = `<option value="">Tous les transporteurs</option>` + keys().map(k => `<option value="${esc(k)}">${esc(tInfo(k).nom)}</option>`).join(""); }
+function fillFilter() {
+  $("#fT").innerHTML = `<option value="">Tous les transporteurs</option>` + keys().map(k => `<option value="${esc(k)}">${esc(tInfo(k).nom)}</option>`).join("");
+  $("#fC").innerHTML = `<option value="">Toutes les catégories</option>` + catKeys().map(k => `<option value="${k}">${esc(cInfo(k).nom)}</option>`).join("");
+}
 function renderAll() { fillFilter(); renderOverview(); renderSide(); renderDetail(); }
 function setFilter(k) { filtreT = filtreT === k ? "" : k; renderOverview(); renderDetail(); }
+function setCat(k) { filtreC = filtreC === k ? "" : k; renderOverview(); renderSide(); renderDetail(); }
 
 /* ---------- Connexion ---------- */
 function openApp() { $("#gate").style.display = "none"; $("#appWrap").classList.remove("app-hidden"); }
@@ -272,12 +312,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#q").addEventListener("input", renderDetail);
   $("#fN").addEventListener("input", renderDetail);
   $("#fT").addEventListener("input", e => { filtreT = e.target.value; renderOverview(); renderDetail(); });
+  $("#fC").addEventListener("input", e => { filtreC = e.target.value; renderOverview(); renderSide(); renderDetail(); });
   $("#bar").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (b) setFilter(b.dataset.t); });
   $("#tiles").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (b) setFilter(b.dataset.t); });
+  $("#ctiles").addEventListener("click", e => { const b = e.target.closest("[data-c]"); if (b) setCat(b.dataset.c); });
   $("#detail").addEventListener("click", async e => {
     const d = e.target.closest("button[data-del]");
     if (d) {
-      const r = rows.find(x => x.code === d.dataset.del);
+      const r = rows.find(x => String(x.code) === d.dataset.del);
       if (r && confirm(`Supprimer ${r.nom || r.code} (${r.code}) de la liste ?`) && await deleteRow(r.code)) {
         rows = rows.filter(x => x !== r); renderAll();
       }
@@ -298,10 +340,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#detail").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.classList.contains("nom")) e.target.blur(); });
   $("#btnCsv").addEventListener("click", () => {
     const e2 = v => `"${String(v).replace(/"/g, '""')}"`;
-    const csv = ["Rang colis;Magasin;Code client;Transporteur;Dernier changement"].concat([...rows].sort((a, b) => a.rang - b.rang)
-      .map(r => [r.rang, r.nom, r.code, tInfo(r.transporteur).nom, r.maj].map(e2).join(";"))).join("\r\n");
+    const csv = ["Rang colis;Magasin;Code client;Catégorie;Transporteur;Dernier changement"].concat([...rows].sort((a, b) => a.rang - b.rang)
+      .map(r => [r.rang, r.nom, r.code, cInfo(catOf(r.code)).nom, tInfo(r.transporteur).nom, r.maj].map(e2).join(";"))).join("\r\n");
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }));
+    a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
     a.download = "magasins_par_transporteur.csv"; a.click();
   });
   // Recharge les données quand on revient sur l'onglet (modifs faites depuis un autre poste)
