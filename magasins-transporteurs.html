@@ -172,12 +172,16 @@ const TRANSPORTEURS = {
 };
 
 // Catégories de magasin (groupe Fastmag). Codes clients séparés par un espace.
-// Tout code absent des trois premières listes est classé MULTI
+// Si le code n'est pas reconnu, la page cherche le nom du magasin dans « noms ».
+// Tout magasin absent des trois premières listes est classé MULTI
 // (groupes Fastmag DEPOTS, FRANCHISE ou vide).
 const CATEGORIES = {
-  MAG:      { nom: "MAG IZAC",        couleur: "#1D4ED8", codes: "1009 1010 1011 1028 1045 1074 1104 1198 1199 1215 1330 1331 1334 1335 1350 1352 1353 1355 1426 1427 1448 1449 1450 1451 1485 1486 1487 1488 1489 1513 1518 1544 1552 1567 1568 1575 1603 1604 1608 1609 1615 1618 1654 1655 1666 1667 1668 1696 1724 1737 1738 1739 1748 1749 1787 1791 1792 1793 1801 1828 1830 1831 1835 1840 1842 1843 1844 1868 1873" },
-  OUTLET:   { nom: "MAG IZAC OUTLET", couleur: "#DB2777", codes: "1109 1377 1498 1543 1545 1627 1648 1665 1729 1740 1782 1865" },
-  AFFILIES: { nom: "AFFILIES",        couleur: "#059669", codes: "1469 1470 1526 1563 1597 1598 1621 1636 1637 1651 1669 1670 1671 1672 1683 1694 1704 1716 1732 1742 1755 1756 1779 1785 1862" },
+  MAG:      { nom: "MAG IZAC",        couleur: "#1D4ED8", codes: "1009 1010 1011 1028 1045 1074 1104 1198 1199 1215 1330 1331 1334 1335 1350 1352 1353 1355 1426 1427 1448 1449 1450 1451 1485 1486 1487 1488 1489 1513 1518 1544 1552 1567 1568 1575 1603 1604 1608 1609 1615 1618 1654 1655 1666 1667 1668 1696 1724 1737 1738 1739 1748 1749 1787 1791 1792 1793 1801 1828 1830 1831 1835 1840 1842 1843 1844 1868 1873",
+              noms: "IZAC AUBER|IZAC BELLE EPINE|IZAC HERRIOT|IZAC RUE RENNES|IZAC PARINOR|IZAC BLAGNAC|IZAC CRETEIL|IZAC VELIZY|IZAC BEZIERS|IZAC ST QUENTIN|IZAC LYON CONFLUENCE|IZAC MONTPELLIER|IZAC ROUEN|IZAC LILLE|IZAC PERPIGNAN AUCHAN|IZAC LEVALLOIS|IZAC CLAYE SOUILLY|IZAC NANTES ATLANTIS|IZAC BEGLES|IZAC CLAIRA|IZAC DIJON TOISON|IZAC AEROVILLE|IZAC RENNES ALMA|IZAC CLERMONT JAUDE|IZAC MERIGNAC|IZAC LES TERRASSES DU PORT|IZAC STRASBOURG|IZAC LA VALENTINE|IZAC VILLENEUVE LA GARENNE|IZAC PART DIEU|IZAC ECOUFLANT|IZAC EPAGNY|IZAC VALEUROPB|IZAC BORDEAUX|IZAC CARRE SENART|IZAC LA DEFENSE|IZAC FENOUILLET|IZAC ROSNY2|IZAC ANGLETB|IZAC NIMES CAP COSTIERES|IZAC NANTES CREBILLON|IZAC EURALILLE|IZAC PRADO|IZAC PARLY|IZAC CAP3000|IZAC GRAND VAR|IZAC NOYELLES|IZAC FORUM DES HALLES|IZAC LES SABLES D OLONNE|IZAC BORDEAUX LAC|IZAC ECULLY|IZAC TOULOUSE|IZAC BEAUGRENELLE|IZAC AIX EN PROVENCE|IZAC LA ROCHELLE|IZAC TOURS|IZAC GRENOBLE|IZAC DIJON CV|IZAC RENNES CV|IZAC CAEN|IZAC NEYRPIC|IZAC STRASBOURG CENTRE VILLE|IZAC ORLEANS|AVANT CAP - CABRIES|IZAC LE MANS|IZAC DEAUVILLE|IZAC LE POLYGONE|IZAC NANCY CV|IZAC SAINT-TROPEZ" },
+  OUTLET:   { nom: "MAG IZAC OUTLET", couleur: "#DB2777", codes: "1109 1377 1498 1543 1545 1627 1648 1665 1729 1740 1782 1865",
+              noms: "IZAC ST DENIS|IZAC PT STE MARIE|IZAC NEW GONESSE|IZAC A13|IZAC LORMONT|IZAC MIRAMAS|IZAC ROUBAIX|IZAC MONTPARNASSE|IZAC LILLENIUM|IZAC ROMANS|IZAC CORBEIL|IZAC GIVERNY" },
+  AFFILIES: { nom: "AFFILIES",        couleur: "#059669", codes: "1469 1470 1526 1563 1597 1598 1621 1636 1637 1651 1669 1670 1671 1672 1683 1694 1704 1716 1732 1742 1755 1756 1779 1785 1862",
+              noms: "IZAC MONTARGIS|IZAC AVIGNON|IZAC NIORT|IZAC SAINT 0MER|IZAC SAINT OMER|IZAC AUXERRE|IZAC BASTIA|IZAC AIX LES BAINS|IZAC METZ|IZAC AJACCIO|IZAC PAU|IZAC VOIRON|IZAC BREST|IZAC ANDREZIEUX|IZAC SAINT ETIENNE B|IZAC SAINT ETIENNE|IZAC ARRAS|IZAC MULHOUSE|IZAC BLOIS|IZAC EPINAL|IZAC HAGUENAU|IZAC THIONVILLE|IZAC BESANCON|IZAC BOULOGNE|IZAC ARCUEIL|IZAC GAP|IZAC CHAMBERY" },
   MULTI:    { nom: "MULTI",           couleur: "#64748B", codes: "" },
 };
 
@@ -190,10 +194,21 @@ const tInfo = k => TRANSPORTEURS[k] || { nom: k, couleur: "#999999" };
 const keys = () => { const k = Object.keys(TRANSPORTEURS); return k.concat([...new Set(rows.map(r => r.transporteur))].filter(x => !k.includes(x))); };
 const CODE2CAT = {};
 Object.entries(CATEGORIES).forEach(([k, c]) => c.codes.split(/\s+/).filter(Boolean).forEach(code => CODE2CAT[code] = k));
-const catOf = code => CODE2CAT[String(code ?? "").trim().replace(/^0+(?=\d)/, "")] || "MULTI";
+// Normalise un nom de magasin : sans accents, sans ponctuation, sans le mot IZAC, ST = SAINT.
+const normNom = s => String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase()
+  .replace(/[^A-Z0-9]+/g, " ").replace(/\bIZAC\b/g, " ").replace(/\bST\b/g, "SAINT").replace(/\bSTE\b/g, "SAINTE").replace(/\s+/g, " ").trim();
+const NOM2CAT = {};
+Object.entries(CATEGORIES).forEach(([k, c]) => (c.noms || "").split("|").filter(Boolean).forEach(n => NOM2CAT[normNom(n)] = k));
+// Retrouve la catégorie : 1) code client exact, 2) chiffres contenus dans le code (ex. « C01009 »), 3) nom du magasin.
+function catOf(r) {
+  const code = String(r.code ?? "").trim();
+  if (CODE2CAT[code]) return CODE2CAT[code];
+  for (const d of code.match(/\d+/g) || []) { const n = d.replace(/^0+(?=\d)/, ""); if (CODE2CAT[n]) return CODE2CAT[n]; }
+  return NOM2CAT[normNom(r.nom)] || "MULTI";
+}
 const cInfo = k => CATEGORIES[k] || CATEGORIES.MULTI;
 const catKeys = () => Object.keys(CATEGORIES);
-const inCat = r => !filtreC || catOf(r.code) === filtreC;
+const inCat = r => !filtreC || catOf(r) === filtreC;
 const inT = r => !filtreT || r.transporteur === filtreT;
 const today = () => new Date().toLocaleDateString("fr-FR");
 const toSort = d => d ? d.split("/").reverse().join("") : "";
@@ -223,7 +238,7 @@ async function deleteRow(code) {
 
 // Les compteurs transporteurs tiennent compte de la catégorie choisie, et inversement.
 function counts() { const c = {}; keys().forEach(k => c[k] = 0); rows.filter(inCat).forEach(r => c[r.transporteur]++); return c; }
-function catCounts() { const c = {}; catKeys().forEach(k => c[k] = 0); rows.filter(inT).forEach(r => c[catOf(r.code)]++); return c; }
+function catCounts() { const c = {}; catKeys().forEach(k => c[k] = 0); rows.filter(inT).forEach(r => c[catOf(r)]++); return c; }
 function renderOverview() {
   const base = rows.filter(inCat), c = counts(), tot = base.length || 1, ks = keys().filter(k => c[k] > 0);
   $("#tot").textContent = base.length;
@@ -246,6 +261,8 @@ function renderSide() {
   }).join("");
   const rec = rows.filter(r => r.maj).sort((a, b) => toSort(b.maj).localeCompare(toSort(a.maj)) || a.rang - b.rang).slice(0, 12);
   $("#recent").innerHTML = rec.length ? rec.map(r => `<li><span>${esc(r.nom || r.code)} → ${esc(tInfo(r.transporteur).nom)}</span><span>${esc(r.maj)}</span></li>`).join("") : "<li><span>Aucun changement enregistré</span></li>";
+  const nonClasses = rows.filter(r => catOf(r) === "MULTI").length;
+  if (rows.length && nonClasses === rows.length) console.warn("Aucun magasin reconnu. Exemples de codes :", rows.slice(0, 5).map(r => r.code));
   const vides = rows.filter(r => !r.nom.trim()).length;
   $("#alert").textContent = vides ? `${vides} code${vides > 1 ? "s" : ""} client sans nom : choisis « Sans nom » dans le tableau pour les compléter.` : "";
 }
@@ -254,12 +271,12 @@ function renderDetail() {
   let vis = rows.map((r, i) => ({ r, i })).filter(({ r }) =>
     (!q || r.nom.toLowerCase().includes(q) || String(r.code).toLowerCase().includes(q)) &&
     inT(r) && inCat(r) && (!fn || (fn === "vide" ? !r.nom.trim() : isToday(r))));
-  const get = { rang: r => r.rang, nom: r => r.nom.toLowerCase() || "~", code: r => r.code, cat: r => catKeys().indexOf(catOf(r.code)), transporteur: r => tInfo(r.transporteur).nom, maj: r => toSort(r.maj) };
+  const get = { rang: r => r.rang, nom: r => r.nom.toLowerCase() || "~", code: r => r.code, cat: r => catKeys().indexOf(catOf(r)), transporteur: r => tInfo(r.transporteur).nom, maj: r => toSort(r.maj) };
   vis.sort((a, b) => { const x = get[tri.k](a.r), y = get[tri.k](b.r); return (x < y ? -1 : x > y ? 1 : 0) * (tri.asc ? 1 : -1) || a.r.rang - b.r.rang; });
   const th = (k, t, cls = "") => `<th class="${cls}" data-sort="${k}" aria-sort="${tri.k === k ? (tri.asc ? "ascending" : "descending") : "none"}">${t}${tri.k === k ? (tri.asc ? " ▲" : " ▼") : ""}</th>`;
   let h = `<thead><tr>${th("rang", "Rang colis", "num")}${th("nom", "Magasin")}${th("code", "Code client")}${th("cat", "Catégorie")}${th("transporteur", "Transporteur")}${th("maj", "Dernier changement")}<th><span style="position:absolute;left:-9999px">Actions</span></th></tr></thead><tbody>`;
   vis.forEach(({ r, i }) => {
-    const ci = cInfo(catOf(r.code));
+    const ci = cInfo(catOf(r));
     h += `<tr${isToday(r) ? ' class="changed"' : ""}><td class="num">${r.rang}</td>
       <td><input class="nom${r.nom.trim() ? "" : " vide"}" data-i="${i}" data-f="nom" value="${esc(r.nom)}" placeholder="Nom à compléter" aria-label="Nom du magasin ${esc(r.code)}"></td>
       <td>${esc(r.code)}</td>
@@ -341,7 +358,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("#btnCsv").addEventListener("click", () => {
     const e2 = v => `"${String(v).replace(/"/g, '""')}"`;
     const csv = ["Rang colis;Magasin;Code client;Catégorie;Transporteur;Dernier changement"].concat([...rows].sort((a, b) => a.rang - b.rang)
-      .map(r => [r.rang, r.nom, r.code, cInfo(catOf(r.code)).nom, tInfo(r.transporteur).nom, r.maj].map(e2).join(";"))).join("\r\n");
+      .map(r => [r.rang, r.nom, r.code, cInfo(catOf(r)).nom, tInfo(r.transporteur).nom, r.maj].map(e2).join(";"))).join("\r\n");
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
     a.download = "magasins_par_transporteur.csv"; a.click();
