@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1f3864">
+<title>Inventaire magasin – IZAC</title>
+<style>
+:root{
+  --bg:#f3f5f9; --card:#ffffff; --ink:#1b2333; --muted:#6b7487; --line:#dfe3ea;
+  --brand:#1f3864; --brand2:#2f5597; --ok:#1e8e4e; --okbg:#e3f5ea; --warn:#b26a00; --warnbg:#fff2dc;
+  --err:#c62828; --errbg:#fde7e7; --info:#1565c0; --infobg:#e3eefc; --grey:#8a93a6; --greybg:#eef0f4;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:16px}
+button{font:inherit;cursor:pointer;border:0;border-radius:12px;padding:14px 16px;font-weight:600}
+input{font:inherit}
+.hidden{display:none!important}
+header{background:var(--brand);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:5}
+header .t{flex:1;min-width:0}
+header .t b{display:block;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header .t span{font-size:13px;opacity:.85}
+.sync{font-size:12px;padding:5px 9px;border-radius:20px;background:rgba(255,255,255,.15);white-space:nowrap}
+.sync.off{background:#c62828}
+.sync.wait{background:#b26a00}
+main{max-width:720px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+h2{font-size:18px;margin:0 0 12px}
+label{display:block;font-size:14px;color:var(--muted);margin:12px 0 6px}
+.inp{width:100%;padding:14px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:18px}
+.inp:focus{outline:2px solid var(--brand2);border-color:transparent}
+.btn{background:var(--brand);color:#fff;width:100%}
+.btn2{background:var(--greybg);color:var(--ink)}
+.btnok{background:var(--ok);color:#fff}
+.btnerr{background:var(--err);color:#fff}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+.msg{padding:12px 14px;border-radius:12px;margin:10px 0;font-size:15px}
+.msg.err{background:var(--errbg);color:var(--err)}
+.msg.ok{background:var(--okbg);color:var(--ok)}
+.msg.warn{background:var(--warnbg);color:var(--warn)}
+.msg.info{background:var(--infobg);color:var(--info)}
+.op{display:flex;align-items:center;gap:10px;font-size:15px}
+.op b{flex:1}
+.op button{padding:8px 12px;font-size:14px}
+.zones{display:grid;gap:10px}
+.zone{display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;border:2px solid var(--line);background:#fff;text-align:left;width:100%;color:var(--ink)}
+.zone .c{font-weight:800;font-size:18px;min-width:52px}
+.zone .l{flex:1;font-weight:600}
+.zone .s{font-size:13px;padding:5px 9px;border-radius:20px;white-space:nowrap}
+.zone.a_faire .s{background:var(--greybg);color:var(--grey)}
+.zone.en_cours .s{background:var(--warnbg);color:var(--warn)}
+.zone.mine{border-color:var(--info)}
+.zone.mine .s{background:var(--infobg);color:var(--info)}
+.zone.terminee{opacity:.7}
+.zone.terminee .s{background:var(--okbg);color:var(--ok)}
+.zone.a_recompter{border-color:var(--err)}
+.zone.a_recompter .s{background:var(--errbg);color:var(--err)}
+.big{font-size:64px;font-weight:800;text-align:center;line-height:1;margin:6px 0}
+.sub{color:var(--muted);text-align:center;font-size:14px}
+.zonehead{display:flex;align-items:center;gap:10px}
+.zonehead .zc{background:var(--brand);color:#fff;border-radius:10px;padding:8px 12px;font-weight:800;font-size:20px}
+.zonehead .zl{flex:1;font-weight:700;font-size:18px}
+.pill{display:inline-block;font-size:12px;padding:4px 8px;border-radius:20px;background:var(--errbg);color:var(--err);font-weight:700}
+#scanInput{font-size:22px;text-align:center;letter-spacing:1px}
+.mult{display:flex;align-items:center;gap:8px;justify-content:center;margin-top:10px}
+.mult button{padding:10px 14px}
+.mult .q{font-weight:800;font-size:18px;min-width:60px;text-align:center}
+.last{list-style:none;margin:0;padding:0}
+.last li{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
+.last li:last-child{border-bottom:0}
+.last .q{font-weight:800;min-width:42px}
+.last .d{flex:1;min-width:0}
+.last .d small{display:block;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.last li.unk .d{color:var(--err)}
+.last li.ann{color:var(--muted);text-decoration:line-through}
+.flash{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .25s;z-index:20}
+.flash.ok{background:rgba(30,142,78,.18)}
+.flash.err{background:rgba(198,40,40,.25)}
+.flash.on{opacity:1;transition:none}
+.modal{position:fixed;inset:0;background:rgba(10,20,40,.55);display:flex;align-items:flex-end;justify-content:center;z-index:30;padding:16px}
+.modal .box{background:#fff;border-radius:18px;padding:18px;width:100%;max-width:520px}
+.modal h3{margin:0 0 8px}
+.modal p{margin:6px 0 12px;color:var(--muted)}
+.chk{display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-size:15px}
+.chk input{width:22px;height:22px;margin-top:1px}
+#reader{width:100%;border-radius:12px;overflow:hidden;margin-top:10px}
+.foot{font-size:12px;color:var(--muted);text-align:center;margin:18px 0 30px}
+@media (min-width:700px){ .modal{align-items:center} }
+</style>
+</head>
+<body>
+<header>
+  <div class="t"><b id="hStore">Inventaire IZAC</b><span id="hSub">Comptage magasin</span></div>
+  <div class="sync" id="sync">—</div>
+</header>
+<div class="flash" id="flash"></div>
+
+<main>
+  <!-- ============ CONNEXION ============ -->
+  <section id="vLogin" class="hidden">
+    <div class="card">
+      <h2>Connexion à l'inventaire</h2>
+      <div class="msg info">Le code de session et le PIN vous sont communiqués par le siège.</div>
+      <label for="lCode">Code de session</label>
+      <input class="inp" id="lCode" autocomplete="off" autocapitalize="characters" maxlength="8" placeholder="ex. MA9LEUCY">
+      <label for="lPin">PIN</label>
+      <input class="inp" id="lPin" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6 chiffres">
+      <label for="lDevice">Nom de cet appareil</label>
+      <input class="inp" id="lDevice" maxlength="40" placeholder="ex. Kit 3 – téléphone 1">
+      <label for="lOp">Votre prénom et nom</label>
+      <input class="inp" id="lOp" maxlength="40" autocomplete="off" placeholder="ex. Sarah M.">
+      <div id="lMsg"></div>
+      <button class="btn" id="lBtn" style="margin-top:16px">Se connecter</button>
+    </div>
+  </section>
+
+  <!-- ============ ZONES ============ -->
+  <section id="vZones" class="hidden">
+    <div class="card op">
+      <span>👤</span><b id="zOp">—</b>
+      <button class="btn2" id="zChangeOp">Changer d'opérateur</button>
+    </div>
+    <div id="zStatusMsg"></div>
+    <div class="card" id="zCard">
+      <h2>Zones à compter</h2>
+      <p class="sub" style="text-align:left;margin:-4px 0 12px">Touchez une zone ou scannez son étiquette pour commencer.</p>
+      <input id="zoneScan" class="inp" autocomplete="off" placeholder="Scanner une étiquette de zone" style="font-size:15px;margin-bottom:12px">
+      <div class="zones" id="zList"></div>
+      <button class="btn2" id="zAdd" style="width:100%;margin-top:12px">+ Ajouter une zone oubliée</button>
+    </div>
+    <div class="card" id="zCloseCard">
+      <h2>Fin de l'inventaire</h2>
+      <p class="sub" style="text-align:left" id="zCloseInfo">—</p>
+      <button class="btnok" id="zClose" style="width:100%">Clôturer le comptage du magasin</button>
+    </div>
+    <div class="foot">Appareil : <span id="zDev">—</span> · <a href="#" id="zLogout">Déconnecter cet appareil</a></div>
+  </section>
+
+  <!-- ============ COMPTAGE ============ -->
+  <section id="vCount" class="hidden">
+    <div class="card">
+      <div class="zonehead">
+        <span class="zc" id="cCode">Z00</span>
+        <span class="zl" id="cLabel">—</span>
+        <span class="pill hidden" id="cRecount">RECOMPTAGE</span>
+      </div>
+      <div class="big" id="cCount">0</div>
+      <div class="sub">pièces comptées dans cette zone · <span id="cOp">—</span></div>
+    </div>
+    <div class="card">
+      <input id="scanInput" class="inp" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+             placeholder="Scannez les articles ici" enterkeyhint="done">
+      <div class="mult">
+        <span class="sub" style="margin:0">Quantité du prochain scan :</span>
+        <button class="btn2" id="qMinus">−</button><span class="q" id="qVal">× 1</span><button class="btn2" id="qPlus">+</button>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn2" id="cCam">📷 Caméra</button>
+        <button class="btn2" id="cUndo">↶ Annuler le dernier</button>
+      </div>
+      <div id="reader" class="hidden"></div>
+    </div>
+    <div class="card">
+      <h2 style="font-size:16px">Derniers scans</h2>
+      <ul class="last" id="cLast"><li class="sub">Aucun scan pour l'instant</li></ul>
+    </div>
+    <div class="row">
+      <button class="btn2" id="cPause">⏸ Pause</button>
+      <button class="btnok" id="cEnd">✓ Terminer la zone</button>
+    </div>
+    <div class="foot">Les articles inconnus (bip grave) : mettez-les de côté, ils sont quand même comptés.</div>
+  </section>
+</main>
+
+<div class="modal hidden" id="modal"><div class="box" id="modalBox"></div></div>
+
+<script>
+/* ======================================================================
+   CONFIGURATION – à renseigner (identique dans inventaire-siege.html)
+   ====================================================================== */
+const SUPABASE_URL = 'https://imurxmsglmpgxdbavalk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltdXJ4bXNnbG1wZ3hkYmF2YWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNDg5NDMsImV4cCI6MjA5NTgyNDk0M30.GdmfOH-bG0ivzz8rFr83pZTBOjZecPgX_WXepAiuYo8';
+
+/* ====================================================================== */
+const LS_SESSION = 'inv2_mag_session', LS_QUEUE = 'inv2_mag_queue', LS_CAT = 'inv2_mag_catalog', LS_LEDGER = 'inv2_mag_ledger';
+let API_BASE = SUPABASE_URL + '/rest/v1';
+try { const q = new URLSearchParams(location.search).get('api');
+      if (q && /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) API_BASE = q; } catch(e){}
+
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} },
+  del(k){ try { localStorage.removeItem(k); } catch(e){} }
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* Appel "simple" (sans en-tête) : passe le blocage CORS du réseau IZAC */
+async function rpc(fn, params){
+  const body = new URLSearchParams();
+  for (const [k, v] of Object.entries(params || {})) body.append(k, v == null ? '' : String(v));
+  const r = await fetch(API_BASE + '/rpc/' + fn + (API_BASE.endsWith('/rest/v1') ? '?apikey=' + encodeURIComponent(SUPABASE_KEY) : ''),
+                        { method: 'POST', body, cache: 'no-store' });
+  const txt = await r.text();
+  let data = null; try { data = JSON.parse(txt); } catch(e){}
+  if (!r.ok) { const e = new Error((data && data.message) || ('Erreur serveur ' + r.status)); e.server = true; throw e; }
+  return data;
+}
+
+const ERR = {
+  CODE_INCONNU: 'Code de session inconnu.',
+  SESSION_FERMEE: 'Cette session est fermée. Contactez le siège.',
+  PIN_BLOQUE: 'PIN bloqué après trop d\'erreurs. Le siège doit générer un nouveau PIN.',
+  PIN_INCORRECT: 'PIN incorrect.',
+  NON_AUTORISE: 'Cet appareil n\'est plus autorisé. Reconnectez-vous.',
+  SESSION_NON_OUVERTE: 'Le comptage n\'est pas ouvert (ou est déjà clôturé).',
+  ZONE_INCONNUE: 'Zone inconnue.',
+  ZONE_OCCUPEE: 'Cette zone est déjà en cours sur un autre appareil',
+  ZONE_TERMINEE: 'Cette zone est terminée. Seul le siège peut demander un recomptage.',
+  OPERATEUR_DEJA_PASSE: 'Ce recomptage doit être fait par une AUTRE personne que celle(s) qui a déjà compté cette zone. Changez d\'opérateur.',
+  OPERATEUR_VIDE: 'Indiquez le nom de l\'opérateur.',
+  ZONES_NON_TERMINEES: 'Toutes les zones doivent être terminées avant de clôturer.',
+  AUCUNE_ZONE: 'Aucune zone n\'a été définie.',
+  RESPONSABLE_VIDE: 'Indiquez le nom du responsable.',
+  LIBELLE_VIDE: 'Indiquez un nom de zone.'
+};
+const errMsg = r => (ERR[r.error] || r.error || 'Erreur') + (r.par ? ' (' + r.par + ')' : '') + (r.restant != null ? ' – ' + r.restant + ' essai(s) restant(s).' : '');
+
+/* ------------------------------------------------------- normalisation */
+const AZ = {'&':'1','é':'2','"':'3',"'":'4','(':'5','-':'6','è':'7','_':'8','ç':'9','à':'0'};
+function cleanScan(raw){
+  let s = String(raw || '').trim().replace(/[\r\n\t]/g, '');
+  // Douchette configurée en QWERTY sur un appareil AZERTY : &é"'(-è_çà -> chiffres
+  if (s && /^[&é"'(\-è_çà0-9]+$/.test(s) && /[&é"'(è_çà]/.test(s)) s = s.split('').map(c => AZ[c] ?? c).join('');
+  return s.toUpperCase().replace(/\s+/g, '');
+}
+const normCode = s => { s = cleanScan(s); return /^\d+$/.test(s) ? (s.replace(/^0+/, '') || '0') : s; };
+// Étiquette de zone : code-barres numérique 9900 + n° de zone (ex. 990003 = Z03),
+// insensible au réglage clavier de la douchette. "Z03" tapé à la main est aussi accepté.
+function zoneFromScan(s){
+  let m = /^9900(\d{2,3})$/.exec(s);
+  if (m) return 'Z' + String(+m[1]).padStart(2, '0');
+  m = /^(?:ZONE[-_:]?)?Z(\d{1,3})$/.exec(s);
+  return m ? 'Z' + String(+m[1]).padStart(2, '0') : null;
+}
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+
+/* ------------------------------------------------------------- son */
+let actx = null;
+function beep(type){
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const seq = type === 'ok' ? [[1400, .07]] : type === 'unk' ? [[420, .14], [0, .06], [420, .14]] : [[220, .45]];
+    let t = actx.currentTime;
+    for (const [f, d] of seq) {
+      if (f) { const o = actx.createOscillator(), g = actx.createGain(); o.type = 'square'; o.frequency.value = f;
+               g.gain.value = .12; o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + d); }
+      t += d;
+    }
+  } catch(e){}
+  try { if (navigator.vibrate) navigator.vibrate(type === 'ok' ? 30 : [120, 60, 120]); } catch(e){}
+  const f = $('flash'); f.className = 'flash ' + (type === 'ok' ? 'ok' : 'err') + ' on';
+  setTimeout(() => f.className = 'flash ' + (type === 'ok' ? 'ok' : 'err'), 60);
+}
+
+/* ------------------------------------------------------------- état */
+let S = store.get(LS_SESSION, null);       // {token, device_id, device_label, operator, session}
+let queue = store.get(LS_QUEUE, []);       // scans en attente d'envoi
+let ledger = store.get(LS_LEDGER, {});     // { "zone:pass": {count, last:[...] } }
+let catalog = null;                        // Map ean normalisé -> [ref, designation, couleur, taille]
+let zones = [];
+let current = null;                        // {zone, pass, recount}
+let nextQty = 1, online = true, flushing = false, wakeLock = null, lastState = null;
+
+function saveQueue(){ store.set(LS_QUEUE, queue); updateSync(); }
+function updateSync(){
+  const el = $('sync');
+  if (!online) { el.className = 'sync off'; el.textContent = 'Hors ligne · ' + queue.length + ' en attente'; }
+  else if (queue.length) { el.className = 'sync wait'; el.textContent = queue.length + ' en attente'; }
+  else { el.className = 'sync'; el.textContent = '✓ Synchronisé'; }
+}
+
+function show(v){
+  for (const id of ['vLogin', 'vZones', 'vCount']) $(id).classList.toggle('hidden', id !== v);
+  if (v === 'vCount') setTimeout(() => $('scanInput').focus(), 50);
+  if (v === 'vZones') setTimeout(() => $('zoneScan').focus(), 50);
+}
+function modal(html){ $('modalBox').innerHTML = html; $('modal').classList.remove('hidden'); }
+function closeModal(){ $('modal').classList.add('hidden'); if (current) $('scanInput').focus(); }
+
+/* ------------------------------------------------------------ connexion */
+$('lBtn').onclick = async () => {
+  const code = $('lCode').value.trim().toUpperCase(), pin = $('lPin').value.trim(),
+        dev = $('lDevice').value.trim(), op = $('lOp').value.trim();
+  if (!code || !pin || !op) { $('lMsg').innerHTML = '<div class="msg err">Code, PIN et nom obligatoires.</div>'; return; }
+  $('lBtn').disabled = true; $('lMsg').innerHTML = '';
+  try {
+    const r = await rpc('inv2_store_join', { p_code: code, p_pin: pin, p_label: dev || 'Appareil', p_operator: op });
+    if (!r.ok) { $('lMsg').innerHTML = '<div class="msg err">' + esc(errMsg(r)) + '</div>'; return; }
+    S = { token: r.token, device_id: r.device_id, device_label: dev || 'Appareil', operator: op, session: r.session };
+    store.set(LS_SESSION, S);
+    $('lPin').value = '';
+    await loadCatalog(true);
+    await refreshState();
+    show('vZones');
+  } catch(e) {
+    $('lMsg').innerHTML = '<div class="msg err">Connexion impossible : ' + esc(e.message) + '</div>';
+  } finally { $('lBtn').disabled = false; }
+};
+
+function logout(force){
+  if (!force && queue.length && !confirm(queue.length + ' scan(s) ne sont pas encore envoyés. Déconnecter quand même ?')) return;
+  store.del(LS_SESSION); store.del(LS_QUEUE); store.del(LS_LEDGER); store.del(LS_CAT);
+  S = null; queue = []; ledger = {}; catalog = null; current = null;
+  updateSync(); renderHeader(); show('vLogin');
+}
+$('zLogout').onclick = e => { e.preventDefault(); logout(false); };
+
+/* ------------------------------------------------------------- catalogue */
+async function loadCatalog(force){
+  const cached = store.get(LS_CAT, null);
+  if (cached && !force && Date.now() - cached.at < 10 * 60 * 1000) { catalog = new Map(cached.items); return; }
+  try {
+    const r = await rpc('inv2_store_catalog', { p_token: S.token });
+    if (r.ok) {
+      const items = r.items.map(a => [normCode(a[0]), [a[1], a[2], a[3], a[4]]]);
+      catalog = new Map(items); store.set(LS_CAT, { at: Date.now(), items });
+    }
+  } catch(e) { if (cached) catalog = new Map(cached.items); }
+}
+function describe(code){
+  if (!catalog || !catalog.size) return null;
+  const a = catalog.get(normCode(code));
+  return a ? [a[0], a[1], [a[2], a[3]].filter(Boolean).join(' · ')].filter(Boolean) : false;
+}
+
+/* ------------------------------------------------------------ état serveur */
+function renderHeader(){
+  if (!S) { $('hStore').textContent = 'Inventaire IZAC'; $('hSub').textContent = 'Comptage magasin'; return; }
+  $('hStore').textContent = S.session.store_code + ' – ' + S.session.store_name;
+  const st = { preparation: 'En préparation', ouverte: 'Comptage ouvert', comptage_termine: 'Comptage clôturé',
+               validee: 'Inventaire validé', annulee: 'Annulé' }[S.session.status] || S.session.status;
+  $('hSub').textContent = st + (S.session.inv_date ? ' · ' + new Date(S.session.inv_date).toLocaleDateString('fr-FR') : '');
+}
+
+async function refreshState(){
+  if (!S) return;
+  try {
+    const r = await rpc('inv2_store_state', { p_token: S.token });
+    online = true;
+    if (!r.ok) { if (r.error === 'NON_AUTORISE') { alert(ERR.NON_AUTORISE); logout(true); } return; }
+    lastState = r; S.session = r.session; store.set(LS_SESSION, S);
+    zones = r.zones; renderHeader(); renderZones();
+  } catch(e) { online = false; }
+  updateSync();
+}
+
+const ST_TXT = { a_faire: 'À faire', en_cours: 'En cours', terminee: '✓ Terminée', a_recompter: '⚠ À recompter' };
+function renderZones(){
+  $('zOp').textContent = S.operator; $('zDev').textContent = S.device_label;
+  const st = S.session.status;
+  let m = '';
+  if (st === 'preparation') m = '<div class="msg warn">Le siège n\'a pas encore ouvert le comptage. Préparez et étiquetez les zones ; la page se met à jour toute seule.</div>';
+  if (st === 'comptage_termine') m = '<div class="msg ok">Comptage clôturé et transmis au siège. Merci ! Ne rangez pas le kit tant que le siège n\'a pas validé (un recomptage peut être demandé).</div>';
+  if (st === 'validee') m = '<div class="msg ok">Inventaire validé par le siège. Vous pouvez renvoyer le kit.</div>';
+  if (st === 'annulee') m = '<div class="msg err">Cette session a été annulée par le siège.</div>';
+  const nbRec = zones.filter(z => z.status === 'a_recompter').length;
+  if (st === 'ouverte' && nbRec) m += '<div class="msg err">Le siège demande le recomptage de ' + nbRec + ' zone(s), par une autre personne que celle qui les a comptées.</div>';
+  $('zStatusMsg').innerHTML = m;
+
+  $('zList').innerHTML = zones.length ? zones.map(z => {
+    const mine = z.a_moi;
+    let s = ST_TXT[z.status] || z.status;
+    if (z.status === 'en_cours') s = mine ? 'Reprendre ›' : 'En cours · ' + (z.operateur_en_cours || '');
+    return '<button class="zone ' + z.status + (mine ? ' mine' : '') + '" data-id="' + z.id + '">' +
+           '<span class="c">' + esc(z.code) + '</span><span class="l">' + esc(z.label) + '</span>' +
+           '<span class="s">' + esc(s) + '</span></button>';
+  }).join('') : '<div class="sub">Aucune zone définie : ajoutez-les avec le bouton ci-dessous.</div>';
+  $('zList').querySelectorAll('.zone').forEach(b => b.onclick = () => startZone(+b.dataset.id));
+
+  const open = st === 'ouverte';
+  $('zAdd').classList.toggle('hidden', !(st === 'ouverte' || st === 'preparation'));
+  const notDone = zones.filter(z => z.status !== 'terminee').length;
+  $('zCloseCard').classList.toggle('hidden', !open);
+  $('zClose').disabled = !!(notDone || queue.length || !zones.length);
+  $('zCloseInfo').textContent = !zones.length ? 'Aucune zone.' :
+    notDone ? notDone + ' zone(s) restent à terminer.' :
+    queue.length ? 'Envoi des derniers scans en cours…' :
+    'Toutes les zones sont terminées. Le responsable du magasin peut clôturer.';
+}
+
+/* -------------------------------------------------------------- opérateur */
+$('zChangeOp').onclick = () => {
+  modal('<h3>Changer d\'opérateur</h3><p>La personne qui scanne doit être celle indiquée ici.</p>' +
+        '<input class="inp" id="mOp" maxlength="40" value="" placeholder="Prénom et nom">' +
+        '<div class="row" style="margin-top:14px"><button class="btn2" id="mNo">Annuler</button><button class="btn" id="mYes">Valider</button></div>');
+  $('mOp').focus();
+  $('mNo').onclick = closeModal;
+  $('mYes').onclick = () => { const v = $('mOp').value.trim(); if (!v) return; S.operator = v; store.set(LS_SESSION, S); closeModal(); renderZones(); };
+};
+
+/* ------------------------------------------------------------------ zones */
+$('zoneScan').addEventListener('keydown', e => {
+  if (e.key !== 'Enter' && e.key !== 'Tab') return;
+  e.preventDefault();
+  const s = cleanScan($('zoneScan').value); $('zoneScan').value = '';
+  if (!s) return;
+  const zc = zoneFromScan(s);
+  const z = zc && zones.find(x => x.code.toUpperCase() === zc);
+  if (!z) { beep('err'); alert(zc ? 'Zone ' + zc + ' inconnue dans cette session.' : 'Ceci n\'est pas une étiquette de zone. Choisissez d\'abord une zone.'); return; }
+  beep('ok'); startZone(z.id);
+});
+
+$('zAdd').onclick = () => {
+  modal('<h3>Ajouter une zone</h3><p>Pour un emplacement oublié dans le plan (le siège en est informé).</p>' +
+        '<input class="inp" id="mZ" maxlength="60" placeholder="ex. Réserve – carton sous l\'escalier">' +
+        '<div class="row" style="margin-top:14px"><button class="btn2" id="mNo">Annuler</button><button class="btn" id="mYes">Ajouter</button></div>');
+  $('mZ').focus(); $('mNo').onclick = closeModal;
+  $('mYes').onclick = async () => {
+    const v = $('mZ').value.trim(); if (!v) return;
+    try { const r = await rpc('inv2_store_add_zone', { p_token: S.token, p_label: v });
+          if (!r.ok) return alert(errMsg(r));
+          closeModal(); await refreshState(); alert('Zone ' + r.code + ' créée. Notez ce code sur une étiquette.'); }
+    catch(e) { alert('Hors ligne : impossible d\'ajouter une zone maintenant.'); }
+  };
+};
+
+async function startZone(id){
+  const z = zones.find(x => x.id === id); if (!z) return;
+  if (S.session.status !== 'ouverte') return alert(ERR.SESSION_NON_OUVERTE);
+  if (z.status === 'terminee') return alert(ERR.ZONE_TERMINEE);
+  if (z.status === 'en_cours' && !z.a_moi) return alert(ERR.ZONE_OCCUPEE + ' (' + (z.operateur_en_cours || '') + ').');
+  if (z.status === 'a_recompter' && (z.deja_comptee_par || []).includes(S.operator.toLowerCase()))
+    return alert(ERR.OPERATEUR_DEJA_PASSE);
+  try {
+    const r = await rpc('inv2_store_start_zone', { p_token: S.token, p_zone_id: id, p_operator: S.operator });
+    if (!r.ok) { beep('err'); alert(errMsg(r)); return refreshState(); }
+    const key = id + ':' + r.pass;
+    const pend = queue.filter(q => q.zone_id === id && q.pass === r.pass).reduce((a, q) => a + q.qty, 0);
+    const srv = z.a_moi && z.mon_passage === r.pass ? (z.mes_pieces || 0) : 0;
+    ledger[key] = ledger[key] || { count: 0, last: [] };
+    ledger[key].count = srv + pend;            // vérité serveur + scans pas encore envoyés
+    store.set(LS_LEDGER, ledger);
+    current = { zone: z, pass: r.pass, recount: z.status === 'a_recompter' || r.pass > 1 };
+    nextQty = 1; renderCount(); show('vCount'); keepAwake(true);
+  } catch(e) { beep('err'); alert('Connexion nécessaire pour démarrer une zone (le comptage, lui, fonctionne hors ligne).'); }
+}
+
+/* --------------------------------------------------------------- comptage */
+function led(){ return ledger[current.zone.id + ':' + current.pass]; }
+function renderCount(){
+  const L = led();
+  $('cCode').textContent = current.zone.code; $('cLabel').textContent = current.zone.label;
+  $('cRecount').classList.toggle('hidden', !current.recount);
+  $('cCount').textContent = L.count; $('cOp').textContent = S.operator;
+  $('qVal').textContent = '× ' + nextQty;
+  $('cLast').innerHTML = L.last.length ? L.last.map(x => {
+    const d = x.desc;
+    const txt = d === false ? 'Code inconnu – mettre l\'article de côté' : d ? esc(d.join(' · ')) : '';
+    return '<li class="' + (d === false ? 'unk ' : '') + (x.kind === 'annulation' ? 'ann' : '') + '"><span class="q">' +
+           (x.qty > 0 ? '+' : '') + x.qty + '</span><span class="d">' + (txt || esc(x.ean)) +
+           '<small>' + esc(x.ean) + ' · ' + new Date(x.ts).toLocaleTimeString('fr-FR') + '</small></span></li>';
+  }).join('') : '<li class="sub">Aucun scan pour l\'instant</li>';
+}
+
+function addScan(code, qty, kind){
+  const L = led();
+  const item = { cid: uid(), zone_id: current.zone.id, pass: current.pass, ean: code, qty, kind: kind || 'scan', ts: new Date().toISOString() };
+  queue.push(item); saveQueue();
+  L.count += qty;
+  const desc = kind === 'annulation' ? null : describe(code);
+  L.last.unshift({ ean: code, qty, kind: item.kind, ts: item.ts, desc });
+  L.last = L.last.slice(0, 12);
+  store.set(LS_LEDGER, ledger);
+  renderCount();
+  beep(kind === 'annulation' ? 'ok' : desc === false ? 'unk' : 'ok');
+  flushSoon();
+}
+
+$('scanInput').addEventListener('keydown', e => {
+  if (e.key !== 'Enter' && e.key !== 'Tab') return;
+  e.preventDefault();
+  const s = cleanScan($('scanInput').value); $('scanInput').value = '';
+  handleCode(s);
+});
+function handleCode(s){
+  if (!s || !current) return;
+  if (zoneFromScan(s)) { beep('err'); alert('Étiquette de ZONE scannée. Terminez d\'abord la zone ' + current.zone.code + '.'); return; }
+  if (s.length > 40) { beep('err'); return; }
+  const q = nextQty; nextQty = 1;
+  addScan(s, q);
+}
+$('qPlus').onclick = () => { nextQty = Math.min(99, nextQty + 1); $('qVal').textContent = '× ' + nextQty; $('scanInput').focus(); };
+$('qMinus').onclick = () => { nextQty = Math.max(1, nextQty - 1); $('qVal').textContent = '× ' + nextQty; $('scanInput').focus(); };
+$('qVal').onclick = () => {
+  const v = parseInt(prompt('Quantité pour le prochain scan (lot identique) :', nextQty), 10);
+  if (v > 0 && v < 1000) { nextQty = v; $('qVal').textContent = '× ' + v; }
+  $('scanInput').focus();
+};
+
+$('cUndo').onclick = () => {
+  const L = led();
+  // dernier scan non encore annulé
+  const done = {};
+  let target = null;
+  for (const x of L.last) {
+    if (x.kind === 'annulation') { done[x.ean] = (done[x.ean] || 0) + 1; continue; }
+    if (done[x.ean]) { done[x.ean]--; continue; }
+    target = x; break;
+  }
+  if (!target) return alert('Rien à annuler.');
+  if (!confirm('Annuler le scan ' + target.ean + ' (' + (target.qty > 0 ? '+' : '') + target.qty + ') ?')) return $('scanInput').focus();
+  addScan(target.ean, -target.qty, 'annulation');
+  $('scanInput').focus();
+};
+
+$('cPause').onclick = async () => {
+  await stopCam(); keepAwake(false); current = null; await flush(); await refreshState(); show('vZones');
+};
+
+$('cEnd').onclick = () => {
+  const n = led().count;
+  modal('<h3>Terminer la zone ' + esc(current.zone.code) + ' ?</h3>' +
+        '<p><b style="font-size:22px;color:#1b2333">' + n + ' pièce(s)</b> comptée(s) dans « ' + esc(current.zone.label) + ' ».</p>' +
+        '<label class="chk"><input type="checkbox" id="mC1"> J\'ai vérifié qu\'il ne reste aucun article non scanné dans cette zone (sol, cintres, piles, cartons, cabines).</label>' +
+        '<div id="mMsg"></div><div class="row" style="margin-top:6px"><button class="btn2" id="mNo">Continuer à compter</button><button class="btnok" id="mYes">Terminer</button></div>');
+  $('mNo').onclick = closeModal;
+  $('mYes').onclick = async () => {
+    if (!$('mC1').checked) { $('mMsg').innerHTML = '<div class="msg warn">Cochez la vérification.</div>'; return; }
+    $('mYes').disabled = true; $('mMsg').innerHTML = '<div class="msg info">Envoi des scans…</div>';
+    try {
+      for (let i = 0; i < 3; i++) {
+        await flush();
+        if (queue.some(q => q.zone_id === current.zone.id && q.pass === current.pass)) throw new Error('scans non envoyés');
+        const r = await rpc('inv2_store_end_zone', { p_token: S.token, p_zone_id: current.zone.id, p_pass: current.pass, p_client_count: n });
+        if (r.ok) {
+          closeModal(); await stopCam(); keepAwake(false);
+          delete ledger[current.zone.id + ':' + current.pass]; store.set(LS_LEDGER, ledger);
+          current = null; beep('ok'); await refreshState(); show('vZones'); return;
+        }
+        if (r.error !== 'ECART_SYNCHRO') { $('mMsg').innerHTML = '<div class="msg err">' + esc(errMsg(r)) + '</div>'; $('mYes').disabled = false; return; }
+        await new Promise(res => setTimeout(res, 1500));
+        if (i === 2) { $('mMsg').innerHTML = '<div class="msg err">Le serveur a reçu ' + r.server_count + ' pièce(s) au lieu de ' + n + '. Appelez le siège avant de continuer.</div>'; }
+      }
+    } catch(e) {
+      $('mMsg').innerHTML = '<div class="msg err">Pas de réseau : la zone sera terminée dès que les scans seront envoyés. Réessayez dans un instant.</div>';
+    }
+    $('mYes').disabled = false;
+  };
+};
+
+/* ---------------------------------------------------------------- clôture */
+$('zClose').onclick = () => {
+  modal('<h3>Clôturer le comptage</h3><p>À faire par le <b>responsable du magasin</b>, une fois toutes les zones terminées.</p>' +
+        '<label>Nom du responsable</label><input class="inp" id="mR" maxlength="60">' +
+        '<label class="chk"><input type="checkbox" id="mC"> J\'atteste que l\'ensemble du stock du magasin (surface de vente, cabines, vitrines, réserve, retours) a été compté zone par zone.</label>' +
+        '<div id="mMsg"></div><div class="row"><button class="btn2" id="mNo">Annuler</button><button class="btnok" id="mYes">Clôturer</button></div>');
+  $('mNo').onclick = closeModal;
+  $('mYes').onclick = async () => {
+    const n = $('mR').value.trim();
+    if (!n || !$('mC').checked) { $('mMsg').innerHTML = '<div class="msg warn">Nom et attestation obligatoires.</div>'; return; }
+    try { const r = await rpc('inv2_store_close', { p_token: S.token, p_responsable: n });
+          if (!r.ok) { $('mMsg').innerHTML = '<div class="msg err">' + esc(errMsg(r)) + '</div>'; return; }
+          closeModal(); await refreshState(); }
+    catch(e) { $('mMsg').innerHTML = '<div class="msg err">Pas de réseau, réessayez.</div>'; }
+  };
+};
+
+/* ------------------------------------------------------- envoi des scans */
+let flushTimer = null;
+function flushSoon(){ clearTimeout(flushTimer); flushTimer = setTimeout(flush, 800); }
+async function flush(){
+  if (flushing || !S || !queue.length) { updateSync(); return; }
+  flushing = true;
+  try {
+    while (queue.length) {
+      const batch = queue.slice(0, 200);
+      const r = await rpc('inv2_store_push', { p_token: S.token, p_rows: JSON.stringify(batch) });
+      online = true;
+      if (!r.ok) {
+        if (r.error === 'NON_AUTORISE') { alert(ERR.NON_AUTORISE + ' ' + queue.length + ' scan(s) non envoyés : prévenez le siège.'); logout(true); }
+        else if (r.error === 'SESSION_NON_OUVERTE') { alert('Le siège a fermé le comptage : ' + queue.length + ' scan(s) n\'ont pas pu être envoyés. Prévenez le siège.'); }
+        break;
+      }
+      const ok = new Set(r.accepted);
+      const rej = new Map((r.rejected || []).map(x => [x.cid, x.raison]));
+      if (rej.size) {
+        const lost = store.get('inv2_mag_rejected', []);
+        batch.filter(b => rej.has(b.cid)).forEach(b => lost.push(Object.assign({ raison: rej.get(b.cid) }, b)));
+        store.set('inv2_mag_rejected', lost.slice(-500));
+        alert(rej.size + ' scan(s) refusé(s) par le serveur (' + [...new Set(rej.values())].join(', ') + '). Prévenez le siège.');
+      }
+      queue = queue.filter(q => !ok.has(q.cid) && !rej.has(q.cid));
+      saveQueue();
+      if (!ok.size && !rej.size) break;
+    }
+  } catch(e) { online = false; }
+  finally { flushing = false; updateSync(); if (!current && S) renderZones(); }
+}
+
+/* ---------------------------------------------------------------- caméra */
+let cam = null;
+function loadScript(src){ return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
+$('cCam').onclick = async () => {
+  if (cam) return stopCam();
+  try {
+    if (!window.Html5Qrcode) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js');
+    $('reader').classList.remove('hidden');
+    cam = new Html5Qrcode('reader');
+    let lastCode = '', lastAt = 0;
+    await cam.start({ facingMode: 'environment' }, { fps: 10, qrbox: { width: 260, height: 140 } }, txt => {
+      const now = Date.now();
+      if (txt === lastCode && now - lastAt < 1500) return;   // évite la double lecture du même article
+      lastCode = txt; lastAt = now; handleCode(cleanScan(txt));
+    });
+    $('cCam').textContent = '✕ Fermer caméra';
+  } catch(e) { alert('Caméra indisponible : ' + (e.message || e)); stopCam(); }
+};
+async function stopCam(){
+  if (cam) { try { await cam.stop(); cam.clear(); } catch(e){} cam = null; }
+  $('reader').classList.add('hidden'); $('cCam').textContent = '📷 Caméra';
+}
+
+/* ------------------------------------------------------------ divers */
+async function keepAwake(on){
+  try {
+    if (on && 'wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+    if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch(e){}
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && current) keepAwake(true); });
+// garder le curseur dans le champ de scan (douchette)
+document.addEventListener('click', e => {
+  if (current && $('modal').classList.contains('hidden') && !e.target.closest('input,button,a')) $('scanInput').focus();
+});
+window.addEventListener('beforeunload', e => { if (queue.length) { e.preventDefault(); e.returnValue = ''; } });
+window.addEventListener('online', () => { online = true; flush(); });
+window.addEventListener('offline', () => { online = false; updateSync(); });
+
+setInterval(flush, 4000);
+setInterval(() => { if (S && !current) refreshState(); }, 8000);
+setInterval(() => { if (S && current) refreshState(); }, 30000);
+setInterval(() => { if (S) loadCatalog(false); }, 10 * 60 * 1000);
+
+/* ---------------------------------------------------------------- départ */
+(async function init(){
+  updateSync(); renderHeader();
+  if (!S) { show('vLogin'); return; }
+  await loadCatalog(false);
+  await refreshState();
+  if (S) { show('vZones'); flush(); }
+})();
+</script>
+</body>
+</html>
