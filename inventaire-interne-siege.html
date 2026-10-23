@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Inventaires – Siège IZAC</title>
+<style>
+:root{
+  --bg:#f3f5f9; --card:#fff; --ink:#1b2333; --muted:#6b7487; --line:#dfe3ea;
+  --brand:#1f3864; --brand2:#2f5597; --ok:#1e8e4e; --okbg:#e3f5ea; --warn:#b26a00; --warnbg:#fff2dc;
+  --err:#c62828; --errbg:#fde7e7; --info:#1565c0; --infobg:#e3eefc; --grey:#8a93a6; --greybg:#eef0f4;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:14px}
+button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:8px 12px;font-weight:600;background:var(--brand);color:#fff}
+button.sec{background:var(--greybg);color:var(--ink)}
+button.ok{background:var(--ok)} button.danger{background:var(--err)} button.sm{padding:5px 8px;font-size:12px}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,select,textarea{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+textarea{width:100%;font-family:ui-monospace,Consolas,monospace;font-size:13px}
+.hidden{display:none!important}
+header{background:var(--brand);color:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:5}
+header b{font-size:16px} header .sp{flex:1} header a{color:#fff;opacity:.85;font-size:13px}
+header button{background:rgba(255,255,255,.15)}
+main{max-width:1400px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+h2{font-size:17px;margin:0 0 12px} h3{font-size:15px;margin:0 0 10px}
+.muted{color:var(--muted)} .small{font-size:12px}
+.flex{display:flex;gap:10px;align-items:center;flex-wrap:wrap} .grow{flex:1}
+.msg{padding:10px 12px;border-radius:8px;margin:8px 0}
+.msg.err{background:var(--errbg);color:var(--err)} .msg.ok{background:var(--okbg);color:var(--ok)}
+.msg.warn{background:var(--warnbg);color:var(--warn)} .msg.info{background:var(--infobg);color:var(--info)}
+.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap}
+.b-preparation{background:var(--greybg);color:var(--grey)} .b-ouverte{background:var(--infobg);color:var(--info)}
+.b-comptage_termine{background:var(--warnbg);color:var(--warn)} .b-validee{background:var(--okbg);color:var(--ok)}
+.b-annulee{background:var(--errbg);color:var(--err)}
+.z-a_faire{background:var(--greybg);color:var(--grey)} .z-en_cours{background:var(--infobg);color:var(--info)}
+.z-terminee{background:var(--okbg);color:var(--ok)} .z-a_recompter{background:var(--errbg);color:var(--err)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px}
+.scard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:box-shadow .15s}
+.scard:hover{box-shadow:0 4px 16px rgba(20,40,80,.12)}
+.scard .top{display:flex;gap:8px;align-items:flex-start}
+.scard .nm{flex:1;font-weight:700;font-size:15px}
+.bar{height:8px;border-radius:8px;background:var(--greybg);overflow:hidden;margin:10px 0 6px}
+.bar>i{display:block;height:100%;background:var(--ok)}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:13px}
+.kv b{font-weight:700}
+.alert{color:var(--err);font-weight:700}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
+.kpi .v{font-size:22px;font-weight:800;margin-top:4px} .kpi .l{font-size:12px;color:var(--muted)}
+.kpi.neg .v{color:var(--err)} .kpi.pos .v{color:var(--ok)}
+.tabs{display:flex;gap:4px;border-bottom:2px solid var(--line);margin-bottom:12px;flex-wrap:wrap}
+.tabs button{background:none;color:var(--muted);border-radius:8px 8px 0 0;padding:9px 14px}
+.tabs button.on{background:var(--brand);color:#fff}
+.tw{overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:#f7f8fb;position:sticky;top:0;z-index:1;font-weight:700;cursor:pointer;white-space:nowrap}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.neg td.e{color:var(--err);font-weight:700} tr.pos td.e{color:var(--ok);font-weight:700}
+tr.unk{background:#fff8f8}
+.zl{font-size:12px} .zl span{display:inline-block;background:var(--greybg);border-radius:6px;padding:1px 6px;margin:1px}
+.modal{position:fixed;inset:0;background:rgba(10,20,40,.55);display:flex;align-items:center;justify-content:center;z-index:30;padding:16px}
+.modal .box{background:#fff;border-radius:14px;padding:20px;width:100%;max-width:640px;max-height:90vh;overflow:auto}
+.big{font-size:34px;font-weight:800;letter-spacing:3px;font-family:ui-monospace,Consolas,monospace}
+.formgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.formgrid label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+.formgrid input{width:100%}
+#print{display:none}
+@media print{
+  body *{visibility:hidden} #print,#print *{visibility:visible}
+  #print{display:block;position:absolute;left:0;top:0;width:100%}
+  header,main{display:none}
+}
+.lbls{display:grid;grid-template-columns:1fr 1fr;gap:6mm}
+.lbl{border:1.5px dashed #999;padding:5mm;text-align:center;page-break-inside:avoid;height:62mm}
+.lbl .c{font-size:44pt;font-weight:800;line-height:1}
+.lbl .t{font-size:13pt;margin:2mm 0}
+.lbl svg{max-width:100%;height:22mm}
+.pv{font-size:11pt;color:#000} .pv h1{font-size:18pt;margin:0 0 4mm} .pv table{font-size:9.5pt} .pv th{position:static}
+.pv .sig{display:grid;grid-template-columns:1fr 1fr;gap:10mm;margin-top:10mm}
+.pv .sig div{border:1px solid #000;height:30mm;padding:3mm}
+</style>
+</head>
+<body>
+<header>
+  <b>📦 Inventaires magasins – Siège</b>
+  <span class="sp"></span>
+  <span id="hUser" class="small"></span>
+  <button id="hLogout" class="hidden">Se déconnecter</button>
+</header>
+
+<main>
+<!-- ================= CONNEXION ================= -->
+<section id="vLogin" class="hidden">
+  <div class="card" style="max-width:420px;margin:40px auto">
+    <h2>Accès siège</h2>
+    <div class="formgrid" style="grid-template-columns:1fr">
+      <div><label>Votre nom</label><input id="lActor" maxlength="40" placeholder="ex. Yendi T."></div>
+      <div><label>Mot de passe siège</label><input id="lPwd" type="password"></div>
+    </div>
+    <div id="lMsg"></div>
+    <button id="lBtn" style="margin-top:12px;width:100%">Se connecter</button>
+  </div>
+</section>
+
+<!-- ================= LISTE / SUIVI EN DIRECT ================= -->
+<section id="vList" class="hidden">
+  <div class="flex" style="margin-bottom:12px">
+    <h2 style="margin:0" class="grow">Suivi en direct <span class="small muted" id="liveAt"></span></h2>
+    <label class="small"><input type="checkbox" id="showAll"> Afficher les sessions archivées</label>
+    <button id="btnNew">+ Nouvelle session d'inventaire</button>
+  </div>
+  <div id="liveTotals" class="kpis"></div>
+  <div class="grid" id="sessList"></div>
+</section>
+
+<!-- ================= DÉTAIL SESSION ================= -->
+<section id="vSession" class="hidden">
+  <div class="flex" style="margin-bottom:10px">
+    <button class="sec" id="back">← Toutes les sessions</button>
+    <h2 style="margin:0" class="grow" id="sTitle">—</h2>
+    <span id="sBadge"></span>
+    <span class="small muted" id="sAt"></span>
+  </div>
+  <div class="card">
+    <div class="flex">
+      <div>Code session : <b class="big" style="font-size:20px" id="sCode">—</b></div>
+      <span class="grow"></span>
+      <button class="sec" id="aPin">Nouveau PIN</button>
+      <button class="sec" id="aTheo">Importer l'état de stock Fastmag</button>
+      <button class="sec" id="aLabels">Imprimer étiquettes de zones</button>
+      <button class="sec" id="aKit">Fiche kit</button>
+      <button id="aOpen">Ouvrir le comptage</button>
+      <button class="sec" id="aPrep">Repasser en préparation</button>
+      <button class="sec" id="aReopen">Rouvrir le comptage</button>
+      <button class="danger" id="aCancel">Annuler la session</button>
+    </div>
+    <div id="sMsg"></div>
+  </div>
+  <div class="kpis" id="kpis"></div>
+  <div class="tabs" id="tabs">
+    <button data-t="zones" class="on">Zones</button>
+    <button data-t="ecarts">Écarts par article</button>
+    <button data-t="compare">Comparer les comptages</button>
+    <button data-t="ops">Opérateurs & appareils</button>
+    <button data-t="log">Journal</button>
+    <button data-t="valid">Clôture & validation</button>
+  </div>
+  <div class="card" id="tZones"></div>
+  <div class="card hidden" id="tEcarts"></div>
+  <div class="card hidden" id="tCompare"></div>
+  <div class="card hidden" id="tOps"></div>
+  <div class="card hidden" id="tLog"></div>
+  <div class="card hidden" id="tValid"></div>
+</section>
+</main>
+
+<div class="modal hidden" id="modal"><div class="box" id="modalBox"></div></div>
+<div id="print"></div>
+<input type="file" id="fileTheo" accept=".xls,.xlsx,.csv,.txt" class="hidden">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
+<script>
+/* ======================================================================
+   CONFIGURATION – à renseigner (identique dans inventaire-magasin.html)
+   ====================================================================== */
+const SUPABASE_URL = 'https://imurxmsglmpgxdbavalk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltdXJ4bXNnbG1wZ3hkYmF2YWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNDg5NDMsImV4cCI6MjA5NTgyNDk0M30.GdmfOH-bG0ivzz8rFr83pZTBOjZecPgX_WXepAiuYo8';
+// Adresse de la page magasin (affichée sur la fiche kit)
+const URL_MAGASIN = 'https://yytabares-glitch.github.io/izac-dashboard/inventaire-magasin.html';
+
+// Plan de zones proposé par défaut à la création d'une session (modifiable)
+const ZONES_DEFAUT = `Z01;Vitrine(s)
+Z02;Table entrée
+Z03;Mur gauche – 1er tiers
+Z04;Mur gauche – 2e tiers
+Z05;Mur gauche – 3e tiers
+Z06;Mur droit – 1er tiers
+Z07;Mur droit – 2e tiers
+Z08;Mur droit – 3e tiers
+Z09;Tables centrales
+Z10;Mur du fond
+Z11;Cabines d'essayage
+Z12;Caisse / comptoir / accessoires
+Z13;Réserve – étagère 1
+Z14;Réserve – étagère 2
+Z15;Réserve – étagère 3
+Z16;Réserve – cartons non déballés
+Z17;Retours / SAV / retouches / mis de côté`;
+
+/* ====================================================================== */
+let API_BASE = SUPABASE_URL + '/rest/v1';
+try { const q = new URLSearchParams(location.search).get('api');
+      if (q && /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) API_BASE = q; } catch(e){}
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtN = (n, d = 0) => (n == null || isNaN(n)) ? '–' : Number(n).toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmtE = n => (n == null || isNaN(n)) ? '–' : Number(n).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
+const fmtP = n => (n == null || !isFinite(n)) ? '–' : (n * 100).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %';
+const fmtD = s => s ? new Date(s).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '–';
+const fmtH = s => s ? new Date(s).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '–';
+function ago(s){ if (!s) return 'jamais'; const m = Math.round((Date.now() - new Date(s)) / 60000);
+  return m < 1 ? "à l'instant" : m < 60 ? 'il y a ' + m + ' min' : m < 1440 ? 'il y a ' + Math.round(m / 60) + ' h' : fmtD(s); }
+const ss = {
+  get(k){ try { return sessionStorage.getItem(k); } catch(e){ return null; } },
+  set(k, v){ try { sessionStorage.setItem(k, v); } catch(e){} },
+  del(k){ try { sessionStorage.removeItem(k); } catch(e){} }
+};
+
+async function rpc(fn, params){
+  const body = new URLSearchParams();
+  for (const [k, v] of Object.entries(params || {})) body.append(k, v == null ? '' : String(v));
+  const r = await fetch(API_BASE + '/rpc/' + fn + (API_BASE.endsWith('/rest/v1') ? '?apikey=' + encodeURIComponent(SUPABASE_KEY) : ''), { method: 'POST', body, cache: 'no-store' });
+  const txt = await r.text(); let data = null; try { data = JSON.parse(txt); } catch(e){}
+  if (!r.ok) throw new Error((data && data.message) || ('Erreur serveur ' + r.status));
+  if (data && data.ok === false && data.error === 'NON_AUTORISE') { logout(); throw new Error('Session siège expirée, reconnectez-vous.'); }
+  return data;
+}
+const ERR = {
+  MOT_DE_PASSE_INCORRECT: 'Mot de passe incorrect.', TROP_DE_TENTATIVES: 'Trop de tentatives : réessayez dans 15 minutes.',
+  ADMIN_NON_CONFIGURE: 'Mot de passe siège non configuré (voir le script SQL).', SESSION_FERMEE: 'Session fermée.',
+  TRANSITION_INTERDITE: 'Changement de statut impossible.', COMPTAGE_NON_CLOTURE: 'Le magasin n\'a pas encore clôturé le comptage.',
+  ZONES_NON_TERMINEES: 'Toutes les zones ne sont pas terminées.', SESSION_NON_OUVERTE: 'Session non ouverte.',
+  PASSAGE_NON_TERMINE: 'Ce comptage n\'est pas terminé.', AUCUN_PASSAGE_EN_COURS: 'Aucun comptage en cours sur cette zone.',
+  MAGASIN_VIDE: 'Code et nom du magasin obligatoires.'
+};
+const em = r => ERR[r.error] || r.error || 'Erreur';
+const toast = (html, cls = 'ok') => { $('sMsg').innerHTML = '<div class="msg ' + cls + '">' + html + '</div>'; setTimeout(() => { $('sMsg').innerHTML = ''; }, 6000); };
+function modal(html){ $('modalBox').innerHTML = html; $('modal').classList.remove('hidden'); }
+function closeModal(){ $('modal').classList.add('hidden'); }
+
+/* normalisation des codes (identique côté magasin) */
+const normCode = s => { s = String(s ?? '').trim().toUpperCase().replace(/\s+/g, '');
+  if (/^\d+(\.0+)?$/.test(s)) s = s.replace(/\.0+$/, '');
+  return /^\d+$/.test(s) ? (s.replace(/^0+/, '') || '0') : s; };
+
+/* ================================================================ AUTH */
+let TOKEN = ss.get('inv2_adm_token'), ACTOR = ss.get('inv2_adm_actor');
+$('lBtn').onclick = async () => {
+  $('lMsg').innerHTML = '';
+  try {
+    const r = await rpc('inv2_admin_login', { p_password: $('lPwd').value, p_actor: $('lActor').value.trim() });
+    if (!r.ok) { $('lMsg').innerHTML = '<div class="msg err">' + esc(em(r)) + '</div>'; return; }
+    TOKEN = r.token; ACTOR = r.actor; ss.set('inv2_adm_token', TOKEN); ss.set('inv2_adm_actor', ACTOR);
+    $('lPwd').value = ''; goList();
+  } catch(e) { $('lMsg').innerHTML = '<div class="msg err">Connexion impossible : ' + esc(e.message) + '</div>'; }
+};
+$('lPwd').addEventListener('keydown', e => { if (e.key === 'Enter') $('lBtn').click(); });
+function logout(){ TOKEN = null; ss.del('inv2_adm_token'); stopPolls(); view('vLogin'); }
+$('hLogout').onclick = logout;
+function view(v){
+  for (const id of ['vLogin', 'vList', 'vSession']) $(id).classList.toggle('hidden', id !== v);
+  $('hLogout').classList.toggle('hidden', v === 'vLogin');
+  $('hUser').textContent = v === 'vLogin' ? '' : (ACTOR || '');
+}
+
+/* ======================================================= LISTE EN DIRECT */
+let listTimer = null, detailTimer = null, sessions = [];
+function stopPolls(){ clearInterval(listTimer); clearInterval(detailTimer); listTimer = detailTimer = null; }
+async function goList(){ stopPolls(); view('vList'); await loadList(); listTimer = setInterval(loadList, 10000); }
+$('showAll').onchange = loadList;
+
+async function loadList(){
+  try {
+    const r = await rpc('inv2_admin_sessions', { p_token: TOKEN, p_all: $('showAll').checked });
+    if (!r.ok) return;
+    sessions = r.sessions; renderList();
+    $('liveAt').textContent = '· mis à jour ' + fmtH(new Date());
+  } catch(e) { $('liveAt').innerHTML = '<span class="alert">· hors ligne (' + esc(e.message) + ')</span>'; }
+}
+const ORDER = { ouverte: 0, comptage_termine: 1, preparation: 2, validee: 3, annulee: 4 };
+const ST = { preparation: 'En préparation', ouverte: 'Comptage en cours', comptage_termine: 'À valider', validee: 'Validé', annulee: 'Annulé' };
+function renderList(){
+  const act = sessions.filter(s => s.status === 'ouverte');
+  const tot = act.reduce((a, s) => (a.p += +s.pieces_comptees, a.t += +s.pieces_theo, a.d += +s.appareils_actifs, a.r += +s.nb_zones_a_recompter, a), { p: 0, t: 0, d: 0, r: 0 });
+  $('liveTotals').innerHTML =
+    kpi('Magasins en cours de comptage', act.length) + kpi('Pièces scannées (en cours)', fmtN(tot.p)) +
+    kpi('Appareils actifs', tot.d) + kpi('Zones à recompter', tot.r, tot.r ? 'neg' : '') +
+    kpi('À valider', sessions.filter(s => s.status === 'comptage_termine').length);
+  const list = [...sessions].sort((a, b) => (ORDER[a.status] - ORDER[b.status]) || (new Date(b.created_at) - new Date(a.created_at)));
+  $('sessList').innerHTML = list.length ? list.map(s => {
+    const pz = s.nb_zones ? s.nb_zones_terminees / s.nb_zones : 0;
+    const stale = s.status === 'ouverte' && s.derniere_activite && (Date.now() - new Date(s.derniere_activite)) > 15 * 60000;
+    return '<div class="scard" data-id="' + s.id + '"><div class="top"><span class="nm">' + esc(s.store_code + ' – ' + s.store_name) +
+      '</span><span class="badge b-' + s.status + '">' + ST[s.status] + '</span></div>' +
+      '<div class="small muted">' + (s.inv_date ? new Date(s.inv_date).toLocaleDateString('fr-FR') : '') + ' · code ' + esc(s.join_code) + '</div>' +
+      '<div class="bar"><i style="width:' + Math.round(pz * 100) + '%"></i></div>' +
+      '<div class="kv"><span>Zones terminées</span><b>' + s.nb_zones_terminees + ' / ' + s.nb_zones + '</b>' +
+      '<span>En cours</span><b>' + s.nb_zones_en_cours + '</b>' +
+      '<span>Pièces scannées</span><b>' + fmtN(+s.pieces_comptees) + (+s.pieces_theo ? ' / ' + fmtN(+s.pieces_theo) + ' théo.' : '') + '</b>' +
+      '<span>Appareils actifs</span><b>' + s.appareils_actifs + '</b>' +
+      '<span>À recompter</span><b class="' + (s.nb_zones_a_recompter ? 'alert' : '') + '">' + s.nb_zones_a_recompter + '</b>' +
+      '<span>Dernier scan</span><b class="' + (stale ? 'alert' : '') + '">' + ago(s.derniere_activite) + '</b></div>' +
+      (s.nb_theo ? '' : '<div class="small alert" style="margin-top:6px">État de stock Fastmag non importé</div>') +
+      '</div>';
+  }).join('') : '<div class="muted">Aucune session. Créez la première avec « Nouvelle session d\'inventaire ».</div>';
+  $('sessList').querySelectorAll('.scard').forEach(c => c.onclick = () => openSession(c.dataset.id));
+}
+const kpi = (l, v, cls = '') => '<div class="kpi ' + cls + '"><div class="l">' + l + '</div><div class="v">' + v + '</div></div>';
+
+/* ------------------------------------------------------- création */
+$('btnNew').onclick = () => {
+  modal('<h2>Nouvelle session d\'inventaire</h2><div class="formgrid">' +
+    '<div><label>Code magasin</label><input id="nCode" maxlength="20" placeholder="ex. 1010"></div>' +
+    '<div><label>Nom du magasin</label><input id="nName" maxlength="80" placeholder="ex. Belle Épine"></div>' +
+    '<div><label>Date prévue</label><input id="nDate" type="date"></div>' +
+    '<div><label>Note interne</label><input id="nNote" maxlength="300"></div></div>' +
+    '<label class="small muted" style="display:block;margin:12px 0 4px">Plan de zones (une par ligne : <b>Z01;Libellé</b>). Le magasin pourra ajouter des zones oubliées.</label>' +
+    '<textarea id="nZones" rows="12">' + esc(ZONES_DEFAUT) + '</textarea><div id="nMsg"></div>' +
+    '<div class="flex" style="margin-top:12px;justify-content:flex-end"><button class="sec" id="nNo">Annuler</button><button id="nYes">Créer la session</button></div>');
+  $('nNo').onclick = closeModal;
+  $('nYes').onclick = async () => {
+    const zones = [], bad = [];
+    $('nZones').value.split('\n').map(l => l.trim()).filter(Boolean).forEach(l => {
+      const [c, ...rest] = l.split(';'); const code = (c || '').trim().toUpperCase(), label = rest.join(';').trim();
+      const m = /^Z(\d{1,3})$/.exec(code);
+      if (!m || !label) bad.push(l); else zones.push({ code: 'Z' + String(+m[1]).padStart(2, '0'), label });
+    });
+    if (bad.length) { $('nMsg').innerHTML = '<div class="msg err">Lignes invalides (format Z01;Libellé) : ' + esc(bad.join(' | ')) + '</div>'; return; }
+    if (new Set(zones.map(z => z.code)).size !== zones.length) { $('nMsg').innerHTML = '<div class="msg err">Codes de zone en double.</div>'; return; }
+    try {
+      const r = await rpc('inv2_admin_create_session', { p_token: TOKEN, p_store_code: $('nCode').value.trim(), p_store_name: $('nName').value.trim(),
+        p_date: $('nDate').value, p_note: $('nNote').value.trim(), p_zones: JSON.stringify(zones) });
+      if (!r.ok) { $('nMsg').innerHTML = '<div class="msg err">' + esc(em(r)) + '</div>'; return; }
+      showCodes(r.join_code, r.pin, () => openSession(r.id));
+    } catch(e) { $('nMsg').innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; }
+  };
+};
+function showCodes(code, pin, after){
+  modal('<h2>Accès du magasin</h2><p>Code de session :</p><div class="big">' + esc(code) + '</div>' +
+    '<p style="margin-top:14px">PIN :</p><div class="big">' + esc(pin) + '</div>' +
+    '<div class="msg warn">Le PIN n\'est affiché <b>qu\'une seule fois</b> (il est stocké chiffré). Notez-le et communiquez-le au responsable ' +
+    '<b>séparément du kit</b> (téléphone / SMS), le jour J. Ne le mettez pas dans la mallette.</div>' +
+    '<div class="flex" style="justify-content:flex-end"><button id="cOk">J\'ai noté le PIN</button></div>');
+  $('cOk').onclick = () => { closeModal(); if (after) after(); };
+}
+
+/* ======================================================= DÉTAIL SESSION */
+let SID = null, D = null, scans = [], maxId = 0, theo = new Map(), curTab = 'zones', zoneSel = new Set(), artSel = new Set();
+let ecFilter = 'ecarts', ecSearch = '', ecSort = 'valeur', cmpZone = null, logCache = null;
+
+$('back').onclick = goList;
+async function openSession(id){
+  stopPolls(); SID = id; D = null; scans = []; maxId = 0; theo = new Map(); zoneSel.clear(); artSel.clear(); cmpZone = null; logCache = null;
+  view('vSession'); $('sTitle').textContent = 'Chargement…';
+  await loadTheo(); await loadDetail();
+  detailTimer = setInterval(loadDetail, 5000);
+}
+async function loadTheo(){
+  try { const r = await rpc('inv2_admin_theo', { p_token: TOKEN, p_session: SID });
+        if (r.ok) { theo = new Map(); for (const a of r.items) theo.set(normCode(a[0]), { ean: a[0], ref: a[1], des: a[2], coul: a[3], taille: a[4], qty: +a[5], pa: a[6] == null ? null : +a[6] }); } }
+  catch(e){}
+}
+async function loadDetail(){
+  try {
+    const r = await rpc('inv2_admin_state', { p_token: TOKEN, p_session: SID, p_since: maxId });
+    if (!r.ok) return;
+    for (const s of r.scans) scans.push({ id: s[0], zone_id: s[1], pass: s[2], ean: s[3], qty: s[4], kind: s[5], op: s[6], at: s[7] });
+    maxId = r.max_id || maxId;
+    D = r; compute(); renderDetail();
+    $('sAt').textContent = 'mis à jour ' + fmtH(new Date());
+  } catch(e) { $('sAt').innerHTML = '<span class="alert">hors ligne</span>'; }
+}
+
+/* ---------------------------------------------------- calculs */
+let C = null;
+function passesOf(zid){ return D.passes.filter(p => p.zone_id === zid && p.status !== 'abandonnee').sort((a, b) => a.pass - b.pass); }
+function effPass(z){
+  if (z.retained_pass) return z.retained_pass;
+  const ps = passesOf(z.id), done = ps.filter(p => p.status === 'terminee');
+  if (done.length) return done[done.length - 1].pass;
+  return ps.length ? ps[ps.length - 1].pass : null;   // en direct : comptage en cours
+}
+function compute(){
+  const zById = new Map(D.zones.map(z => [z.id, z]));
+  const eff = new Map(D.zones.map(z => [z.id, effPass(z)]));
+  const art = new Map();   // ean normalisé -> {compte, zones:{code:qty}, raw}
+  for (const s of scans) {
+    if (eff.get(s.zone_id) !== s.pass) continue;
+    const k = normCode(s.ean);
+    let a = art.get(k); if (!a) art.set(k, a = { compte: 0, zones: {}, raw: s.ean });
+    a.compte += s.qty;
+    const zc = zById.get(s.zone_id)?.code || '?';
+    a.zones[zc] = (a.zones[zc] || 0) + s.qty;
+  }
+  const lines = [];
+  const keys = new Set([...theo.keys(), ...art.keys()]);
+  for (const k of keys) {
+    const t = theo.get(k), a = art.get(k);
+    const compte = a ? a.compte : 0, th = t ? t.qty : 0;
+    const zones = a ? Object.fromEntries(Object.entries(a.zones).filter(([, q]) => q !== 0)) : {};
+    if (!t && compte === 0) continue;
+    lines.push({ k, ean: t ? t.ean : a.raw, ref: t?.ref || '', des: t?.des || '', coul: t?.coul || '', taille: t?.taille || '',
+                 theo: th, compte, ecart: compte - th, pa: t?.pa ?? null, valeur: t?.pa != null ? (compte - th) * t.pa : null,
+                 inconnu: !t, zones });
+  }
+  // zones où l'on a trouvé la même référence (pour les articles jamais trouvés)
+  const refZones = {};
+  for (const l of lines) if (l.ref && Object.keys(l.zones).length) {
+    refZones[l.ref] = refZones[l.ref] || new Set(); Object.keys(l.zones).forEach(z => refZones[l.ref].add(z)); }
+  const sum = f => lines.reduce((a, l) => a + (f(l) || 0), 0);
+  const valTheo = sum(l => l.pa != null ? l.theo * l.pa : 0);
+  const valEcart = sum(l => l.valeur);
+  const valManq = sum(l => l.valeur != null && l.valeur < 0 ? l.valeur : 0);
+  C = { lines, refZones, zById, eff,
+        pTheo: sum(l => l.theo), pCompte: sum(l => l.compte), pEcart: sum(l => l.ecart),
+        valTheo, valEcart, valManq, hasPa: lines.some(l => l.pa != null),
+        nbInc: lines.filter(l => l.inconnu).length, pInc: sum(l => l.inconnu ? l.compte : 0),
+        nbEcart: lines.filter(l => l.ecart !== 0).length };
+}
+function zoneStats(z){
+  const ps = passesOf(z.id), done = ps.filter(p => p.status === 'terminee');
+  return { ps, done, arbitrer: done.length >= 2 && !z.retained_pass };
+}
+
+/* ---------------------------------------------------- rendu */
+function renderDetail(){
+  const s = D.session;
+  $('sTitle').textContent = s.store_code + ' – ' + s.store_name + (s.inv_date ? ' · ' + new Date(s.inv_date).toLocaleDateString('fr-FR') : '');
+  $('sBadge').innerHTML = '<span class="badge b-' + s.status + '">' + ST[s.status] + '</span>';
+  $('sCode').textContent = s.join_code;
+  const st = s.status, locked = st === 'validee' || st === 'annulee';
+  $('aOpen').classList.toggle('hidden', st !== 'preparation');
+  $('aPrep').classList.toggle('hidden', st !== 'ouverte');
+  $('aReopen').classList.toggle('hidden', st !== 'comptage_termine');
+  $('aCancel').classList.toggle('hidden', locked);
+  $('aPin').classList.toggle('hidden', !(st === 'preparation' || st === 'ouverte'));
+  $('aTheo').classList.toggle('hidden', locked);
+  const nbZ = D.zones.length, nbT = D.zones.filter(z => z.status === 'terminee').length;
+  const devAct = D.devices.filter(d => !d.revoked && d.last_seen && Date.now() - new Date(d.last_seen) < 5 * 60000).length;
+  $('kpis').innerHTML =
+    kpi('Zones terminées', nbT + ' / ' + nbZ) +
+    kpi('À recompter', D.zones.filter(z => z.status === 'a_recompter').length, D.zones.some(z => z.status === 'a_recompter') ? 'neg' : '') +
+    kpi('Pièces théoriques', theo.size ? fmtN(C.pTheo) : '<span class="small alert">non importé</span>') +
+    kpi('Pièces comptées', fmtN(C.pCompte)) +
+    kpi('Écart pièces', theo.size ? (C.pEcart > 0 ? '+' : '') + fmtN(C.pEcart) : '–', C.pEcart < 0 ? 'neg' : C.pEcart > 0 ? 'pos' : '') +
+    kpi('Écart valeur (PA)', C.hasPa ? fmtE(C.valEcart) : '–', C.valEcart < 0 ? 'neg' : '') +
+    kpi('Taux de démarque', C.hasPa && C.valTheo ? fmtP(-C.valEcart / C.valTheo) : '–', C.valEcart < 0 ? 'neg' : '') +
+    kpi('Codes inconnus', C.nbInc + ' (' + fmtN(C.pInc) + ' pcs)', C.nbInc ? 'neg' : '') +
+    kpi('Appareils actifs', devAct);
+  renderTab();
+}
+$('tabs').onclick = e => { const b = e.target.closest('button'); if (!b) return; curTab = b.dataset.t;
+  $('tabs').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderTab(); };
+function renderTab(){
+  const map = { zones: 'tZones', ecarts: 'tEcarts', compare: 'tCompare', ops: 'tOps', log: 'tLog', valid: 'tValid' };
+  for (const [k, id] of Object.entries(map)) $(id).classList.toggle('hidden', k !== curTab);
+  if (document.activeElement && document.activeElement.closest && document.activeElement.closest('#' + map[curTab]) &&
+      document.activeElement.tagName === 'INPUT' && document.activeElement.type === 'text') return; // ne pas casser une saisie en cours
+  ({ zones: rZones, ecarts: rEcarts, compare: rCompare, ops: rOps, log: rLog, valid: rValid })[curTab]();
+}
+
+/* ------------------------------------------------------- onglet ZONES */
+const ZST = { a_faire: 'À faire', en_cours: 'En cours', terminee: 'Terminée', a_recompter: 'À recompter' };
+function cadence(p){
+  const end = p.ended_at || p.dernier_scan; if (!end || !p.pieces) return null;
+  const h = (new Date(end) - new Date(p.started_at)) / 3.6e6; return h > 0.02 ? p.pieces / h : null;
+}
+function rZones(){
+  const st = D.session.status, canRec = st === 'ouverte' || st === 'comptage_termine';
+  let h = '<div class="flex" style="margin-bottom:10px"><h3 class="grow" style="margin:0">Zones (' + D.zones.length + ')</h3>' +
+    (canRec ? '<button class="danger" id="zRec" ' + (zoneSel.size ? '' : 'disabled') + '>Demander le recomptage (' + zoneSel.size + ')</button>' : '') +
+    (st !== 'validee' && st !== 'annulee' ? '<button class="sec" id="zAddB">+ Ajouter des zones</button>' : '') + '</div>' +
+    '<div class="msg info small">Le recomptage est fait <b>à l\'aveugle par une autre personne</b> : le magasin ne voit ni le 1er comptage, ni le motif. ' +
+    'Une fois terminé, comparez les deux comptages dans l\'onglet « Comparer » et retenez le bon.</div>' +
+    '<div class="tw"><table><thead><tr><th></th><th>Zone</th><th>Libellé</th><th>Statut</th><th>Comptages (opérateur · pièces · horaires · cadence)</th><th>Retenu</th><th></th></tr></thead><tbody>';
+  for (const z of D.zones) {
+    const { ps, arbitrer } = zoneStats(z);
+    const eff = C.eff.get(z.id);
+    const can = canRec && z.status === 'terminee';
+    h += '<tr><td>' + (can ? '<input type="checkbox" class="zs" data-id="' + z.id + '"' + (zoneSel.has(z.id) ? ' checked' : '') + '>' : '') + '</td>' +
+      '<td><b>' + esc(z.code) + '</b></td><td>' + esc(z.label) + (z.created_by && z.created_by !== D.session.created_by ? ' <span class="small muted">(ajoutée par ' + esc(z.created_by) + ')</span>' : '') + '</td>' +
+      '<td><span class="badge z-' + z.status + '">' + ZST[z.status] + '</span>' + (arbitrer ? ' <span class="badge b-comptage_termine">à arbitrer</span>' : '') + '</td><td>' +
+      (ps.length ? ps.map(p => {
+        const c = cadence(p);
+        return '<div>' + (p.pass > 1 ? 'Recomptage ' : '') + 'P' + p.pass + ' · ' + esc(p.operator) + ' · <b>' + fmtN(p.pieces) + ' pcs</b> · ' +
+          fmtH(p.started_at) + '–' + (p.ended_at ? fmtH(p.ended_at) : '<i>en cours</i>') + (c ? ' · ' + fmtN(c) + ' pcs/h' : '') + '</div>';
+      }).join('') : '<span class="muted">–</span>') + '</td>' +
+      '<td>' + (eff ? 'P' + eff + (z.retained_pass ? ' (choisi)' : '') : '–') + '</td><td>' +
+      (zoneStats(z).ps.length >= 2 ? '<button class="sm sec" data-cmp="' + z.id + '">Comparer</button> ' : '') +
+      (z.status === 'en_cours' && st !== 'validee' ? '<button class="sm sec" data-ab="' + z.id + '" title="Appareil perdu ou bloqué">Débloquer</button>' : '') + '</td></tr>';
+  }
+  h += '</tbody></table></div>';
+  $('tZones').innerHTML = h;
+  $('tZones').querySelectorAll('.zs').forEach(c => c.onchange = () => { c.checked ? zoneSel.add(+c.dataset.id) : zoneSel.delete(+c.dataset.id); rZones(); });
+  $('tZones').querySelectorAll('[data-cmp]').forEach(b => b.onclick = () => { cmpZone = +b.dataset.cmp; switchTab('compare'); });
+  $('tZones').querySelectorAll('[data-ab]').forEach(b => b.onclick = () => abandon(+b.dataset.ab));
+  if ($('zRec')) $('zRec').onclick = () => requestRecount([...zoneSel], 'sélection manuelle');
+  if ($('zAddB')) $('zAddB').onclick = addZones;
+}
+function switchTab(t){ curTab = t; $('tabs').querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.t === t)); renderTab(); }
+async function requestRecount(ids, reason){
+  if (!ids.length) return;
+  const codes = ids.map(id => C.zById.get(id)?.code).filter(Boolean);
+  if (!confirm('Demander le recomptage des zones ' + codes.join(', ') + ' ?\nLe magasin devra les recompter avec une autre personne.')) return;
+  try {
+    const r = await rpc('inv2_admin_request_recount', { p_token: TOKEN, p_session: SID, p_zone_ids: JSON.stringify(ids), p_reason: reason });
+    if (!r.ok) return toast(esc(em(r)), 'err');
+    zoneSel.clear(); artSel.clear();
+    toast(r.demandes + ' zone(s) envoyée(s) en recomptage.' + (r.ignorees.length ? ' Ignorées (pas encore terminées) : ' + r.ignorees.map(x => x.zone).join(', ') : ''));
+    loadDetail();
+  } catch(e) { toast(esc(e.message), 'err'); }
+}
+async function abandon(zid){
+  const z = C.zById.get(zid);
+  if (!confirm('Débloquer la zone ' + z.code + ' ?\nLe comptage en cours sur cette zone sera ABANDONNÉ (ignoré) et la zone devra être recomptée entièrement.')) return;
+  try { const r = await rpc('inv2_admin_abandon_pass', { p_token: TOKEN, p_zone_id: zid }); if (!r.ok) return toast(esc(em(r)), 'err'); loadDetail(); }
+  catch(e) { toast(esc(e.message), 'err'); }
+}
+function addZones(){
+  const used = D.zones.map(z => +z.code.replace(/\D/g, '')).filter(n => !isNaN(n));
+  const next = 'Z' + String((Math.max(0, ...used) + 1)).padStart(2, '0');
+  modal('<h3>Ajouter des zones</h3><p class="muted">Une par ligne : Z18;Libellé</p><textarea id="azT" rows="6">' + next + ';</textarea><div id="azM"></div>' +
+    '<div class="flex" style="justify-content:flex-end;margin-top:10px"><button class="sec" id="azNo">Annuler</button><button id="azYes">Ajouter</button></div>');
+  $('azNo').onclick = closeModal;
+  $('azYes').onclick = async () => {
+    const zs = []; let bad = false;
+    $('azT').value.split('\n').map(l => l.trim()).filter(Boolean).forEach(l => { const [c, ...r] = l.split(';'); const m = /^Z(\d{1,3})$/i.exec((c || '').trim());
+      if (!m || !r.join(';').trim()) bad = true; else zs.push({ code: 'Z' + String(+m[1]).padStart(2, '0'), label: r.join(';').trim() }); });
+    if (bad || !zs.length) { $('azM').innerHTML = '<div class="msg err">Format : Z18;Libellé</div>'; return; }
+    try { const r = await rpc('inv2_admin_add_zones', { p_token: TOKEN, p_session: SID, p_zones: JSON.stringify(zs) });
+          if (!r.ok) { $('azM').innerHTML = '<div class="msg err">' + esc(em(r)) + '</div>'; return; }
+          closeModal(); toast(r.ajoutees + ' zone(s) ajoutée(s).'); loadDetail(); }
+    catch(e) { $('azM').innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; }
+  };
+}
+
+/* ------------------------------------------------------- onglet ÉCARTS */
+function filteredLines(){
+  const q = ecSearch.toLowerCase();
+  let L = C.lines.filter(l => {
+    if (ecFilter === 'ecarts' && l.ecart === 0) return false;
+    if (ecFilter === 'manquants' && l.ecart >= 0) return false;
+    if (ecFilter === 'surplus' && l.ecart <= 0) return false;
+    if (ecFilter === 'inconnus' && !l.inconnu) return false;
+    if (ecFilter === 'jamais' && (l.compte !== 0 || l.inconnu)) return false;
+    if (q && !(l.ean + ' ' + l.ref + ' ' + l.des + ' ' + l.coul + ' ' + l.taille).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const sorters = {
+    valeur: (a, b) => Math.abs(b.valeur ?? b.ecart) - Math.abs(a.valeur ?? a.ecart),
+    ecart: (a, b) => Math.abs(b.ecart) - Math.abs(a.ecart),
+    ref: (a, b) => (a.ref + a.coul + a.taille).localeCompare(b.ref + b.coul + b.taille)
+  };
+  return L.sort(sorters[ecSort] || sorters.valeur);
+}
+function zonesToRecount(lines){
+  const codes = new Set();
+  for (const l of lines) {
+    Object.keys(l.zones).forEach(z => codes.add(z));
+    if (l.compte === 0 && l.ref && C.refZones[l.ref]) C.refZones[l.ref].forEach(z => codes.add(z));
+  }
+  return D.zones.filter(z => codes.has(z.code));
+}
+function rEcarts(){
+  const warn = theo.size ? '' : '<div class="msg warn">Importez d\'abord l\'état de stock Fastmag du magasin (bouton en haut) pour calculer les écarts.</div>';
+  const L = filteredLines();
+  const sel = C.lines.filter(l => artSel.has(l.k));
+  const zr = zonesToRecount(sel).filter(z => z.status === 'terminee');
+  const canRec = D.session.status === 'ouverte' || D.session.status === 'comptage_termine';
+  const F = [['ecarts', 'Écarts ≠ 0'], ['manquants', 'Manquants'], ['surplus', 'Surplus'], ['jamais', 'Jamais trouvés'], ['inconnus', 'Codes inconnus'], ['tous', 'Tous']];
+  let h = warn +
+    '<div class="flex" style="margin-bottom:10px">' +
+    '<select id="ecF">' + F.map(([v, t]) => '<option value="' + v + '"' + (v === ecFilter ? ' selected' : '') + '>' + t + '</option>').join('') + '</select>' +
+    '<input type="text" id="ecQ" placeholder="Rechercher réf, EAN, désignation…" value="' + esc(ecSearch) + '" style="min-width:240px">' +
+    '<select id="ecS"><option value="valeur"' + (ecSort === 'valeur' ? ' selected' : '') + '>Tri : valeur d\'écart</option><option value="ecart"' + (ecSort === 'ecart' ? ' selected' : '') + '>Tri : écart en pièces</option><option value="ref"' + (ecSort === 'ref' ? ' selected' : '') + '>Tri : référence</option></select>' +
+    '<span class="grow muted small">' + L.length + ' ligne(s)</span>' +
+    (canRec ? '<button class="danger" id="ecRec" ' + (zr.length ? '' : 'disabled') + '>Faire recompter les zones de la sélection (' + zr.map(z => z.code).join(', ') + ')</button>' : '') +
+    '<button class="sec" id="ecCsv">Exporter CSV</button></div>' +
+    '<div class="tw"><table><thead><tr><th><input type="checkbox" id="ecAll"></th><th>EAN</th><th>Référence</th><th>Désignation</th><th>Couleur</th><th>Taille</th>' +
+    '<th class="n">Théo.</th><th class="n">Compté</th><th class="n">Écart</th><th class="n">PA</th><th class="n">Valeur écart</th><th>Trouvé en</th></tr></thead><tbody>';
+  const max = 1500;
+  for (const l of L.slice(0, max)) {
+    const zl = Object.entries(l.zones).sort().map(([z, q]) => '<span>' + esc(z) + (q !== 1 ? ' ×' + q : '') + '</span>').join('');
+    const hint = l.compte === 0 && l.ref && C.refZones[l.ref] ? '<span class="muted">autres tailles en ' + [...C.refZones[l.ref]].sort().join(', ') + '</span>' : '';
+    h += '<tr class="' + (l.ecart < 0 ? 'neg' : l.ecart > 0 ? 'pos' : '') + (l.inconnu ? ' unk' : '') + '">' +
+      '<td><input type="checkbox" class="as" data-k="' + esc(l.k) + '"' + (artSel.has(l.k) ? ' checked' : '') + '></td>' +
+      '<td>' + esc(l.ean) + '</td><td>' + (l.inconnu ? '<b class="alert">INCONNU</b>' : esc(l.ref)) + '</td><td>' + esc(l.des) + '</td><td>' + esc(l.coul) + '</td><td>' + esc(l.taille) + '</td>' +
+      '<td class="n">' + fmtN(l.theo) + '</td><td class="n">' + fmtN(l.compte) + '</td><td class="n e">' + (l.ecart > 0 ? '+' : '') + fmtN(l.ecart) + '</td>' +
+      '<td class="n">' + (l.pa != null ? fmtE(l.pa) : '–') + '</td><td class="n e">' + (l.valeur != null ? fmtE(l.valeur) : '–') + '</td>' +
+      '<td class="zl">' + (zl || hint) + '</td></tr>';
+  }
+  if (L.length > max) h += '<tr><td colspan="12" class="muted">… ' + (L.length - max) + ' lignes de plus : affinez le filtre ou exportez en CSV.</td></tr>';
+  h += '</tbody></table></div>';
+  $('tEcarts').innerHTML = h;
+  $('ecF').onchange = e => { ecFilter = e.target.value; rEcarts(); };
+  $('ecS').onchange = e => { ecSort = e.target.value; rEcarts(); };
+  let t; $('ecQ').oninput = e => { clearTimeout(t); t = setTimeout(() => { ecSearch = e.target.value; rEcarts(); const i = $('ecQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 250); };
+  $('tEcarts').querySelectorAll('.as').forEach(c => c.onchange = () => { c.checked ? artSel.add(c.dataset.k) : artSel.delete(c.dataset.k); rEcarts(); });
+  $('ecAll').onchange = e => { L.slice(0, max).forEach(l => e.target.checked ? artSel.add(l.k) : artSel.delete(l.k)); rEcarts(); };
+  if ($('ecRec')) $('ecRec').onclick = () => requestRecount(zr.map(z => z.id), 'écarts : ' + sel.slice(0, 8).map(l => l.ref || l.ean).join(', '));
+  $('ecCsv').onclick = () => downloadCsv('ecarts_' + fileBase() + '.csv',
+    [['EAN', 'Référence', 'Désignation', 'Couleur', 'Taille', 'Théorique', 'Compté', 'Écart', 'PA', 'Valeur écart', 'Inconnu', 'Trouvé en']]
+      .concat(L.map(l => [l.ean, l.ref, l.des, l.coul, l.taille, l.theo, l.compte, l.ecart, num(l.pa), num(l.valeur), l.inconnu ? 'oui' : '',
+                          Object.entries(l.zones).sort().map(([z, q]) => z + ':' + q).join(' ')])));
+}
+
+/* --------------------------------------------------- onglet COMPARER */
+function rCompare(){
+  const cands = D.zones.filter(z => zoneStats(z).ps.length >= 2);
+  if (!cands.length) { $('tCompare').innerHTML = '<div class="muted">Aucune zone n\'a encore été recomptée.</div>'; return; }
+  if (!cmpZone || !cands.some(z => z.id === cmpZone)) cmpZone = cands[0].id;
+  const z = C.zById.get(cmpZone), { ps } = zoneStats(z);
+  const per = {};   // ean -> {pass: qty}
+  for (const s of scans) if (s.zone_id === z.id) { const k = normCode(s.ean); per[k] = per[k] || { raw: s.ean }; per[k][s.pass] = (per[k][s.pass] || 0) + s.qty; }
+  const passes = ps.map(p => p.pass);
+  const rows = Object.entries(per).map(([k, v]) => ({ k, raw: v.raw, q: passes.map(p => v[p] || 0) })).filter(r => r.q.some(x => x !== 0));
+  rows.sort((a, b) => (Math.max(...b.q) - Math.min(...b.q)) - (Math.max(...a.q) - Math.min(...a.q)));
+  const diff = rows.filter(r => new Set(r.q).size > 1).length;
+  const eff = C.eff.get(z.id), locked = D.session.status === 'validee';
+  let h = '<div class="flex" style="margin-bottom:10px"><select id="cmpSel">' + cands.map(c => '<option value="' + c.id + '"' + (c.id === z.id ? ' selected' : '') + '>' + esc(c.code + ' – ' + c.label) + '</option>').join('') + '</select>' +
+    '<span class="grow"></span>' +
+    (locked ? '' : ps.filter(p => p.status === 'terminee').map(p => '<button class="' + (eff === p.pass && z.retained_pass ? 'ok' : 'sec') + '" data-ret="' + p.pass + '">Retenir P' + p.pass + ' (' + esc(p.operator) + ')</button>').join(' ')) +
+    (!locked && z.status === 'terminee' ? ' <button class="danger" id="cmpAgain">Demander un nouveau recomptage</button>' : '') + '</div>' +
+    '<div class="msg ' + (diff ? 'warn' : 'ok') + '">' + (diff ? diff + ' article(s) diffèrent entre les comptages.' : 'Les comptages concordent.') +
+    ' Comptage retenu actuellement : <b>P' + (eff || '–') + '</b>' + (z.retained_pass ? ' (choisi par le siège)' : ' (par défaut : le plus récent terminé)') + '.</div>' +
+    '<div class="tw"><table><thead><tr><th>EAN</th><th>Référence</th><th>Désignation</th>' + ps.map(p => '<th class="n">P' + p.pass + ' · ' + esc(p.operator) + (p.status === 'en_cours' ? ' (en cours)' : '') + '</th>').join('') + '<th class="n">Diff.</th></tr></thead><tbody>' +
+    rows.map(r => { const t = theo.get(r.k); const d = Math.max(...r.q) - Math.min(...r.q);
+      return '<tr class="' + (d ? 'neg' : '') + '"><td>' + esc(t ? t.ean : r.raw) + '</td><td>' + esc(t?.ref || 'INCONNU') + '</td><td>' + esc(t?.des || '') + '</td>' +
+        r.q.map(q => '<td class="n">' + fmtN(q) + '</td>').join('') + '<td class="n e">' + (d ? fmtN(d) : '') + '</td></tr>'; }).join('') +
+    '<tr><td colspan="3"><b>Total</b></td>' + ps.map(p => '<td class="n"><b>' + fmtN(p.pieces) + '</b></td>').join('') + '<td></td></tr>' +
+    '</tbody></table></div>';
+  $('tCompare').innerHTML = h;
+  $('cmpSel').onchange = e => { cmpZone = +e.target.value; rCompare(); };
+  $('tCompare').querySelectorAll('[data-ret]').forEach(b => b.onclick = async () => {
+    try { const r = await rpc('inv2_admin_retain', { p_token: TOKEN, p_zone_id: z.id, p_pass: b.dataset.ret }); if (!r.ok) return toast(esc(em(r)), 'err');
+          toast('Comptage P' + b.dataset.ret + ' retenu pour ' + z.code + '.'); loadDetail(); } catch(e) { toast(esc(e.message), 'err'); } });
+  if ($('cmpAgain')) $('cmpAgain').onclick = () => requestRecount([z.id], 'désaccord entre comptages');
+}
+
+/* --------------------------------------------------- onglet OPÉRATEURS */
+function rOps(){
+  const ops = {};
+  for (const p of D.passes) {
+    if (p.status === 'abandonnee') continue;
+    const o = ops[p.operator] = ops[p.operator] || { zones: 0, pcs: 0, h: 0, rec: 0 };
+    o.zones++; o.pcs += +p.pieces || 0; if (p.pass > 1) o.rec++;
+    const end = p.ended_at || p.dernier_scan; if (end) o.h += Math.max(0, (new Date(end) - new Date(p.started_at)) / 3.6e6);
+  }
+  let h = '<h3>Opérateurs (cadence mesurée)</h3><div class="tw" style="margin-bottom:16px"><table><thead><tr><th>Opérateur</th><th class="n">Zones</th><th class="n">dont recomptages</th><th class="n">Pièces</th><th class="n">Temps</th><th class="n">Cadence</th></tr></thead><tbody>' +
+    Object.entries(ops).map(([n, o]) => '<tr><td>' + esc(n) + '</td><td class="n">' + o.zones + '</td><td class="n">' + o.rec + '</td><td class="n">' + fmtN(o.pcs) + '</td><td class="n">' +
+      Math.floor(o.h) + ' h ' + String(Math.round((o.h % 1) * 60)).padStart(2, '0') + '</td><td class="n">' + (o.h > .02 ? fmtN(o.pcs / o.h) + ' pcs/h' : '–') + '</td></tr>').join('') +
+    '</tbody></table></div><h3>Appareils connectés</h3><div class="tw"><table><thead><tr><th>Appareil</th><th>Dernier opérateur</th><th>Connecté le</th><th>Dernière activité</th><th>État</th><th></th></tr></thead><tbody>' +
+    D.devices.map(d => '<tr><td>' + esc(d.label) + '</td><td>' + esc(d.operator) + '</td><td>' + fmtD(d.created_at) + '</td><td>' + ago(d.last_seen) + '</td><td>' +
+      (d.revoked ? '<span class="badge b-annulee">révoqué</span>' : '<span class="badge b-validee">autorisé</span>') + '</td><td>' +
+      (!d.revoked && D.session.status !== 'validee' ? '<button class="sm danger" data-rv="' + d.id + '">Révoquer</button>' : '') + '</td></tr>').join('') +
+    '</tbody></table></div><p class="small muted">Révoquer un appareil le déconnecte immédiatement (téléphone perdu, personne non autorisée…). Pensez aussi à générer un nouveau PIN.</p>';
+  $('tOps').innerHTML = h;
+  $('tOps').querySelectorAll('[data-rv]').forEach(b => b.onclick = async () => {
+    if (!confirm('Révoquer cet appareil ?')) return;
+    try { const r = await rpc('inv2_admin_revoke_device', { p_token: TOKEN, p_device: b.dataset.rv }); if (!r.ok) return toast(esc(em(r)), 'err'); loadDetail(); }
+    catch(e) { toast(esc(e.message), 'err'); } });
+}
+
+/* ------------------------------------------------------- onglet JOURNAL */
+const ACT = { session_creee: 'Session créée', appareil_connecte: 'Appareil connecté', pin_incorrect: 'PIN incorrect', zone_demarree: 'Zone démarrée',
+  recomptage_demarre: 'Recomptage démarré', zone_terminee: 'Zone terminée', comptage_cloture_magasin: 'Comptage clôturé par le magasin',
+  recomptage_demande: 'Recomptage demandé', passage_retenu: 'Comptage retenu', passage_abandonne: 'Comptage abandonné (zone débloquée)',
+  appareil_revoque: 'Appareil révoqué', inventaire_valide: 'INVENTAIRE VALIDÉ ET VERROUILLÉ', statut: 'Changement de statut',
+  theorique_importe: 'État de stock importé', pin_regenere: 'Nouveau PIN généré', zones_ajoutees: 'Zones ajoutées (siège)', zone_ajoutee_magasin: 'Zone ajoutée par le magasin' };
+async function rLog(){
+  $('tLog').innerHTML = '<div class="muted">Chargement…</div>';
+  try {
+    const r = await rpc('inv2_admin_log', { p_token: TOKEN, p_session: SID }); if (!r.ok) return;
+    logCache = r.log;
+    $('tLog').innerHTML = '<div class="tw"><table><thead><tr><th>Date</th><th>Qui</th><th>Action</th><th>Détail</th></tr></thead><tbody>' +
+      r.log.map(l => '<tr><td>' + fmtD(l.at) + '</td><td>' + esc(l.actor) + '</td><td>' + esc(ACT[l.action] || l.action) + '</td><td class="small">' +
+        esc(l.detail ? Object.entries(l.detail).map(([k, v]) => k + ' : ' + (typeof v === 'object' ? JSON.stringify(v) : v)).join(' · ') : '') + '</td></tr>').join('') +
+      '</tbody></table></div>';
+  } catch(e) { $('tLog').innerHTML = '<div class="msg err">' + esc(e.message) + '</div>'; }
+}
+
+/* ------------------------------------------------- onglet VALIDATION */
+function checks(){
+  const s = D.session, z = D.zones;
+  return [
+    [!!theo.size, 'État de stock Fastmag importé'],
+    [z.length > 0 && z.every(x => x.status === 'terminee'), 'Toutes les zones sont terminées (' + z.filter(x => x.status === 'terminee').length + '/' + z.length + ')'],
+    [s.status === 'comptage_termine' || s.status === 'validee', 'Comptage clôturé et attesté par le responsable du magasin' + (s.closed_by ? ' (' + s.closed_by + ', ' + fmtD(s.closed_at) + ')' : '')],
+    [!z.some(x => zoneStats(x).arbitrer), 'Recomptages arbitrés (comptage retenu choisi)', true],
+    [z.some(x => x.recount_after != null) || s.status === 'validee', 'Au moins un recomptage de contrôle effectué', true]
+  ];
+}
+function rValid(){
+  const s = D.session, ok = checks(), blocking = ok.filter(c => !c[2] && !c[0]);
+  let h = '<h3>Contrôles avant validation</h3>' + ok.map(([b, t, soft]) => '<div>' + (b ? '✅' : soft ? '⚠️' : '❌') + ' ' + esc(t) + '</div>').join('') +
+    '<div class="flex" style="margin-top:16px">' +
+    '<button class="sec" id="vFast">Export pour Fastmag (EAN ; quantité)</button>' +
+    '<button class="sec" id="vFast2">Export Réf ; Couleur ; Taille ; quantité</button>' +
+    '<button class="sec" id="vArch">Archive détaillée (par zone)</button>' +
+    '<button class="sec" id="vPv">Imprimer le PV d\'inventaire</button>' +
+    '<span class="grow"></span>' +
+    (s.status === 'validee' ? '' : '<button class="ok" id="vVal" ' + (blocking.length ? 'disabled' : '') + '>Valider et verrouiller l\'inventaire</button>') + '</div>';
+  if (s.status === 'validee')
+    h += '<div class="msg ok">Inventaire validé par ' + esc(s.validated_by) + ' le ' + fmtD(s.validated_at) + '. Plus aucune modification possible.<br>' +
+         'Empreinte SHA-256 de l\'archive : <code>' + esc(s.validated_hash) + '</code> <button class="sm sec" id="vChk">Vérifier</button></div>';
+  else h += '<div class="msg info small">La validation : 1) télécharge l\'archive détaillée (à conserver avec les pièces comptables), 2) enregistre son empreinte SHA-256, ' +
+            '3) verrouille définitivement la session et révoque les appareils. Intégrez ensuite le fichier dans Fastmag.</div>';
+  $('tValid').innerHTML = h;
+  $('vFast').onclick = () => downloadCsv('fastmag_ean_' + fileBase() + '.csv', [['EAN', 'Quantite']].concat(finalLines().filter(l => l.compte !== 0 || !l.inconnu).map(l => [l.ean, l.compte])));
+  $('vFast2').onclick = () => downloadCsv('fastmag_ref_' + fileBase() + '.csv', [['Reference', 'Couleur', 'Taille', 'EAN', 'Quantite']].concat(finalLines().map(l => [l.ref, l.coul, l.taille, l.ean, l.compte])));
+  $('vArch').onclick = () => downloadText('archive_' + fileBase() + '.csv', archiveCsv());
+  $('vPv').onclick = printPv;
+  if ($('vVal')) $('vVal').onclick = validate;
+  if ($('vChk')) $('vChk').onclick = async () => { const hsh = await sha256('\ufeff' + archiveCsv());
+    alert(hsh === s.validated_hash ? 'OK : les données actuelles correspondent exactement à l\'inventaire validé.' : 'ATTENTION : empreinte différente !\n' + hsh); };
+}
+function finalLines(){ return [...C.lines].sort((a, b) => (a.ref + a.coul + a.taille + a.ean).localeCompare(b.ref + b.coul + b.taille + b.ean)); }
+
+/* archive déterministe : mêmes données -> même fichier -> même empreinte */
+function archiveCsv(){
+  const s = D.session;
+  const rows = [['# IZAC – Archive inventaire', s.store_code, s.store_name, s.inv_date || '', 'session ' + s.id],
+                ['# Section', 'Zone', 'Libelle', 'Passage', 'Operateur', 'EAN', 'Reference', 'Designation', 'Couleur', 'Taille', 'Quantite']];
+  const zs = [...D.zones].sort((a, b) => a.code.localeCompare(b.code));
+  for (const z of zs) {
+    const e = C.eff.get(z.id), p = D.passes.find(x => x.zone_id === z.id && x.pass === e);
+    const agg = {};
+    for (const sc of scans) if (sc.zone_id === z.id && sc.pass === e) agg[normCode(sc.ean)] = (agg[normCode(sc.ean)] || 0) + sc.qty;
+    for (const k of Object.keys(agg).sort()) { if (!agg[k]) continue; const t = theo.get(k);
+      rows.push(['COMPTAGE', z.code, z.label, e, p ? p.operator : '', t ? t.ean : k, t?.ref || 'INCONNU', t?.des || '', t?.coul || '', t?.taille || '', agg[k]]); }
+  }
+  rows.push(['# Section', 'EAN', 'Reference', 'Designation', 'Couleur', 'Taille', 'Theorique', 'Compte', 'Ecart', 'PA', 'Valeur ecart']);
+  for (const l of [...C.lines].sort((a, b) => a.k.localeCompare(b.k)))
+    rows.push(['SYNTHESE', l.ean, l.ref, l.des, l.coul, l.taille, l.theo, l.compte, l.ecart, num(l.pa), num(l.valeur)]);
+  rows.push(['TOTAL', 'pieces theoriques', C.pTheo, 'pieces comptees', C.pCompte, 'ecart', C.pEcart, 'valeur ecart', num(C.valEcart)]);
+  return toCsv(rows);
+}
+async function validate(){
+  if (!confirm('Valider DÉFINITIVEMENT l\'inventaire de ' + D.session.store_name + ' ?\nPlus aucune modification ne sera possible.')) return;
+  await loadDetail();     // dernières données
+  const csv = archiveCsv(), hash = await sha256('\ufeff' + csv);   // = empreinte du fichier téléchargé
+  const summary = { pieces_theo: C.pTheo, pieces_comptees: C.pCompte, ecart_pieces: C.pEcart, valeur_theo: round2(C.valTheo),
+                    valeur_ecart: round2(C.valEcart), taux_demarque: C.valTheo ? round4(-C.valEcart / C.valTheo) : null,
+                    nb_zones: D.zones.length, nb_recomptages: D.zones.filter(z => z.recount_after != null).length, codes_inconnus: C.nbInc };
+  try {
+    const r = await rpc('inv2_admin_validate', { p_token: TOKEN, p_session: SID, p_hash: hash, p_summary: JSON.stringify(summary) });
+    if (!r.ok) return toast(esc(em(r)), 'err');
+    downloadText('archive_' + fileBase() + '.csv', csv);
+    toast('Inventaire validé et verrouillé. Archive téléchargée (empreinte ' + hash.slice(0, 12) + '…).');
+    await loadDetail();
+  } catch(e) { toast(esc(e.message), 'err'); }
+}
+
+/* ------------------------------------------------------------- PV */
+function printPv(){
+  const s = D.session, firstScan = scans.length ? scans[0].at : null, lastScan = scans.length ? scans[scans.length - 1].at : null;
+  const ops = [...new Set(D.passes.filter(p => p.status !== 'abandonnee').map(p => p.operator))];
+  const top = [...C.lines].filter(l => l.ecart !== 0).sort((a, b) => Math.abs(b.valeur ?? b.ecart) - Math.abs(a.valeur ?? a.ecart)).slice(0, 25);
+  $('print').innerHTML = '<div class="pv"><h1>Procès-verbal d\'inventaire physique</h1>' +
+    '<p><b>Société :</b> JSR – enseigne IZAC &nbsp; <b>Magasin :</b> ' + esc(s.store_code + ' – ' + s.store_name) + '<br>' +
+    '<b>Date d\'inventaire :</b> ' + (s.inv_date ? new Date(s.inv_date).toLocaleDateString('fr-FR') : '–') +
+    ' &nbsp; <b>Comptage :</b> du ' + fmtD(firstScan) + ' au ' + fmtD(lastScan) + '<br>' +
+    '<b>Méthode :</b> comptage physique exhaustif par zones, au scanner, à l\'aveugle (stock théorique non communiqué au magasin), ' +
+    'recomptages de contrôle par une personne différente, suivi en direct par le siège.<br>' +
+    '<b>Zones :</b> ' + D.zones.length + ' &nbsp; <b>Recomptages :</b> ' + D.zones.filter(z => z.recount_after != null).length +
+    ' &nbsp; <b>Opérateurs :</b> ' + esc(ops.join(', ')) + '</p>' +
+    '<table><tr><th>Pièces théoriques</th><th>Pièces comptées</th><th>Écart pièces</th><th>Valeur théorique (PA)</th><th>Écart valeur</th><th>Taux de démarque</th><th>Codes inconnus</th></tr>' +
+    '<tr><td>' + fmtN(C.pTheo) + '</td><td>' + fmtN(C.pCompte) + '</td><td>' + fmtN(C.pEcart) + '</td><td>' + (C.hasPa ? fmtE(C.valTheo) : '–') + '</td><td>' +
+    (C.hasPa ? fmtE(C.valEcart) : '–') + '</td><td>' + (C.hasPa && C.valTheo ? fmtP(-C.valEcart / C.valTheo) : '–') + '</td><td>' + C.nbInc + '</td></tr></table>' +
+    '<h3 style="margin-top:6mm">Principaux écarts</h3><table><tr><th>Référence</th><th>Désignation</th><th>Couleur</th><th>Taille</th><th>Théo.</th><th>Compté</th><th>Écart</th><th>Valeur</th></tr>' +
+    top.map(l => '<tr><td>' + esc(l.ref || 'INCONNU ' + l.ean) + '</td><td>' + esc(l.des) + '</td><td>' + esc(l.coul) + '</td><td>' + esc(l.taille) + '</td><td>' + l.theo + '</td><td>' + l.compte + '</td><td>' + l.ecart + '</td><td>' + (l.valeur != null ? fmtE(l.valeur) : '–') + '</td></tr>').join('') +
+    '</table><p class="small" style="margin-top:6mm">Comptage clôturé et attesté par : <b>' + esc(s.closed_by || '–') + '</b> le ' + fmtD(s.closed_at) +
+    '<br>Validé par le siège : <b>' + esc(s.validated_by || 'non validé') + '</b>' + (s.validated_at ? ' le ' + fmtD(s.validated_at) : '') +
+    '<br>Empreinte SHA-256 de l\'archive détaillée : <code>' + esc(s.validated_hash || '(générée à la validation)') + '</code></p>' +
+    '<div class="sig"><div>Responsable du magasin<br>Nom, date, signature</div><div>Siège<br>Nom, date, signature</div></div></div>';
+  window.print();
+}
+
+/* ---------------------------------------------- étiquettes & fiche kit */
+$('aLabels').onclick = () => {
+  const zs = [...D.zones].sort((a, b) => a.code.localeCompare(b.code));
+  $('print').innerHTML = '<div class="lbls">' + zs.map(z => '<div class="lbl"><div class="c">' + esc(z.code) + '</div><div class="t">' + esc(z.label) + '</div>' +
+    '<svg class="bc" data-v="' + zoneBarcode(z.code) + '"></svg><div style="font-size:9pt">' + esc(D.session.store_code + ' ' + D.session.store_name) + '</div></div>').join('') + '</div>';
+  $('print').querySelectorAll('svg.bc').forEach(sv => { try { JsBarcode(sv, sv.dataset.v, { format: 'CODE128', height: 60, displayValue: true, fontSize: 14, margin: 4 }); } catch(e){} });
+  window.print();
+};
+const zoneBarcode = code => '9900' + String(+code.replace(/\D/g, '')).padStart(2, '0');
+$('aKit').onclick = () => {
+  const s = D.session;
+  $('print').innerHTML = '<div class="pv"><h1>Kit inventaire – ' + esc(s.store_code + ' ' + s.store_name) + '</h1>' +
+    '<p><b>Date :</b> ' + (s.inv_date ? new Date(s.inv_date).toLocaleDateString('fr-FR') : '–') + '<br><b>Page à ouvrir sur chaque téléphone :</b> ' + esc(URL_MAGASIN) +
+    '<br><b>Code de session :</b> <span style="font-size:20pt;font-weight:800;letter-spacing:2px">' + esc(s.join_code) + '</span><br>' +
+    '<b>PIN :</b> communiqué par téléphone par le siège le jour J.</p>' +
+    '<h3>La veille</h3><ol><li>Ranger le magasin, plier, regrouper les articles identiques.</li><li>Coller chaque étiquette de zone à son emplacement (plan ci-joint). Rien ne doit rester hors zone.</li>' +
+    '<li>Ne plus déplacer de marchandise entre zones. Pas de réception ni de transfert pendant l\'inventaire.</li><li>Charger les téléphones et les douchettes.</li></ol>' +
+    '<h3>Le jour J</h3><ol><li>Chaque personne se connecte avec <b>son propre nom</b> (code + PIN).</li><li>Une personne = une zone à la fois : scanner l\'étiquette de zone, puis chaque article <b>un par un</b>.</li>' +
+    '<li>Lot identique sous film : bouton « Quantité » puis un seul scan.</li><li>Bip grave = article inconnu : le mettre de côté (il est compté quand même).</li>' +
+    '<li>Erreur : « Annuler le dernier ». Zone finie : vérifier sol, cintres, piles, cartons, puis « Terminer la zone ».</li>' +
+    '<li>Le siège peut demander des recomptages : ils doivent être faits par une <b>autre personne</b>.</li>' +
+    '<li>Quand toutes les zones sont terminées : le <b>responsable</b> clôture le comptage dans l\'application.</li>' +
+    '<li>Attendre la validation du siège avant de ranger le kit, puis le renvoyer avec l\'étiquette retour.</li></ol>' +
+    '<h3>Contenu du kit</h3><p>☐ 3 téléphones &nbsp; ☐ 3 douchettes + 1 de secours &nbsp; ☐ câbles / batteries &nbsp; ☐ étiquettes de zones &nbsp; ☐ cette fiche &nbsp; ☐ étiquette de retour</p>' +
+    '<h3>Plan des zones</h3><table><tr><th>Zone</th><th>Emplacement</th></tr>' +
+    [...D.zones].sort((a, b) => a.code.localeCompare(b.code)).map(z => '<tr><td>' + esc(z.code) + '</td><td>' + esc(z.label) + '</td></tr>').join('') + '</table></div>';
+  window.print();
+};
+
+/* --------------------------------------------------- actions session */
+async function setStatus(st, q){
+  if (q && !confirm(q)) return;
+  try { const r = await rpc('inv2_admin_set_status', { p_token: TOKEN, p_session: SID, p_status: st }); if (!r.ok) return toast(esc(em(r)), 'err'); loadDetail(); }
+  catch(e) { toast(esc(e.message), 'err'); }
+}
+$('aOpen').onclick = () => setStatus('ouverte', theo.size ? null : 'L\'état de stock Fastmag n\'est pas importé. Ouvrir quand même le comptage ?');
+$('aPrep').onclick = () => setStatus('preparation', 'Repasser en préparation ? Les appareils ne pourront plus scanner.');
+$('aReopen').onclick = () => setStatus('ouverte', 'Rouvrir le comptage pour le magasin ?');
+$('aCancel').onclick = () => setStatus('annulee', 'ANNULER cette session ? Elle ne pourra plus être utilisée.');
+$('aPin').onclick = async () => {
+  if (!confirm('Générer un nouveau PIN ? L\'ancien ne fonctionnera plus pour connecter de nouveaux appareils.')) return;
+  try { const r = await rpc('inv2_admin_reset_pin', { p_token: TOKEN, p_session: SID }); if (!r.ok) return toast(esc(em(r)), 'err'); showCodes(D.session.join_code, r.pin); }
+  catch(e) { toast(esc(e.message), 'err'); }
+};
+
+/* --------------------------------------------------- import Fastmag */
+$('aTheo').onclick = () => { $('fileTheo').value = ''; $('fileTheo').click(); };
+$('fileTheo').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const buf = await f.arrayBuffer();
+    let wb;
+    if (/\.(csv|txt)$/i.test(f.name)) {
+      // CSV : décodage UTF-8 (ou Windows-1252 si accents illisibles), valeurs gardées en texte
+      let txt = new TextDecoder('utf-8').decode(buf);
+      if (txt.includes('�')) txt = new TextDecoder('windows-1252').decode(buf);
+      wb = XLSX.read(txt.replace(/^﻿/, ''), { type: 'string', raw: true });
+    } else {
+      wb = XLSX.read(buf, { type: 'array' });
+    }
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '' });
+    mapColumns(rows, f.name);
+  } catch(err) { alert('Fichier illisible : ' + err.message); }
+};
+const PAT = { ean: /ean|code.?barre|gencod|gtin|\bcb\b/i, ref: /^r[ée]f|r[ée]f[ée]rence|mod[eè]le|article/i, des: /d[ée]sign|libell|nom/i,
+              coul: /coul|colo/i, taille: /taille|tail|size|\bt\b/i, qty: /stock|qt[ée]|quantit|dispo/i, pa: /prix.?d.?achat|\bp\.?a\.?\b|pmp|co[uû]t|achat/i };
+function mapColumns(rows, name){
+  let hi = 0, best = -1;
+  for (let i = 0; i < Math.min(rows.length, 30); i++) {
+    const sc = rows[i].filter(c => typeof c === 'string' && Object.values(PAT).some(p => p.test(c))).length;
+    if (sc > best) { best = sc; hi = i; }
+  }
+  const head = rows[hi].map(c => String(c).trim());
+  const guess = k => head.findIndex(h => PAT[k].test(h));
+  const opt = k => '<select id="m_' + k + '"><option value="-1">— aucune —</option>' + head.map((h, i) => '<option value="' + i + '"' + (i === guess(k) ? ' selected' : '') + '>' + esc(h || ('colonne ' + (i + 1))) + '</option>').join('') + '</select>';
+  const L = { ean: 'Code-barres / EAN *', ref: 'Référence', des: 'Désignation', coul: 'Couleur', taille: 'Taille', qty: 'Quantité en stock *', pa: 'Prix d\'achat (pour la valeur)' };
+  modal('<h2>Import de l\'état de stock</h2><p class="muted">' + esc(name) + ' · ' + (rows.length - hi - 1) + ' lignes · ligne d\'en-tête n°' + (hi + 1) + '</p>' +
+    '<div class="formgrid">' + Object.keys(L).map(k => '<div><label>' + L[k] + '</label>' + opt(k) + '</div>').join('') + '</div>' +
+    '<div class="msg info small">L\'état de stock reste <b>invisible pour le magasin</b> : seul le libellé (réf., couleur, taille) est utilisé pour afficher l\'article au scan, jamais la quantité.</div>' +
+    '<div id="mPrev" class="small"></div><div class="flex" style="justify-content:flex-end;margin-top:12px"><button class="sec" id="mNo">Annuler</button><button id="mYes">Importer</button></div>');
+  const read = () => Object.fromEntries(Object.keys(L).map(k => [k, +$('m_' + k).value]));
+  const build = m => {
+    const out = [];
+    for (const r of rows.slice(hi + 1)) {
+      const ean = String(r[m.ean] ?? '').trim().replace(/\.0+$/, ''); if (!ean || m.ean < 0) continue;
+      const q = parseFloat(String(r[m.qty] ?? '0').replace(/\s/g, '').replace(',', '.')) || 0;
+      const pa = m.pa >= 0 ? parseFloat(String(r[m.pa] ?? '').replace(/\s/g, '').replace('€', '').replace(',', '.')) : NaN;
+      const g = i => i >= 0 ? String(r[i] ?? '').trim() : '';
+      out.push([ean, g(m.ref), g(m.des), g(m.coul), g(m.taille), q, isNaN(pa) ? '' : pa]);
+    }
+    return out;
+  };
+  const prev = () => { const m = read(); const b = build(m); const tot = b.reduce((a, x) => a + x[5], 0);
+    $('mPrev').innerHTML = '<p><b>' + fmtN(b.length) + '</b> articles · <b>' + fmtN(tot) + '</b> pièces' + (m.pa >= 0 ? ' · valeur ' + fmtE(b.reduce((a, x) => a + x[5] * (+x[6] || 0), 0)) : '') + '</p>' +
+      (b[0] ? '<p class="muted">Exemple : ' + esc(b[0].slice(0, 5).join(' · ')) + ' · qté ' + b[0][5] + '</p>' : '<p class="alert">Aucune ligne : vérifiez la colonne EAN.</p>'); };
+  Object.keys(L).forEach(k => $('m_' + k).onchange = prev); prev();
+  $('mNo').onclick = closeModal;
+  $('mYes').onclick = async () => {
+    const m = read(); if (m.ean < 0 || m.qty < 0) return alert('Colonnes EAN et quantité obligatoires.');
+    const b = build(m); if (!b.length) return;
+    $('mYes').disabled = true;
+    try {
+      for (let i = 0; i < b.length; i += 1000) {
+        $('mPrev').innerHTML = '<div class="msg info">Envoi… ' + Math.min(i + 1000, b.length) + ' / ' + b.length + '</div>';
+        const r = await rpc('inv2_admin_upload_theo', { p_token: TOKEN, p_session: SID, p_rows: JSON.stringify(b.slice(i, i + 1000)), p_replace: i === 0 });
+        if (!r.ok) throw new Error(em(r));
+      }
+      closeModal(); toast(fmtN(b.length) + ' articles importés.'); await loadTheo(); loadDetail();
+    } catch(err) { $('mPrev').innerHTML = '<div class="msg err">' + esc(err.message) + '</div>'; $('mYes').disabled = false; }
+  };
+}
+
+/* ------------------------------------------------------------- outils */
+const num = v => v == null || isNaN(v) ? '' : String(Math.round(v * 100) / 100).replace('.', ',');
+const round2 = v => Math.round(v * 100) / 100, round4 = v => Math.round(v * 10000) / 10000;
+const fileBase = () => (D.session.store_code + '_' + (D.session.inv_date || '')).replace(/[^\w-]/g, '_');
+function toCsv(rows){ return rows.map(r => r.map(v => { v = String(v ?? ''); return /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(';')).join('\r\n'); }
+function downloadText(name, txt){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + txt], { type: 'text/csv;charset=utf-8' }));
+  a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+const downloadCsv = (name, rows) => downloadText(name, toCsv(rows));
+async function sha256(txt){ const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt));
+  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+
+/* ------------------------------------------------------------- départ */
+(function init(){ if (TOKEN) goList(); else view('vLogin'); })();
+</script>
+</body>
+</html>
