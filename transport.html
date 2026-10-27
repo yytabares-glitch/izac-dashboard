@@ -206,6 +206,7 @@
     <div class="hdr-right">
       <div class="hdr-period" id="period">—</div>
       <button class="btn-import" id="exportXlsx">Exporter Excel</button>
+      <button class="btn-import" id="exportLines" title="Une ligne par expédition (n° de BL), selon la période et le filtre B2C/B2B actifs">Exporter les lignes</button>
       <button class="btn-import" id="openImport">Importer un fichier</button>
     </div>
   </div>
@@ -772,6 +773,56 @@ function exportMonths(){
   XLSX.writeFile(wb,'IZAC_colis_par_mois_'+suffix+'.xlsx');
 }
 document.getElementById('exportMonths').addEventListener('click',exportMonths);
+
+// ===== export ligne à ligne (une ligne par expédition / BL), selon période + filtre actifs =====
+function exportLines(){
+  if(typeof XLSX==='undefined'){ alert('Le module Excel ne s\'est pas chargé. Recharge la page.'); return; }
+  const rows=ALL_ROWS.filter(rowMatchesFilter)
+    .slice().sort((x,y)=>(x.dexpISO||'').localeCompare(y.dexpISO||'') || String(x.id_ls).localeCompare(String(y.id_ls)));
+  if(!rows.length){ alert('Aucune expédition sur cette période avec ce filtre.'); return; }
+  const titre='Expéditions ligne à ligne — '+(periodLabel()||'toute la période')+(activeType!=='ALL'?' · filtre '+activeType:'');
+  const data=rows.map(r=>({
+    'N° de BL (ID_LS)': r.id_ls,
+    'Date expédition': r.dexpISO ? isoToFR(r.dexpISO) : '',
+    'Mois': r.dexpISO ? r.dexpISO.slice(0,7) : '',
+    'Code client': r.cli || '',
+    'Client': cliLabel(r.cli),
+    'TYPE_CMD': r.type,
+    'TYPE_CDE': r.typeCde,
+    'TYPE_CLI': r.typeCli,
+    'Transporteur': r.trps,
+    'Colis': r.colis,
+    'Pièces demandées': r.qa,
+    'Pièces préparées': r.qp,
+    'Délai prépa (j)': r.delai
+  }));
+  const tot=data.reduce((s,r)=>({c:s.c+r['Colis'],qa:s.qa+r['Pièces demandées'],qp:s.qp+r['Pièces préparées']}),{c:0,qa:0,qp:0});
+  data.push({'N° de BL (ID_LS)':'TOTAL ('+fmt(rows.length)+' expéditions)','Date expédition':'','Mois':'','Code client':'','Client':'',
+    'TYPE_CMD':'','TYPE_CDE':'','TYPE_CLI':'','Transporteur':'','Colis':tot.c,'Pièces demandées':tot.qa,'Pièces préparées':tot.qp,'Délai prépa (j)':''});
+  // synthèse transporteur × mois, pour vérifier que l'export colle au tableau « Colis par mois »
+  const syn={};
+  rows.forEach(r=>{
+    const k=(r.dexpISO?r.dexpISO.slice(0,7):'—')+'|'+r.trps;
+    const o=syn[k]||(syn[k]={'Mois':r.dexpISO?r.dexpISO.slice(0,7):'—','Transporteur':r.trps,'Expéditions':0,'Colis':0});
+    o['Expéditions']++; o['Colis']+=r.colis;
+  });
+  const synRows=Object.values(syn).sort((x,y)=>x['Mois'].localeCompare(y['Mois'])||y['Colis']-x['Colis']);
+  const wb=XLSX.utils.book_new();
+  const addSheet=(name,list)=>{
+    const ws=XLSX.utils.json_to_sheet(list,{origin:'A3'});
+    XLSX.utils.sheet_add_aoa(ws,[[titre]],{origin:'A1'});
+    const heads=Object.keys(list[0]);
+    ws['!cols']=heads.map(h=>({wch:Math.min(40,Math.max(h.length,...list.slice(0,500).map(r=>String(r[h]??'').length))+2)}));
+    ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:2,c:0},e:{r:2+list.length,c:heads.length-1}})};
+    XLSX.utils.book_append_sheet(wb,ws,name);
+  };
+  addSheet('Lignes',data);
+  addSheet('Synthèse transporteurs',synRows);
+  const typ=activeType==='ALL'?'tout':activeType;
+  XLSX.writeFile(wb,'IZAC_lignes_expeditions_'+typ+'_'+(pFrom||'debut')+'_'+(pTo||'fin')+'.xlsx');
+}
+document.getElementById('exportLines').addEventListener('click',exportLines);
+
 
 // ===== sélection de période =====
 function periodLabel(){
