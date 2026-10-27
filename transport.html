@@ -79,6 +79,12 @@
   .sb-scroll tbody tr:hover{background:var(--line2)}
   .sb-empty{padding:18px;text-align:center;color:var(--ink3);font-size:13px}
 
+  /* ===== période ===== */
+  .periodbox{border-left:3px solid var(--navy)}
+  .pl{font-size:12px;font-weight:700;color:var(--ink2)}
+  .presets{display:flex;gap:6px;flex-wrap:wrap;margin-left:6px}
+  .p-active{font-size:12px;color:var(--navy);font-weight:700;margin-top:10px}
+
   .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:8px}
   .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden}
   .kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--navy)}
@@ -91,7 +97,7 @@
   .grid{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-top:16px}
   .panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
   .panel h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);
-    border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:14px;display:flex;justify-content:space-between}
+    border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
   .panel h3 .n{color:var(--ink);font-weight:700}
   .chartbox{position:relative;height:240px}
   .chartbox.tall{height:300px}
@@ -104,6 +110,17 @@
   .barcell{height:6px;border-radius:3px;background:var(--navy);display:inline-block;vertical-align:middle;margin-left:8px}
   .tag{font-size:11px;padding:2px 7px;border-radius:99px;font-weight:700}
   .tag.g{background:var(--greenbg);color:var(--green)} .tag.w{background:var(--warnbg);color:var(--warn)} .tag.b{background:var(--redbg);color:var(--red)}
+
+  /* ===== colis par mois ===== */
+  .mgrid{display:grid;grid-template-columns:1fr 1.15fr;gap:20px;align-items:start}
+  .mscroll{max-height:320px;overflow:auto}
+  #tblMonths th{cursor:default;position:sticky;top:0;background:#fff}
+  #tblMonths td:first-child{white-space:nowrap}
+  #tblMonths tfoot td{font-weight:800;border-top:2px solid var(--navy);border-bottom:none;background:var(--line2)}
+  .evo-up{color:var(--green);font-weight:700} .evo-down{color:var(--red);font-weight:700}
+  .partiel{font-size:10px;padding:1px 6px;border-radius:99px;background:var(--warnbg);color:var(--warn);font-weight:700;margin-left:6px;text-transform:none;letter-spacing:0}
+  .btn-mini{background:var(--navy);color:#fff;border:none;border-radius:7px;padding:6px 12px;font-size:11.5px;font-weight:700;cursor:pointer;letter-spacing:0;text-transform:none}
+  .btn-mini:hover{background:var(--navy2)}
 
   .full{grid-column:1/-1}
   .toolbar{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
@@ -139,7 +156,7 @@
   .btn-close{background:var(--line2);color:var(--ink2)}
   .btn-close:hover{background:var(--line)}
 
-  @media(max-width:780px){.kpis{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}
+  @media(max-width:780px){.kpis{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.mgrid{grid-template-columns:1fr}.presets{margin-left:0}}
 
   /* écran de connexion */
   .gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
@@ -199,6 +216,27 @@
   <div id="dash" class="hidden">
     <div class="filterbar" id="filterbar"></div>
 
+    <div class="searchbox periodbox">
+      <div class="sb-head">
+        <span class="sb-title">Période</span>
+        <span class="sb-hint">filtre tout le tableau de bord sur la date d'expédition</span>
+      </div>
+      <div class="sb-inputs">
+        <span class="pl">Du</span><input type="date" id="pFrom">
+        <span class="pl">au</span><input type="date" id="pTo">
+        <div class="presets" id="presets">
+          <button class="chip chip-sm" data-p="cur">Mois en cours</button>
+          <button class="chip chip-sm" data-p="prev">Mois dernier</button>
+          <button class="chip chip-sm" data-p="3m">3 derniers mois</button>
+          <button class="chip chip-sm" data-p="12m">12 derniers mois</button>
+          <button class="chip chip-sm" data-p="ytd">Année en cours</button>
+          <button class="chip chip-sm" data-p="lastyear">Année dernière</button>
+          <button class="chip chip-sm active" data-p="all">Tout</button>
+        </div>
+      </div>
+      <div class="p-active" id="pActive"></div>
+    </div>
+
     <div class="searchbox">
       <div class="sb-head">
         <span class="sb-title">Recherche de lignes</span>
@@ -219,6 +257,32 @@
       <div class="kpi"><div class="lab">Colis</div><div class="val" id="k-colis">—</div><div class="sub" id="k-colis-sub"></div></div>
       <div class="kpi k-ok"><div class="lab">Taux de prépa</div><div class="val" id="k-taux">—</div><div class="sub" id="k-taux-sub"></div></div>
       <div class="kpi"><div class="lab">Délai prépa moyen</div><div class="val" id="k-delai">—</div><div class="sub" id="k-delai-sub"></div></div>
+    </div>
+
+    <div class="panel full" style="margin-top:16px">
+      <h3><span>Colis par mois <span class="n" id="months-n"></span></span>
+        <button class="btn-mini" id="exportMonths">Exporter ce tableau</button></h3>
+      <div class="mgrid">
+        <div class="chartbox tall"><canvas id="chMonths"></canvas></div>
+        <div class="mscroll">
+          <table id="tblMonths">
+            <thead>
+              <tr>
+                <th>Mois</th>
+                <th class="num">Expés</th>
+                <th class="num">Colis</th>
+                <th class="num">dont B2C</th>
+                <th class="num">dont B2B</th>
+                <th class="num">Colis / expé</th>
+                <th class="num">Pièces prép.</th>
+                <th class="num">Évol. colis</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyMonths"></tbody>
+            <tfoot id="tfootMonths"></tfoot>
+          </table>
+        </div>
+      </div>
     </div>
 
     <div class="grid">
@@ -319,17 +383,26 @@ const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n)
 const WEEKDAYS_SHORT = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 
 let charts = {};
-let ALL_ROWS = [], ROWS = [], CLISTATS = [];
+let ALL_ROWS = [], ROWS = [], CLISTATS = [], MONTHS = [];
 let sortKey = 'exp', sortDir = -1, activeType = 'ALL';
+let pFrom = '', pTo = '';   // période sélectionnée (AAAA-MM-JJ), vide = pas de borne
 
 const B2B_TYPES = ['RETAIL','OUTLET','NEGOCE'];
 const B2C_TYPES = ['WEB'];
-function rowMatchesFilter(r){
+function typeMatches(r){
   if(activeType==='ALL') return true;
   if(activeType==='B2C') return B2C_TYPES.includes(r.type);
   if(activeType==='B2B') return B2B_TYPES.includes(r.type);
   return r.type===activeType;
 }
+function inPeriod(r){
+  if(!pFrom && !pTo) return true;
+  if(!r.dexpISO) return false;
+  if(pFrom && r.dexpISO < pFrom) return false;
+  if(pTo && r.dexpISO > pTo) return false;
+  return true;
+}
+function rowMatchesFilter(r){ return typeMatches(r) && inPeriod(r); }
 
 function cliLabel(id){
   if(!id) return '—';
@@ -341,8 +414,11 @@ function cliLabel(id){
 function weekdayIdx(d){ return (d.getDay()+6)%7; }
 function fmt(n){ return (n||0).toLocaleString('fr-FR'); }
 function pct(a,b){ return b ? (a/b*100) : 0; }
-function fmtDay(iso){ const d=new Date(iso); return d.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'2-digit'}); }
-function fmtMonth(iso){ const d=new Date(iso+'-01'); return d.toLocaleDateString('fr-FR',{month:'long',year:'2-digit'}); }
+function fmtDay(iso){ const d=new Date(iso+'T00:00:00'); return d.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'2-digit'}); }
+function fmtMonth(ym){ const d=new Date(+ym.slice(0,4), +ym.slice(5,7)-1, 1); return d.toLocaleDateString('fr-FR',{month:'long',year:'2-digit'}); }
+function fmtMonthLong(ym){ const d=new Date(+ym.slice(0,4), +ym.slice(5,7)-1, 1); const s=d.toLocaleDateString('fr-FR',{month:'long',year:'numeric'}); return s.charAt(0).toUpperCase()+s.slice(1); }
+function isoLocal(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function lastDayOfMonth(ym){ const d=new Date(+ym.slice(0,4), +ym.slice(5,7), 0); return isoLocal(d); }
 
 function frToISODate(s){ if(!s) return null; const m=s.trim().match(/(\d{2})\/(\d{2})\/(\d{4})/); return m?`${m[3]}-${m[2]}-${m[1]}`:null; }
 function frToISOTimestamp(s){ if(!s) return null; const m=s.trim().match(/(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}):(\d{2}))?/); if(!m)return null; const t=m[4]?`T${m[4]}:${m[5]}:${m[6]}`:'T00:00:00'; return `${m[3]}-${m[2]}-${m[1]}${t}`; }
@@ -390,6 +466,33 @@ function showEmpty(){
   e.innerHTML='Aucune donnée en base pour le moment. Clique sur <b>« Importer un fichier »</b> en haut à droite pour commencer.';
 }
 
+// ===== agrégat mensuel (colis par mois) =====
+function aggregateMonths(rows){
+  const map={};
+  rows.forEach(r=>{
+    if(!r.dexpISO) return;
+    const k=r.dexpISO.slice(0,7);
+    const m=map[k]||(map[k]={k,exp:0,colis:0,b2c:0,b2b:0,qp:0,first:r.dexpISO,last:r.dexpISO});
+    m.exp++; m.colis+=r.colis; m.qp+=r.qp;
+    if(B2C_TYPES.includes(r.type)) m.b2c+=r.colis;
+    else if(B2B_TYPES.includes(r.type)) m.b2b+=r.colis;
+    if(r.dexpISO<m.first) m.first=r.dexpISO;
+    if(r.dexpISO>m.last) m.last=r.dexpISO;
+  });
+  const list=Object.values(map).sort((a,b)=>a.k.localeCompare(b.k));
+  list.forEach(m=>{
+    // mois coupé par la période sélectionnée
+    const start=m.k+'-01', end=lastDayOfMonth(m.k);
+    m.partiel = !!((pFrom && pFrom>start) || (pTo && pTo<end));
+  });
+  list.forEach((m,i)=>{
+    const prev=list[i-1];
+    // pas d'évolution si l'un des deux mois est partiel (comparaison faussée)
+    m.evo = (prev && prev.colis && !m.partiel && !prev.partiel) ? (m.colis-prev.colis)/prev.colis*100 : null;
+  });
+  return list;
+}
+
 function aggregate(rows){
   const exp=rows.length;
   const colis=rows.reduce((s,r)=>s+r.colis,0);
@@ -397,10 +500,11 @@ function aggregate(rows){
   const qp=rows.reduce((s,r)=>s+r.qp,0);
   const delaiAvg=exp?rows.reduce((s,r)=>s+r.delai,0)/exp:0;
 
-  const dayMap={}; rows.forEach(r=>{ if(r.dexp){const k=r.dexp.toISOString().slice(0,10);dayMap[k]=(dayMap[k]||0)+1;}});
+  // clés de date basées sur dt_exp (évite le décalage de fuseau de toISOString)
+  const dayMap={}; rows.forEach(r=>{ if(r.dexpISO){const k=r.dexpISO;dayMap[k]=(dayMap[k]||0)+1;}});
   const dayKeys=Object.keys(dayMap).sort(); let days, dayMode;
   if(dayKeys.length>35){
-    const mMap={}; rows.forEach(r=>{ if(r.dexp){const k=r.dexp.toISOString().slice(0,7);mMap[k]=(mMap[k]||0)+1;}});
+    const mMap={}; rows.forEach(r=>{ if(r.dexpISO){const k=r.dexpISO.slice(0,7);mMap[k]=(mMap[k]||0)+1;}});
     days=Object.keys(mMap).sort().map(k=>({k,label:fmtMonth(k),v:mMap[k]})); dayMode='mois';
   } else { days=dayKeys.map(k=>({k,label:fmtDay(k),v:dayMap[k]})); dayMode='jour'; }
 
@@ -430,26 +534,24 @@ function aggregate(rows){
             max:rows.filter(r=>r.dexp).reduce((a,r)=>!a||r.dexp>a?r.dexp:a,null)}};
 }
 
+function subTypeOrder(typeMap){
+  return ['WEB','RETAIL','OUTLET','NEGOCE'].filter(t=>typeMap[t]!=null)
+      .concat(Object.keys(typeMap).filter(t=>!['WEB','RETAIL','OUTLET','NEGOCE'].includes(t)));
+}
 function initDash(){
   activeType='ALL';
   const typeMap={}; ALL_ROWS.forEach(r=>typeMap[r.type]=(typeMap[r.type]||0)+1);
-  const cntFor = t => (t==='ALL')?ALL_ROWS.length
-      :(t==='B2C')?ALL_ROWS.filter(r=>B2C_TYPES.includes(r.type)).length
-      :(t==='B2B')?ALL_ROWS.filter(r=>B2B_TYPES.includes(r.type)).length
-      :(typeMap[t]||0);
-  // ordre des sous-types : les plus présents d'abord, mais WEB/RETAIL/OUTLET/NEGOCE prioritaires
-  const subOrder = ['WEB','RETAIL','OUTLET','NEGOCE'].filter(t=>typeMap[t]!=null)
-      .concat(Object.keys(typeMap).filter(t=>!['WEB','RETAIL','OUTLET','NEGOCE'].includes(t)));
+  const subOrder = subTypeOrder(typeMap);
   const bar=document.getElementById('filterbar');
   bar.innerHTML =
     '<div class="frow frow-main">'+
-      `<button class="chip chip-lg active" data-type="ALL">Tout <span class="c">${fmt(cntFor('ALL'))}</span></button>`+
-      `<button class="chip chip-lg" data-type="B2C">B2C <span class="c">${fmt(cntFor('B2C'))}</span></button>`+
-      `<button class="chip chip-lg" data-type="B2B">B2B <span class="c">${fmt(cntFor('B2B'))}</span></button>`+
+      `<button class="chip chip-lg active" data-type="ALL">Tout <span class="c"></span></button>`+
+      `<button class="chip chip-lg" data-type="B2C">B2C <span class="c"></span></button>`+
+      `<button class="chip chip-lg" data-type="B2B">B2B <span class="c"></span></button>`+
     '</div>'+
     '<div class="frow frow-sub">'+
       '<span class="fl">dont</span>'+
-      subOrder.map(t=>`<button class="chip chip-sm" data-type="${t}">${t} <span class="c">${fmt(typeMap[t])}</span></button>`).join('')+
+      subOrder.map(t=>`<button class="chip chip-sm" data-type="${t}">${t} <span class="c"></span></button>`).join('')+
     '</div>';
   bar.querySelectorAll('.chip').forEach(ch=>ch.addEventListener('click',()=>{
     activeType=ch.dataset.type;
@@ -457,20 +559,36 @@ function initDash(){
     render();
     if(document.getElementById('qResults').classList.contains('show')) runLineSearch();
   }));
+  // bornes des champs date = étendue des données
+  const isos=ALL_ROWS.map(r=>r.dexpISO).filter(Boolean).sort();
+  if(isos.length){
+    ['pFrom','pTo'].forEach(id=>{ const el=document.getElementById(id); el.min=isos[0]; el.max=isos[isos.length-1]; });
+  }
   document.getElementById('loading').classList.add('hidden');
   document.getElementById('error').classList.add('hidden');
   document.getElementById('dash').classList.remove('hidden');
   render();
 }
+// compteurs des puces type, recalculés sur la période sélectionnée
+function updateChipCounts(){
+  const rows=ALL_ROWS.filter(inPeriod);
+  const typeMap={}; rows.forEach(r=>typeMap[r.type]=(typeMap[r.type]||0)+1);
+  const cntFor = t => (t==='ALL')?rows.length
+      :(t==='B2C')?rows.filter(r=>B2C_TYPES.includes(r.type)).length
+      :(t==='B2B')?rows.filter(r=>B2B_TYPES.includes(r.type)).length
+      :(typeMap[t]||0);
+  document.querySelectorAll('#filterbar .chip').forEach(ch=>{
+    const c=ch.querySelector('.c'); if(c) c.textContent=fmt(cntFor(ch.dataset.type));
+  });
+}
 function render(){
+  updateChipCounts();
   const rows = ALL_ROWS.filter(rowMatchesFilter);
   ROWS=rows; const a=aggregate(rows); CLISTATS=a.cli;
-  if(a.period.min && a.period.max){
-    document.getElementById('period').textContent =
-      a.period.min.toLocaleDateString('fr-FR')+' → '+a.period.max.toLocaleDateString('fr-FR');
-  }
+  document.getElementById('period').textContent = (a.period.min && a.period.max)
+    ? a.period.min.toLocaleDateString('fr-FR')+' → '+a.period.max.toLocaleDateString('fr-FR') : '—';
   document.getElementById('loadinfo').textContent =
-    fmt(ALL_ROWS.length)+' expéditions en base'+(activeType!=='ALL'?' · filtre '+activeType:'');
+    fmt(ALL_ROWS.length)+' expéditions en base'+(activeType!=='ALL'?' · filtre '+activeType:'')+(periodLabel()?' · '+periodLabel():'');
   document.getElementById('k-exp').textContent=fmt(a.exp);
   document.getElementById('k-exp-sub').textContent=a.dayMode==='mois'?a.days.length+' mois d\'activité':a.days.length+' jour(s) d\'expédition';
   document.getElementById('vol-unit').textContent=a.dayMode;
@@ -486,6 +604,9 @@ function render(){
   document.getElementById('days-n').textContent=fmt(a.exp)+' expés';
   document.getElementById('cli-n').textContent=a.cli.length+' destinataires';
 
+  MONTHS = aggregateMonths(rows);
+  renderMonths(MONTHS);
+
   drawDays(a.days); drawTrps(a.trps,a.exp); drawType(a.types);
   drawDelai(a.delKeys,a.delMap); drawWeekday(a.wdMap); drawTop(a.cli);
 
@@ -493,6 +614,112 @@ function render(){
   document.getElementById('search').value='';
   renderTable('');
 }
+
+// ===== tableau + graphique colis par mois =====
+function renderMonths(list){
+  const tb=document.getElementById('tbodyMonths'), tf=document.getElementById('tfootMonths');
+  document.getElementById('months-n').textContent = list.length ? list.length+' mois' : '';
+  if(!list.length){
+    tb.innerHTML=`<tr><td colspan="8" class="muted" style="padding:24px;text-align:center">Aucune expédition sur cette période.</td></tr>`;
+    tf.innerHTML=''; drawMonths([]); return;
+  }
+  // affichage du plus récent au plus ancien
+  tb.innerHTML=list.slice().reverse().map(m=>{
+    const evo = m.evo==null ? '<span class="muted">—</span>'
+      : `<span class="${m.evo>=0?'evo-up':'evo-down'}">${m.evo>=0?'+':''}${m.evo.toFixed(0)}%</span>`;
+    const part = m.partiel ? `<span class="partiel" title="Mois coupé par la période : du ${isoToFR(m.first)} au ${isoToFR(m.last)}">partiel</span>` : '';
+    return `<tr><td>${fmtMonthLong(m.k)}${part}</td>
+      <td class="num">${fmt(m.exp)}</td>
+      <td class="num"><b>${fmt(m.colis)}</b></td>
+      <td class="num">${fmt(m.b2c)}</td>
+      <td class="num">${fmt(m.b2b)}</td>
+      <td class="num">${m.exp?(m.colis/m.exp).toFixed(1):'0'}</td>
+      <td class="num">${fmt(m.qp)}</td>
+      <td class="num">${evo}</td></tr>`;
+  }).join('');
+  const T=list.reduce((s,m)=>({exp:s.exp+m.exp,colis:s.colis+m.colis,b2c:s.b2c+m.b2c,b2b:s.b2b+m.b2b,qp:s.qp+m.qp}),{exp:0,colis:0,b2c:0,b2b:0,qp:0});
+  const moy = list.length ? Math.round(T.colis/list.length) : 0;
+  tf.innerHTML=`<tr><td>Total</td><td class="num">${fmt(T.exp)}</td><td class="num">${fmt(T.colis)}</td>
+    <td class="num">${fmt(T.b2c)}</td><td class="num">${fmt(T.b2b)}</td>
+    <td class="num">${T.exp?(T.colis/T.exp).toFixed(1):'0'}</td><td class="num">${fmt(T.qp)}</td>
+    <td class="num" title="Moyenne de colis par mois">moy. ${fmt(moy)}</td></tr>`;
+  drawMonths(list);
+}
+function drawMonths(list){ destroy('m');
+  const opts=baseOpts();
+  opts.plugins.legend={display:true,position:'top',labels:{boxWidth:12,font:{size:11}}};
+  opts.plugins.tooltip={callbacks:{label:c=>` ${c.dataset.label} : ${fmt(c.parsed.y)}`}};
+  opts.scales.x.stacked=true; opts.scales.y.stacked=true;
+  const other=list.map(m=>m.colis-m.b2c-m.b2b);
+  const datasets=[
+    {label:'B2B',data:list.map(m=>m.b2b),backgroundColor:COLORS[0],borderRadius:3,maxBarThickness:46},
+    {label:'B2C',data:list.map(m=>m.b2c),backgroundColor:COLORS[1],borderRadius:3,maxBarThickness:46}];
+  if(other.some(v=>v>0)) datasets.push({label:'Autres',data:other,backgroundColor:COLORS[7],borderRadius:3,maxBarThickness:46});
+  charts.m=new Chart(document.getElementById('chMonths'),{type:'bar',
+    data:{labels:list.map(m=>fmtMonth(m.k)+(m.partiel?'*':'')),datasets},options:opts});
+}
+function exportMonths(){
+  if(typeof XLSX==='undefined'){ alert('Le module Excel ne s\'est pas chargé. Recharge la page.'); return; }
+  if(!MONTHS.length){ alert('Aucune donnée sur cette période.'); return; }
+  const rows=MONTHS.map(m=>({
+    'Mois': fmtMonthLong(m.k),
+    'Mois partiel': m.partiel ? ('du '+isoToFR(m.first)+' au '+isoToFR(m.last)) : '',
+    'Expéditions': m.exp,
+    'Colis': m.colis,
+    'Colis B2C': m.b2c,
+    'Colis B2B': m.b2b,
+    'Colis / expé': m.exp ? Math.round(m.colis/m.exp*10)/10 : 0,
+    'Pièces préparées': m.qp,
+    'Évol. colis vs mois préc. (%)': m.evo==null ? '' : Math.round(m.evo*10)/10
+  }));
+  const T=MONTHS.reduce((s,m)=>({exp:s.exp+m.exp,colis:s.colis+m.colis,b2c:s.b2c+m.b2c,b2b:s.b2b+m.b2b,qp:s.qp+m.qp}),{exp:0,colis:0,b2c:0,b2b:0,qp:0});
+  rows.push({'Mois':'TOTAL','Mois partiel':'','Expéditions':T.exp,'Colis':T.colis,'Colis B2C':T.b2c,'Colis B2B':T.b2b,
+    'Colis / expé':T.exp?Math.round(T.colis/T.exp*10)/10:0,'Pièces préparées':T.qp,'Évol. colis vs mois préc. (%)':''});
+  const ws=XLSX.utils.json_to_sheet(rows,{origin:'A3'});
+  XLSX.utils.sheet_add_aoa(ws,[['Colis par mois — '+(periodLabel()||'toute la période')+(activeType!=='ALL'?' · filtre '+activeType:'')]],{origin:'A1'});
+  const heads=Object.keys(rows[0]);
+  ws['!cols']=heads.map(h=>({wch:Math.max(h.length,...rows.map(r=>String(r[h]).length))+2}));
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Colis par mois');
+  const suffix=(pFrom||'debut')+'_'+(pTo||'fin');
+  XLSX.writeFile(wb,'IZAC_colis_par_mois_'+suffix+'.xlsx');
+}
+document.getElementById('exportMonths').addEventListener('click',exportMonths);
+
+// ===== sélection de période =====
+function periodLabel(){
+  if(!pFrom && !pTo) return '';
+  if(pFrom && pTo) return 'du '+isoToFR(pFrom)+' au '+isoToFR(pTo);
+  if(pFrom) return 'depuis le '+isoToFR(pFrom);
+  return 'jusqu\'au '+isoToFR(pTo);
+}
+function applyPeriod(from,to,presetKey){
+  if(from && to && from>to){ const t=from; from=to; to=t; }
+  pFrom=from||''; pTo=to||'';
+  document.getElementById('pFrom').value=pFrom;
+  document.getElementById('pTo').value=pTo;
+  document.querySelectorAll('#presets .chip').forEach(c=>c.classList.toggle('active',c.dataset.p===presetKey));
+  document.getElementById('pActive').textContent = pFrom||pTo ? 'Période active : '+periodLabel() : '';
+  render();
+  if(document.getElementById('qResults').classList.contains('show')) runLineSearch();
+}
+function presetRange(p){
+  const t=new Date(), y=t.getFullYear(), m=t.getMonth();
+  switch(p){
+    case 'cur':      return [isoLocal(new Date(y,m,1)), isoLocal(new Date(y,m+1,0))];
+    case 'prev':     return [isoLocal(new Date(y,m-1,1)), isoLocal(new Date(y,m,0))];
+    case '3m':       return [isoLocal(new Date(y,m-2,1)), isoLocal(new Date(y,m+1,0))];
+    case '12m':      return [isoLocal(new Date(y,m-11,1)), isoLocal(new Date(y,m+1,0))];
+    case 'ytd':      return [isoLocal(new Date(y,0,1)), isoLocal(new Date(y,11,31))];
+    case 'lastyear': return [isoLocal(new Date(y-1,0,1)), isoLocal(new Date(y-1,11,31))];
+    default:         return ['',''];
+  }
+}
+document.querySelectorAll('#presets .chip').forEach(ch=>ch.addEventListener('click',()=>{
+  const [f,t]=presetRange(ch.dataset.p); applyPeriod(f,t,ch.dataset.p);
+}));
+['pFrom','pTo'].forEach(id=>document.getElementById(id).addEventListener('change',()=>{
+  applyPeriod(document.getElementById('pFrom').value, document.getElementById('pTo').value, null);
+}));
 
 function destroy(id){ if(charts[id]){charts[id].destroy(); delete charts[id];} }
 function baseOpts(){
@@ -651,7 +878,8 @@ function runLineSearch(){
   res.classList.add('show');
   const crit=[date?('jour '+new Date(date+'T00:00:00').toLocaleDateString('fr-FR')):null,
               mag?('magasin « '+document.getElementById('qMag').value.trim()+' »'):null,
-              bl?('BL « '+bl+' »'):null].filter(Boolean).join(' · ');
+              bl?('BL « '+bl+' »'):null,
+              periodLabel()||null].filter(Boolean).join(' · ');
   if(!rows.length){ res.innerHTML=`<div class="sb-count">Aucune ligne pour ${crit}.</div>`; return; }
   const MAX=500; const shown=rows.slice(0,MAX);
   const head=`<div class="sb-count">${fmt(rows.length)} ligne(s) — ${crit}${rows.length>MAX?` · ${MAX} premières affichées`:''}</div>`;
