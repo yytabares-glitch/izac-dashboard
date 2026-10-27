@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Envoi Chronopost par groupe — IZAC</title>
+<style>
+:root{--navy:#0D2750;--bg:#EDEFF3;--card:#fff;--line:#E5E9F2;--line2:#EEF1F6;--ink:#263145;--ink2:#5b647a;--ink3:#828a9c;--blue:#0C5AB8;--green:#1f9d57;--warn:#b8860b;--red:#D64545}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.wrap{max-width:1000px;margin:0 auto;padding:18px 18px 60px}
+.hdr{background:var(--navy);border-radius:10px;padding:16px 22px;display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.logo{width:38px;height:38px;background:#1E4D9B;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff}
+.hdr h1{font-size:19px;font-weight:800;color:#fff;line-height:1.1}.hdr .sub{font-size:12px;color:rgba(255,255,255,.7);font-weight:600}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:14px}
+.panel h2{font-size:15px;font-weight:800;color:var(--navy);margin-bottom:10px}
+.muted{color:var(--ink3);font-size:13px}
+.carnet{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ok{color:var(--green);font-weight:700}.ko{color:var(--red);font-weight:700}
+.btn{background:#fff;border:1px solid var(--line);border-radius:9px;padding:9px 14px;font-weight:700;cursor:pointer;color:var(--navy)}
+.btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.params{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.params label{font-size:12px;font-weight:700;color:var(--ink2);display:block;margin-bottom:5px}
+.params input{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:14px}
+.groups{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:700px){.groups{grid-template-columns:1fr}}
+.g{all:unset;box-sizing:border-box;cursor:pointer;background:var(--card);border:1px solid var(--line);border-top:5px solid var(--c);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:4px}
+.g:hover{border-color:var(--c)}.g.on{box-shadow:0 0 0 2px var(--c) inset}
+.g:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.g b{font-size:18px;font-weight:800;color:var(--navy)}.g span{font-size:13px;color:var(--ink2)}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;margin-top:12px}
+.it{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:13px;background:#fff}
+.it small{color:var(--ink3);display:block;font-size:11px}
+.it.miss{background:#FDF6E3;border-color:#F1DFAA}
+.it input{width:16px;height:16px;flex:none}
+.bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}
+.steps{margin:6px 0 0 18px;font-size:13.5px;color:var(--ink2)}.steps li{margin:3px 0}
+.warn{color:var(--warn);font-size:13px;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hdr"><div class="logo">IZ</div><div><h1>Envoi Chronopost par groupe</h1><div class="sub">Génère le fichier « Importer mes envois » de chronopost.fr</div></div></header>
+
+  <section class="panel">
+    <h2>1. Carnet d'adresses Chronopost</h2>
+    <div class="carnet">
+      <span id="carnetState" class="muted"></span>
+      <label class="btn" for="carnetFile">Charger l'export du carnet</label>
+      <input type="file" id="carnetFile" accept=".csv" hidden>
+    </div>
+    <p class="muted" style="margin-top:8px">Une seule fois (puis à chaque nouveau magasin) : chronopost.fr › Mon espace › Mes carnets d'adresses › Import/Export d'adresses › Exporter. Le carnet reste enregistré dans ce navigateur uniquement.</p>
+  </section>
+
+  <section class="panel">
+    <h2>2. Paramètres de l'envoi</h2>
+    <div class="params">
+      <div><label for="pDate">Date d'envoi</label><input type="date" id="pDate"></div>
+      <div><label for="pPoids">Poids par colis (kg)</label><input type="number" id="pPoids" min="0.1" step="0.1" value="2"></div>
+      <div><label for="pColis">Colis par magasin</label><input type="number" id="pColis" min="1" step="1" value="1"></div>
+      <div><label for="pProduit">Code produit Chronopost</label><input id="pProduit" value="C13" placeholder="ex. code du Chrono 13"></div>
+      <div><label for="pNom">Nom de l'envoi</label><input id="pNom" placeholder="ex. Consommables novembre"></div>
+    </div>
+    <p class="warn" id="prodWarn"></p>
+  </section>
+
+  <section class="panel">
+    <h2>3. Groupe de magasins</h2>
+    <div class="groups" id="groups"></div>
+    <div class="list" id="list"></div>
+    <div class="bar">
+      <button class="btn primary" id="btnGen" disabled>Générer le fichier d'import</button>
+      <span class="muted" id="genInfo"></span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>4. Dans Chronopost</h2>
+    <ol class="steps">
+      <li>Expédier › <b>Étape par étape</b> › « Vous avez plusieurs colis à expédier ? » : indique un nombre (par ex. 1) puis Valider.</li>
+      <li>Bloc <b>Importer mes envois</b> › Choisir un fichier › le fichier généré › <b>Intégrer mes envois</b>.</li>
+      <li>Vérifie la liste, puis <b>Valider mes envois</b> et imprime les étiquettes.</li>
+    </ol>
+  </section>
+</div>
+
+<script>
+/* =====================================================================
+   GROUPES : code client IZAC, nom, référence du magasin dans le carnet Chronopost.
+   Référence vide = magasin absent du carnet (à créer dans Chronopost puis à renseigner ici).
+   ===================================================================== */
+const GROUPES = {"RESEAU": [["IZ1009", "AUBER", "AUBER"], ["IZ1010", "BELLE EPINE", "BELLE EPINE"], ["IZ1011", "HERRIOT", "LYON HERRIOT"], ["IZ1028", "RUE RENNES", "RENNES PARIS"], ["IZ1045", "PARINOR", "PARINOR"], ["IZ1074", "BLAGNAC", "BLAGNAC"], ["IZ1104", "CRETEIL", "CRETEIL"], ["IZ1198", "VELIZY", "VELIZY II"], ["IZ1199", "BEZIERS", "BEZIERS"], ["IZ1215", "ST QUENTIN", "ST QUENTIN"], ["IZ1330", "LYON CONFLUENCE", "LYON CONFLUENCE"], ["IZ1331", "MONTPELLIER", "MONTPELLIER"], ["IZ1334", "ROUEN", "ROUEN"], ["IZ1335", "LILLE", "LILLE"], ["IZ1350", "PERPIGNAN AUCHAN", "AUCHAN"], ["IZ1352", "LEVALLOIS", "LEVALLOIS"], ["IZ1353", "CLAYE SOUILLY", "CLAYE SOUILLY"], ["IZ1355", "NANTES ATLANTIS", "NANTES ATLANTIS"], ["IZ1426", "BEGLES", "BEGLES"], ["IZ1427", "CLAIRA", "CLAIRA"], ["IZ1448", "DIJON TOISON", "DIJON"], ["IZ1449", "AEROVILLE", "AEROVILLE"], ["IZ1450", "RENNES ALMA", "RENNES ALMA"], ["IZ1451", "CLERMONT JAUDE", "CLERMONT"], ["IZ1485", "MERIGNAC", "MERIGNAC"], ["IZ1486", "LES TERRASSES DU PORT", "LES TERRASSES"], ["IZ1487", "STRASBOURG", "STRASBOURG"], ["IZ1488", "LA VALENTINE", "LA VALENTINE"], ["IZ1489", "VILLENEUVE LA GARENNE", "VILLENEUVE"], ["IZ1513", "PART DIEU", "LYON PART DIEU"], ["IZ1518", "ECOUFLANT", "ANGERS"], ["IZ1544", "EPAGNY", "EPAGNY"], ["IZ1552", "VALEUROPB", "VAL D'EUROPE"], ["IZ1567", "BORDEAUX", "BORDEAUX"], ["IZ1568", "CARRE SENART", "CARRE SENART"], ["IZ1575", "LA DEFENSE", "LA DEFENSE"], ["IZ1603", "FENOUILLET", "FENOUILLET"], ["IZ1604", "ROSNY2", "ROSNY II"], ["IZ1608", "ANGLETB", "ANGLET BAB 2"], ["IZ1609", "NIMES CAP COSTIERES", "NÎMES CAP"], ["IZ1615", "NANTES CREBILLON", "CREBILLON"], ["IZ1618", "EURALILLE", "EURALILLE"], ["IZ1654", "PRADO", "IZAC - PRADO"], ["IZ1655", "PARLY", "PARLY II"], ["IZ1666", "CAP3000", "CAP 3000"], ["IZ1667", "GRAND VAR", "IZAC TOULON GRA"], ["IZ1668", "NOYELLES", "NOYELLES"], ["IZ1696", "FORUM DES HALLES", "IZAC FORUM"], ["IZ1724", "LES SABLES D OLONNE", "IZAC LES SABLES"], ["IZ1737", "BORDEAUX LAC", "IZAC BORDOLAC"], ["IZ1738", "ECULLY", "ECULLY"], ["IZ1739", "TOULOUSE", "IZAC TOULOUSEAn"], ["IZ1748", "BEAUGRENELLE", "IZAC BEAUGRENEL"], ["IZ1749", "AIX EN PROVENCE", "AIXPROVENCE"], ["IZ1787", "LA ROCHELLE", "LA ROCHELLE"], ["IZ1791", "TOURS", "TOURSTOURS"], ["IZ1792", "GRENOBLE", "Grenoble"], ["IZ1793", "DIJON CV", ""], ["IZ1801", "RENNES CV", "IZACRENNES"], ["IZ1828", "CAEN", "IZAC CAEN"], ["IZ1830", "NEYRPIC", "KoltBruno"], ["IZ1831", "STRASBOURG CENTRE VILLE", "IZAC STRASBOURG"], ["IZ1835", "ORLEANS", "IZAC ORLEANS CV"], ["IZ1840", "AVANT CAP - CABRIES", "IZAC CABRIES"], ["IZ1842", "LE MANS", ""], ["IZ1843", "DEAUVILLE", ""], ["IZ1844", "LE POLYGONE", "IZAC CC POLYGON"], ["IZ1868", "NANCY CV", "IZAC - NANCY CV"], ["IZ1873", "SAINT-TROPEZ", "LidwineMiquel"]], "OUTLET": [["IZ1109", "ST DENIS", "ST DENIS"], ["IZ1377", "PT STE MARIE", "PONT STE MARIE"], ["IZ1498", "NEW GONESSE", "NEW GONESSE"], ["IZ1543", "A13", "A13"], ["IZ1545", "LORMONT", "LORMONT"], ["IZ1627", "MIRAMAS", "MIRAMAS"], ["IZ1648", "ROUBAIX", "ROUBAIX"], ["IZ1665", "MONTPARNASSE", "MONTPARNASSE"], ["IZ1729", "LILLENIUM", "IZAC LILLENIUM"], ["IZ1740", "ROMANS", "ROMANS"], ["IZ1782", "CORBEIL", "CORBEIL"], ["IZ1865", "GIVERNY", "McARTHUR PARIS "]], "AFFILIES": [["IZ1469", "MONTARGIS", "MONTARGIS"], ["IZ1470", "AVIGNON", "AVIGNON"], ["IZ1526", "NIORT", "NIORT"], ["IZ1563", "SAINT OMER", "ST OMER"], ["IZ1597", "AUXERRE", "AUXERRE"], ["IZ1598", "BASTIA", "BASTIA"], ["IZ1621", "AIX LES BAINS", "AIX LES BAINS"], ["IZ1636", "METZ", "METZ"], ["IZ1637", "AJACCIO", "AJACCIO"], ["IZ1651", "PAU", "PAU 3"], ["IZ1669", "VOIRON", "IZAC VOIRON"], ["IZ1670", "BREST", "BREST"], ["IZ1671", "ANDREZIEUX", "ANDREZIEUX"], ["IZ1672", "SAINT ETIENNE B", "ST-ETIENNE"], ["IZ1683", "ARRAS", "ARRAS"], ["IZ1694", "MULHOUSE", "MULHOUSE"], ["IZ1704", "BLOIS", "IZAC BLOIS"], ["IZ1716", "EPINAL", "EPINAL"], ["IZ1732", "HAGUENAU", "HAGUENAU"], ["IZ1742", "THIONVILLE", ""], ["IZ1755", "BESANCON", "IZAC BESANCON"], ["IZ1756", "BOULOGNE", "IZAC BOULOGNE"], ["IZ1779", "ARCUEIL", ""], ["IZ1785", "GAP", "IZAC GAP"], ["IZ1862", "CHAMBERY", "MauletDaniel"]]};
+const COULEURS = { RESEAU:"#1D4ED8", OUTLET:"#DB2777", AFFILIES:"#059669" };
+const LIBELLES = { RESEAU:"Réseau", OUTLET:"Outlet", AFFILIES:"Affiliés" };
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+let CARNET = {}, groupe = "", coches = new Set();
+
+/* ---- carnet (gardé dans ce navigateur) ---- */
+function parseCSV(txt){
+  const lines = txt.replace(/\r/g,"").split("\n").filter(l=>l.trim());
+  const h = lines[0].split(";").map(x=>x.trim());
+  return lines.slice(1).map(l=>{ const c=l.split(";"); const o={}; h.forEach((k,i)=>o[k]=(c[i]??"").trim()); return o; });
+}
+function loadCarnet(){
+  try{ CARNET = JSON.parse(localStorage.getItem("izac-carnet-chrono")||"{}"); }catch(e){ CARNET={}; }
+  const n = Object.keys(CARNET).length, d = localStorage.getItem("izac-carnet-chrono-date");
+  $("#carnetState").innerHTML = n ? `<span class="ok">Carnet chargé : ${n} adresses</span>${d?` (le ${esc(d)})`:""}` : `<span class="ko">Aucun carnet chargé</span>`;
+}
+$("#carnetFile").addEventListener("change", e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ const rows=parseCSV(r.result); const m={};
+    rows.forEach(x=>{ const ref=x["Référence"]; if(ref && !m[ref]) m[ref]=x; });
+    if(!Object.keys(m).length){ alert("Fichier non reconnu : charge l'export du carnet d'adresses Chronopost."); return; }
+    try{ localStorage.setItem("izac-carnet-chrono", JSON.stringify(m)); localStorage.setItem("izac-carnet-chrono-date", new Date().toLocaleDateString("fr-FR")); }catch(x){}
+    CARNET=m; loadCarnet(); renderList(); };
+  r.readAsText(f, "ISO-8859-1");
+});
+
+/* ---- paramètres (mémorisés) ---- */
+const today = () => { const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+$("#pDate").value = today();
+["pPoids","pColis","pProduit"].forEach(id=>{ try{ const v=localStorage.getItem("izac-env-"+id); if(v) $("#"+id).value=v; }catch(e){}
+  $("#"+id).addEventListener("change",()=>{ try{ localStorage.setItem("izac-env-"+id,$("#"+id).value); }catch(e){} checkReady(); }); });
+["pDate","pNom"].forEach(id=>$("#"+id).addEventListener("input",checkReady));
+
+/* ---- groupes ---- */
+function renderGroups(){
+  $("#groups").innerHTML = Object.keys(GROUPES).map(g=>{ const n=GROUPES[g].length, miss=GROUPES[g].filter(x=>!x[2]).length;
+    return `<button class="g${g===groupe?" on":""}" style="--c:${COULEURS[g]}" data-g="${g}"><b>${LIBELLES[g]}</b><span>${n} magasins${miss?` · ${miss} absent${miss>1?"s":""} du carnet`:""}</span></button>`; }).join("");
+}
+function renderList(){
+  if(!groupe){ $("#list").innerHTML=""; checkReady(); return; }
+  $("#list").innerHTML = GROUPES[groupe].map(([code,nom,ref])=>{
+    const ok = ref && (!Object.keys(CARNET).length || CARNET[ref]);
+    return `<label class="it${ok?"":" miss"}"><input type="checkbox" data-code="${code}" ${ok&&coches.has(code)?"checked":""} ${ok?"":"disabled"}>
+      <span>${esc(nom)}<small>${code} · ${ref?("réf. "+esc(ref)):"absent du carnet Chronopost"}${ref&&Object.keys(CARNET).length&&!CARNET[ref]?" · introuvable dans le carnet chargé":""}</small></span></label>`; }).join("");
+  checkReady();
+}
+$("#groups").addEventListener("click",e=>{ const b=e.target.closest("[data-g]"); if(!b) return; groupe=b.dataset.g;
+  coches=new Set(GROUPES[groupe].filter(x=>x[2]).map(x=>x[0])); renderGroups(); renderList(); });
+$("#list").addEventListener("change",e=>{ const c=e.target.dataset.code; if(!c) return; e.target.checked?coches.add(c):coches.delete(c); checkReady(); });
+
+function checkReady(){
+  const prod=$("#pProduit").value.trim();
+  $("#prodWarn").textContent = prod ? "" : "Indique le code produit de ton Chrono 13 (voir « Accéder au Guide » sur la page d'import Chronopost). Il est mémorisé ensuite.";
+  const nb = groupe ? GROUPES[groupe].filter(x=>coches.has(x[0])).length : 0;
+  const ready = !!(groupe && nb && prod && $("#pDate").value && Object.keys(CARNET).length);
+  $("#btnGen").disabled = !ready;
+  $("#genInfo").textContent = !Object.keys(CARNET).length ? "Charge d'abord le carnet d'adresses." : groupe ? `${nb} magasin${nb>1?"s":""} × ${$("#pColis").value||1} colis` : "Choisis un groupe.";
+}
+
+/* ---- génération du fichier (format « import_multicolis » Chronopost, ISO-8859-1, séparateur ;) ---- */
+const ENTETE = ["Référence","Nom","Prénom","Adresse","Suite adresse","Code porte","Code pays","Code Postal","Ville","Téléphone","E-mail","Type","Raison sociale","Date Envoi","Poids","Produit","Point relais","Livraison le Samedi","Document / Marchandise","Longueur","Largeur","Hauteur","Nom Envoi","Description contenu"," Valeur Douane"," Valeur Assurance","Incoterm"];
+function toLatin1(str){ const out=new Uint8Array(str.length); for(let i=0;i<str.length;i++){ const c=str.charCodeAt(i); out[i]= c<256 ? c : 63; } return out; }
+$("#btnGen").addEventListener("click",()=>{
+  const d=$("#pDate").value.split("-"), date=`${d[2]}/${d[1]}/${d[0]}`;
+  const poids=String($("#pPoids").value||"1").replace(".",","), nbc=Math.max(1,parseInt($("#pColis").value||"1",10));
+  const prod=$("#pProduit").value.trim(), nomEnv=($("#pNom").value.trim()||(LIBELLES[groupe]+" "+date)).slice(0,30);
+  const clean = v => String(v??"").replace(/[;\r\n]/g," ").replace(/^null$/i,"").trim();
+  const lignes=[ENTETE.join(";")]; let n=0;
+  GROUPES[groupe].filter(x=>coches.has(x[0])).forEach(([code,nom,ref])=>{
+    const c=CARNET[ref]; if(!c) return;
+    for(let i=0;i<nbc;i++){
+      lignes.push([ref, c["Nom"], c["Prénom"], c["Adresse"], c["Suite adresse"], c["Code porte"], c["Code pays"]||"FR", c["Code Postal"], c["Ville"],
+        c["Téléphone"], c["E-mail"], "pro", c["Raison sociale"]||c["Nom"], date, poids, prod, "", "", "", "", "", "", nomEnv, "", "", "", ""].map(clean).join(";"));
+      n++;
+    }
+  });
+  const blob=new Blob([toLatin1(lignes.join("\n")+"\n")],{type:"text/csv"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download=`chronopost_${groupe.toLowerCase()}_${$("#pDate").value}.csv`; a.click();
+  $("#genInfo").textContent=`Fichier généré : ${n} colis.`;
+});
+
+loadCarnet(); renderGroups(); checkReady();
+</script>
+</body>
+</html>
