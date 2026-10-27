@@ -116,6 +116,10 @@
   .mscroll{max-height:320px;overflow:auto}
   #tblMonths th{cursor:default;position:sticky;top:0;background:#fff}
   #tblMonths td:first-child{white-space:nowrap}
+  .mtools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .mtoggle{display:flex;gap:4px}
+  .mtoggle .chip{letter-spacing:0;text-transform:none}
+  .tshare{font-size:10.5px;color:var(--ink3);font-weight:400;margin-left:3px}
   #tblMonths tfoot td{font-weight:800;border-top:2px solid var(--navy);border-bottom:none;background:var(--line2)}
   .evo-up{color:var(--green);font-weight:700} .evo-down{color:var(--red);font-weight:700}
   .partiel{font-size:10px;padding:1px 6px;border-radius:99px;background:var(--warnbg);color:var(--warn);font-weight:700;margin-left:6px;text-transform:none;letter-spacing:0}
@@ -261,23 +265,21 @@
 
     <div class="panel full" style="margin-top:16px">
       <h3><span>Colis par mois <span class="n" id="months-n"></span></span>
-        <button class="btn-mini" id="exportMonths">Exporter ce tableau</button></h3>
+        <span class="mtools">
+          <span class="mtoggle" id="monthMode">
+            <button class="chip chip-sm active" data-m="type">B2C / B2B</button>
+            <button class="chip chip-sm" data-m="trps">Transporteur</button>
+            <button class="chip chip-sm" data-m="cli" title="Colonne TYPE_CLI de l'export">TYPE_CLI</button>
+            <button class="chip chip-sm" data-m="cde" title="Colonne TYPE_CDE de l'export">TYPE_CDE</button>
+            <button class="chip chip-sm" data-m="cmd" title="Colonne TYPE_CMD de l'export">TYPE_CMD</button>
+          </span>
+          <button class="btn-mini" id="exportMonths">Exporter ce tableau</button>
+        </span></h3>
       <div class="mgrid">
         <div class="chartbox tall"><canvas id="chMonths"></canvas></div>
         <div class="mscroll">
           <table id="tblMonths">
-            <thead>
-              <tr>
-                <th>Mois</th>
-                <th class="num">Expés</th>
-                <th class="num">Colis</th>
-                <th class="num">dont B2C</th>
-                <th class="num">dont B2B</th>
-                <th class="num">Colis / expé</th>
-                <th class="num">Pièces prép.</th>
-                <th class="num">Évol. colis</th>
-              </tr>
-            </thead>
+            <thead id="theadMonths"></thead>
             <tbody id="tbodyMonths"></tbody>
             <tfoot id="tfootMonths"></tfoot>
           </table>
@@ -386,6 +388,15 @@ let charts = {};
 let ALL_ROWS = [], ROWS = [], CLISTATS = [], MONTHS = [];
 let sortKey = 'exp', sortDir = -1, activeType = 'ALL';
 let pFrom = '', pTo = '';   // période sélectionnée (AAAA-MM-JJ), vide = pas de borne
+let monthMode = 'type';     // ventilation du panneau « Colis par mois » : 'type', 'trps' ou 'cde'
+// axes de ventilation mensuelle (en plus de B2C/B2B)
+const DIMS = {
+  trps: { label:'Transporteur', sheet:'Par transporteur', get:r=>r.trps },
+  cli:  { label:'TYPE_CLI',     sheet:'Par TYPE_CLI',     get:r=>r.typeCli },
+  cde:  { label:'TYPE_CDE',     sheet:'Par TYPE_CDE',     get:r=>r.typeCde },
+  cmd:  { label:'TYPE_CMD',     sheet:'Par TYPE_CMD',     get:r=>r.type }
+};
+let MONTH_KEYS = { trps:[], cli:[], cde:[], cmd:[] };  // valeurs présentes sur la période, de la plus grosse à la plus petite (en colis)
 
 const B2B_TYPES = ['RETAIL','OUTLET','NEGOCE'];
 const B2C_TYPES = ['WEB'];
@@ -431,7 +442,7 @@ async function loadFromDB(){
     const { count } = await sb.from(TABLE).select('id_ls',{count:'exact',head:true});
     while(true){
       const { data, error } = await sb.from(TABLE)
-        .select('id_ls,id_cli,type_cmd,type_cli,trps,nb_colis,qte_a_prep,qte_prep,nb_jour_prep,dt_exp')
+        .select('id_ls,id_cli,type_cmd,type_cde,type_cli,trps,nb_colis,qte_a_prep,qte_prep,nb_jour_prep,dt_exp')
         .order('id_ls',{ascending:true}).range(from, from+PAGE-1);
       if(error) throw error;
       if(!data || !data.length) break;
@@ -443,7 +454,7 @@ async function loadFromDB(){
     if(!all.length){ showEmpty(); return; }
     ALL_ROWS = all.map(r=>{
       const dexp = r.dt_exp ? new Date(r.dt_exp+'T00:00:00') : null;
-      return { id_ls:r.id_ls, cli:r.id_cli, type:r.type_cmd||'—', typeCli:r.type_cli||'', trps:r.trps||'—',
+      return { id_ls:r.id_ls, cli:r.id_cli, type:r.type_cmd||'—', typeCde:r.type_cde||'—', typeCli:r.type_cli||'', trps:r.trps||'—',
         colis:r.nb_colis||0, qa:r.qte_a_prep||0, qp:r.qte_prep||0, delai:r.nb_jour_prep||0,
         dexp, dexpISO:r.dt_exp||'', wd: dexp?weekdayIdx(dexp):null };
     });
@@ -472,8 +483,13 @@ function aggregateMonths(rows){
   rows.forEach(r=>{
     if(!r.dexpISO) return;
     const k=r.dexpISO.slice(0,7);
-    const m=map[k]||(map[k]={k,exp:0,colis:0,b2c:0,b2b:0,qp:0,first:r.dexpISO,last:r.dexpISO});
+    const m=map[k]||(map[k]={k,exp:0,colis:0,b2c:0,b2b:0,qp:0,first:r.dexpISO,last:r.dexpISO,dims:Object.fromEntries(Object.keys(DIMS).map(d=>[d,{}]))});
     m.exp++; m.colis+=r.colis; m.qp+=r.qp;
+    Object.entries(DIMS).forEach(([dim,D])=>{
+      const key=D.get(r)||'—';
+      const t=m.dims[dim][key]||(m.dims[dim][key]={exp:0,colis:0});
+      t.exp++; t.colis+=r.colis;
+    });
     if(B2C_TYPES.includes(r.type)) m.b2c+=r.colis;
     else if(B2B_TYPES.includes(r.type)) m.b2b+=r.colis;
     if(r.dexpISO<m.first) m.first=r.dexpISO;
@@ -489,6 +505,11 @@ function aggregateMonths(rows){
     const prev=list[i-1];
     // pas d'évolution si l'un des deux mois est partiel (comparaison faussée)
     m.evo = (prev && prev.colis && !m.partiel && !prev.partiel) ? (m.colis-prev.colis)/prev.colis*100 : null;
+  });
+  // valeurs de chaque axe triées par volume de colis sur la période
+  Object.keys(DIMS).forEach(dim=>{
+    const tot={}; list.forEach(m=>Object.entries(m.dims[dim]).forEach(([t,v])=>tot[t]=(tot[t]||0)+v.colis));
+    MONTH_KEYS[dim] = Object.keys(tot).sort((a,b)=>tot[b]-tot[a]);
   });
   return list;
 }
@@ -616,33 +637,57 @@ function render(){
 }
 
 // ===== tableau + graphique colis par mois =====
+function monthTotals(list){
+  return list.reduce((s,m)=>({exp:s.exp+m.exp,colis:s.colis+m.colis,b2c:s.b2c+m.b2c,b2b:s.b2b+m.b2b,qp:s.qp+m.qp}),{exp:0,colis:0,b2c:0,b2b:0,qp:0});
+}
+function evoCell(m){
+  return m.evo==null ? '<span class="muted">—</span>'
+    : `<span class="${m.evo>=0?'evo-up':'evo-down'}">${m.evo>=0?'+':''}${m.evo.toFixed(0)}%</span>`;
+}
+const dimVal=(m,dim,key,f)=>((m.dims[dim][key]||{})[f])||0;
 function renderMonths(list){
-  const tb=document.getElementById('tbodyMonths'), tf=document.getElementById('tfootMonths');
+  const th=document.getElementById('theadMonths'), tb=document.getElementById('tbodyMonths'), tf=document.getElementById('tfootMonths');
   document.getElementById('months-n').textContent = list.length ? list.length+' mois' : '';
+  const dim = DIMS[monthMode] ? monthMode : null;   // null = vue « Par type » (B2C/B2B)
+  const keys = dim ? MONTH_KEYS[dim] : [];
+  th.innerHTML = dim
+    ? `<tr><th>Mois</th><th class="num">Expés</th><th class="num">Colis</th>${keys.map(t=>`<th class="num">${t}</th>`).join('')}<th class="num">Évol. colis</th></tr>`
+    : `<tr><th>Mois</th><th class="num">Expés</th><th class="num">Colis</th><th class="num">dont B2C</th><th class="num">dont B2B</th>
+       <th class="num">Colis / expé</th><th class="num">Pièces prép.</th><th class="num">Évol. colis</th></tr>`;
+  const nCols = dim ? 4+keys.length : 8;
   if(!list.length){
-    tb.innerHTML=`<tr><td colspan="8" class="muted" style="padding:24px;text-align:center">Aucune expédition sur cette période.</td></tr>`;
+    tb.innerHTML=`<tr><td colspan="${nCols}" class="muted" style="padding:24px;text-align:center">Aucune expédition sur cette période.</td></tr>`;
     tf.innerHTML=''; drawMonths([]); return;
   }
   // affichage du plus récent au plus ancien
   tb.innerHTML=list.slice().reverse().map(m=>{
-    const evo = m.evo==null ? '<span class="muted">—</span>'
-      : `<span class="${m.evo>=0?'evo-up':'evo-down'}">${m.evo>=0?'+':''}${m.evo.toFixed(0)}%</span>`;
     const part = m.partiel ? `<span class="partiel" title="Mois coupé par la période : du ${isoToFR(m.first)} au ${isoToFR(m.last)}">partiel</span>` : '';
-    return `<tr><td>${fmtMonthLong(m.k)}${part}</td>
-      <td class="num">${fmt(m.exp)}</td>
-      <td class="num"><b>${fmt(m.colis)}</b></td>
-      <td class="num">${fmt(m.b2c)}</td>
-      <td class="num">${fmt(m.b2b)}</td>
-      <td class="num">${m.exp?(m.colis/m.exp).toFixed(1):'0'}</td>
-      <td class="num">${fmt(m.qp)}</td>
-      <td class="num">${evo}</td></tr>`;
+    const head = `<td>${fmtMonthLong(m.k)}${part}</td><td class="num">${fmt(m.exp)}</td><td class="num"><b>${fmt(m.colis)}</b></td>`;
+    if(dim){
+      return `<tr>${head}${keys.map(t=>{
+        const v=dimVal(m,dim,t,'colis');
+        return `<td class="num" title="${fmt(dimVal(m,dim,t,'exp'))} expés">${fmt(v)}${v&&m.colis?`<span class="tshare">${Math.round(v/m.colis*100)}%</span>`:''}</td>`;
+      }).join('')}<td class="num">${evoCell(m)}</td></tr>`;
+    }
+    return `<tr>${head}
+      <td class="num">${fmt(m.b2c)}</td><td class="num">${fmt(m.b2b)}</td>
+      <td class="num">${m.exp?(m.colis/m.exp).toFixed(1):'0'}</td><td class="num">${fmt(m.qp)}</td>
+      <td class="num">${evoCell(m)}</td></tr>`;
   }).join('');
-  const T=list.reduce((s,m)=>({exp:s.exp+m.exp,colis:s.colis+m.colis,b2c:s.b2c+m.b2c,b2b:s.b2b+m.b2b,qp:s.qp+m.qp}),{exp:0,colis:0,b2c:0,b2b:0,qp:0});
+  const T=monthTotals(list);
   const moy = list.length ? Math.round(T.colis/list.length) : 0;
-  tf.innerHTML=`<tr><td>Total</td><td class="num">${fmt(T.exp)}</td><td class="num">${fmt(T.colis)}</td>
-    <td class="num">${fmt(T.b2c)}</td><td class="num">${fmt(T.b2b)}</td>
-    <td class="num">${T.exp?(T.colis/T.exp).toFixed(1):'0'}</td><td class="num">${fmt(T.qp)}</td>
-    <td class="num" title="Moyenne de colis par mois">moy. ${fmt(moy)}</td></tr>`;
+  const footHead=`<td>Total</td><td class="num">${fmt(T.exp)}</td><td class="num">${fmt(T.colis)}</td>`;
+  if(dim){
+    tf.innerHTML=`<tr>${footHead}${keys.map(t=>{
+      const v=list.reduce((s,m)=>s+dimVal(m,dim,t,'colis'),0);
+      return `<td class="num">${fmt(v)}<span class="tshare">${T.colis?Math.round(v/T.colis*100):0}%</span></td>`;
+    }).join('')}<td class="num" title="Moyenne de colis par mois">moy. ${fmt(moy)}</td></tr>`;
+  } else {
+    tf.innerHTML=`<tr>${footHead}
+      <td class="num">${fmt(T.b2c)}</td><td class="num">${fmt(T.b2b)}</td>
+      <td class="num">${T.exp?(T.colis/T.exp).toFixed(1):'0'}</td><td class="num">${fmt(T.qp)}</td>
+      <td class="num" title="Moyenne de colis par mois">moy. ${fmt(moy)}</td></tr>`;
+  }
   drawMonths(list);
 }
 function drawMonths(list){ destroy('m');
@@ -650,36 +695,79 @@ function drawMonths(list){ destroy('m');
   opts.plugins.legend={display:true,position:'top',labels:{boxWidth:12,font:{size:11}}};
   opts.plugins.tooltip={callbacks:{label:c=>` ${c.dataset.label} : ${fmt(c.parsed.y)}`}};
   opts.scales.x.stacked=true; opts.scales.y.stacked=true;
-  const other=list.map(m=>m.colis-m.b2c-m.b2b);
-  const datasets=[
-    {label:'B2B',data:list.map(m=>m.b2b),backgroundColor:COLORS[0],borderRadius:3,maxBarThickness:46},
-    {label:'B2C',data:list.map(m=>m.b2c),backgroundColor:COLORS[1],borderRadius:3,maxBarThickness:46}];
-  if(other.some(v=>v>0)) datasets.push({label:'Autres',data:other,backgroundColor:COLORS[7],borderRadius:3,maxBarThickness:46});
+  let datasets;
+  if(DIMS[monthMode]){
+    datasets=MONTH_KEYS[monthMode].map((t,i)=>({label:t,data:list.map(m=>dimVal(m,monthMode,t,'colis')),
+      backgroundColor:COLORS[i%COLORS.length],borderRadius:3,maxBarThickness:46}));
+  } else {
+    const other=list.map(m=>m.colis-m.b2c-m.b2b);
+    datasets=[
+      {label:'B2B',data:list.map(m=>m.b2b),backgroundColor:COLORS[0],borderRadius:3,maxBarThickness:46},
+      {label:'B2C',data:list.map(m=>m.b2c),backgroundColor:COLORS[1],borderRadius:3,maxBarThickness:46}];
+    if(other.some(v=>v>0)) datasets.push({label:'Autres',data:other,backgroundColor:COLORS[7],borderRadius:3,maxBarThickness:46});
+  }
   charts.m=new Chart(document.getElementById('chMonths'),{type:'bar',
     data:{labels:list.map(m=>fmtMonth(m.k)+(m.partiel?'*':'')),datasets},options:opts});
 }
+document.querySelectorAll('#monthMode .chip').forEach(ch=>ch.addEventListener('click',()=>{
+  monthMode=ch.dataset.m;
+  document.querySelectorAll('#monthMode .chip').forEach(c=>c.classList.toggle('active',c===ch));
+  renderMonths(MONTHS);
+}));
 function exportMonths(){
   if(typeof XLSX==='undefined'){ alert('Le module Excel ne s\'est pas chargé. Recharge la page.'); return; }
   if(!MONTHS.length){ alert('Aucune donnée sur cette période.'); return; }
-  const rows=MONTHS.map(m=>({
-    'Mois': fmtMonthLong(m.k),
-    'Mois partiel': m.partiel ? ('du '+isoToFR(m.first)+' au '+isoToFR(m.last)) : '',
-    'Expéditions': m.exp,
-    'Colis': m.colis,
-    'Colis B2C': m.b2c,
-    'Colis B2B': m.b2b,
+  const titre='Colis par mois — '+(periodLabel()||'toute la période')+(activeType!=='ALL'?' · filtre '+activeType:'');
+  const T=monthTotals(MONTHS);
+  const partielTxt=m=>m.partiel?('du '+isoToFR(m.first)+' au '+isoToFR(m.last)):'';
+  const sheets={};
+  // par type B2C / B2B
+  const rType=MONTHS.map(m=>({
+    'Mois': fmtMonthLong(m.k), 'Mois partiel': partielTxt(m),
+    'Expéditions': m.exp, 'Colis': m.colis, 'Colis B2C': m.b2c, 'Colis B2B': m.b2b,
     'Colis / expé': m.exp ? Math.round(m.colis/m.exp*10)/10 : 0,
     'Pièces préparées': m.qp,
     'Évol. colis vs mois préc. (%)': m.evo==null ? '' : Math.round(m.evo*10)/10
   }));
-  const T=MONTHS.reduce((s,m)=>({exp:s.exp+m.exp,colis:s.colis+m.colis,b2c:s.b2c+m.b2c,b2b:s.b2b+m.b2b,qp:s.qp+m.qp}),{exp:0,colis:0,b2c:0,b2b:0,qp:0});
-  rows.push({'Mois':'TOTAL','Mois partiel':'','Expéditions':T.exp,'Colis':T.colis,'Colis B2C':T.b2c,'Colis B2B':T.b2b,
+  rType.push({'Mois':'TOTAL','Mois partiel':'','Expéditions':T.exp,'Colis':T.colis,'Colis B2C':T.b2c,'Colis B2B':T.b2b,
     'Colis / expé':T.exp?Math.round(T.colis/T.exp*10)/10:0,'Pièces préparées':T.qp,'Évol. colis vs mois préc. (%)':''});
-  const ws=XLSX.utils.json_to_sheet(rows,{origin:'A3'});
-  XLSX.utils.sheet_add_aoa(ws,[['Colis par mois — '+(periodLabel()||'toute la période')+(activeType!=='ALL'?' · filtre '+activeType:'')]],{origin:'A1'});
-  const heads=Object.keys(rows[0]);
-  ws['!cols']=heads.map(h=>({wch:Math.max(h.length,...rows.map(r=>String(r[h]).length))+2}));
-  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Colis par mois');
+  sheets.type=['Par B2C-B2B',rType];
+  // par transporteur / par type de prépa
+  Object.entries(DIMS).forEach(([dim,D])=>{
+    const keys=MONTH_KEYS[dim];
+    const rows=MONTHS.map(m=>{
+      const o={'Mois':fmtMonthLong(m.k),'Mois partiel':partielTxt(m),'Expéditions':m.exp,'Colis':m.colis};
+      keys.forEach(t=>o['Colis '+t]=dimVal(m,dim,t,'colis'));
+      keys.forEach(t=>o['Expés '+t]=dimVal(m,dim,t,'exp'));
+      return o;
+    });
+    const tt={'Mois':'TOTAL','Mois partiel':'','Expéditions':T.exp,'Colis':T.colis};
+    keys.forEach(t=>tt['Colis '+t]=MONTHS.reduce((s,m)=>s+dimVal(m,dim,t,'colis'),0));
+    keys.forEach(t=>tt['Expés '+t]=MONTHS.reduce((s,m)=>s+dimVal(m,dim,t,'exp'),0));
+    rows.push(tt);
+    sheets[dim]=[D.sheet,rows];
+  });
+  // format liste (pratique pour un tableau croisé dynamique)
+  const rList=[];
+  MONTHS.forEach(m=>Object.entries(DIMS).forEach(([dim,D])=>MONTH_KEYS[dim].forEach(t=>{
+    const v=m.dims[dim][t]; if(!v) return;
+    rList.push({'Mois':m.k,'Libellé mois':fmtMonthLong(m.k),'Axe':D.label,'Valeur':t,'Expéditions':v.exp,'Colis':v.colis,
+      'Part des colis du mois (%)':m.colis?Math.round(v.colis/m.colis*1000)/10:0});
+  })));
+  const wb=XLSX.utils.book_new();
+  const addSheet=(name,rows)=>{
+    const ws=XLSX.utils.json_to_sheet(rows,{origin:'A3'});
+    XLSX.utils.sheet_add_aoa(ws,[[titre]],{origin:'A1'});
+    if(rows.length){
+      const heads=Object.keys(rows[0]);
+      ws['!cols']=heads.map(h=>({wch:Math.max(h.length,...rows.map(r=>String(r[h]).length))+2}));
+    }
+    XLSX.utils.book_append_sheet(wb,ws,name);
+  };
+  // l'onglet de la vue affichée en premier
+  const order=[monthMode].concat(Object.keys(sheets).filter(k=>k!==monthMode));
+  order.forEach(k=>{ if(sheets[k]) addSheet(sheets[k][0],sheets[k][1]); });
+  addSheet('Liste détaillée',rList);
   const suffix=(pFrom||'debut')+'_'+(pTo||'fin');
   XLSX.writeFile(wb,'IZAC_colis_par_mois_'+suffix+'.xlsx');
 }
