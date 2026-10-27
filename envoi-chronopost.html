@@ -24,8 +24,10 @@ button,input,select{font:inherit;color:inherit}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .params{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
 .params label{font-size:12px;font-weight:700;color:var(--ink2);display:block;margin-bottom:5px}
+.params select{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:14px;background:#fff}
 .params input{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:14px}
-.groups{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.groups{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:900px){.groups{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:700px){.groups{grid-template-columns:1fr}}
 .g{all:unset;box-sizing:border-box;cursor:pointer;background:var(--card);border:1px solid var(--line);border-top:5px solid var(--c);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:4px}
 .g:hover{border-color:var(--c)}.g.on{box-shadow:0 0 0 2px var(--c) inset}
@@ -38,6 +40,9 @@ button,input,select{font:inherit;color:inherit}
 .it input{width:16px;height:16px;flex:none}
 .bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}
 .steps{margin:6px 0 0 18px;font-size:13.5px;color:var(--ink2)}.steps li{margin:3px 0}
+.add summary{cursor:pointer;font-weight:700;color:var(--navy);font-size:14px}
+.it.miss{cursor:pointer}
+.del{border:0;background:none;color:var(--red);cursor:pointer;font-size:12px;margin-left:auto}
 .warn{color:var(--warn);font-size:13px;margin-top:8px}
 </style>
 </head>
@@ -56,12 +61,31 @@ button,input,select{font:inherit;color:inherit}
   </section>
 
   <section class="panel">
+    <details class="add"><summary>+ Ajouter une adresse (sans passer par Chronopost)</summary>
+      <div class="params" style="margin-top:10px">
+        <div><label for="nRef">Référence *</label><input id="nRef" placeholder="LE MANS"></div>
+        <div><label for="nRs">Raison sociale *</label><input id="nRs" placeholder="IZAC - LE MANS"></div>
+        <div><label for="nAdr">Adresse *</label><input id="nAdr"></div>
+        <div><label for="nSuite">Suite d'adresse</label><input id="nSuite" placeholder="C CIAL …"></div>
+        <div><label for="nCp">Code postal *</label><input id="nCp"></div>
+        <div><label for="nVille">Ville *</label><input id="nVille"></div>
+        <div><label for="nTel">Téléphone *</label><input id="nTel"></div>
+        <div><label for="nMail">E-mail *</label><input id="nMail"></div>
+        <div style="align-self:end"><button class="btn" id="nBtn">Enregistrer l'adresse</button></div>
+      </div>
+      <p class="muted" style="margin-top:6px">L'adresse est gardée dans ce navigateur et reste disponible si tu recharges le carnet. Pour l'avoir aussi dans Chronopost : Mon espace › Mes carnets d'adresses › Créer une adresse.</p>
+    </details>
+  </section>
+
+  <section class="panel">
     <h2>2. Paramètres de l'envoi</h2>
     <div class="params">
       <div><label for="pDate">Date d'envoi</label><input type="date" id="pDate"></div>
       <div><label for="pPoids">Poids par colis (kg)</label><input type="number" id="pPoids" min="0.1" step="0.1" value="2"></div>
       <div><label for="pColis">Colis par magasin</label><input type="number" id="pColis" min="1" step="1" value="1"></div>
-      <div><label for="pProduit">Code produit Chronopost</label><input id="pProduit" value="C13" placeholder="ex. code du Chrono 13"></div>
+      <div><label for="pProduit">Produit Chronopost</label><select id="pProduit">
+        <option value="1">Chrono 13</option><option value="1S">Chrono 13 (instance agence)</option>
+        <option value="2">Chrono 10</option><option value="86">Chrono Relais 13</option></select></div>
       <div><label for="pNom">Nom de l'envoi</label><input id="pNom" placeholder="ex. Consommables novembre"></div>
     </div>
     <p class="warn" id="prodWarn"></p>
@@ -71,6 +95,15 @@ button,input,select{font:inherit;color:inherit}
     <h2>3. Groupe de magasins</h2>
     <div class="groups" id="groups"></div>
     <div class="list" id="list"></div>
+    <details class="add" id="addMag"><summary>+ Ajouter un magasin à ce groupe</summary>
+      <div class="params" style="margin-top:10px">
+        <div><label for="aCode">Code client</label><input id="aCode" placeholder="IZ1234"></div>
+        <div><label for="aNom">Nom du magasin</label><input id="aNom" placeholder="LE MANS"></div>
+        <div><label for="aRef">Référence dans le carnet</label><input id="aRef" list="refs" placeholder="choisis ou tape"></div>
+        <div style="align-self:end"><button class="btn" id="aBtn">Ajouter</button></div>
+      </div><datalist id="refs"></datalist>
+      <p class="muted" style="margin-top:6px">Pour un magasin absent (en jaune), clique sur sa ligne pour lui donner une référence.</p>
+    </details>
     <div class="bar">
       <button class="btn primary" id="btnGen" disabled>Générer le fichier d'import</button>
       <span class="muted" id="genInfo"></span>
@@ -89,16 +122,37 @@ button,input,select{font:inherit;color:inherit}
 
 <script>
 /* =====================================================================
-   GROUPES : code client IZAC, nom, référence du magasin dans le carnet Chronopost.
+   GROUPES : code client IZAC, nom, référence du magasin dans le carnet Chronopost, département.
+   Le groupe RÉSEAU est affiché en deux : Île-de-France (75, 77, 78, 91, 92, 93, 94, 95) et Province.
    Référence vide = magasin absent du carnet (à créer dans Chronopost puis à renseigner ici).
    ===================================================================== */
-const GROUPES = {"RESEAU": [["IZ1009", "AUBER", "AUBER"], ["IZ1010", "BELLE EPINE", "BELLE EPINE"], ["IZ1011", "HERRIOT", "LYON HERRIOT"], ["IZ1028", "RUE RENNES", "RENNES PARIS"], ["IZ1045", "PARINOR", "PARINOR"], ["IZ1074", "BLAGNAC", "BLAGNAC"], ["IZ1104", "CRETEIL", "CRETEIL"], ["IZ1198", "VELIZY", "VELIZY II"], ["IZ1199", "BEZIERS", "BEZIERS"], ["IZ1215", "ST QUENTIN", "ST QUENTIN"], ["IZ1330", "LYON CONFLUENCE", "LYON CONFLUENCE"], ["IZ1331", "MONTPELLIER", "MONTPELLIER"], ["IZ1334", "ROUEN", "ROUEN"], ["IZ1335", "LILLE", "LILLE"], ["IZ1350", "PERPIGNAN AUCHAN", "AUCHAN"], ["IZ1352", "LEVALLOIS", "LEVALLOIS"], ["IZ1353", "CLAYE SOUILLY", "CLAYE SOUILLY"], ["IZ1355", "NANTES ATLANTIS", "NANTES ATLANTIS"], ["IZ1426", "BEGLES", "BEGLES"], ["IZ1427", "CLAIRA", "CLAIRA"], ["IZ1448", "DIJON TOISON", "DIJON"], ["IZ1449", "AEROVILLE", "AEROVILLE"], ["IZ1450", "RENNES ALMA", "RENNES ALMA"], ["IZ1451", "CLERMONT JAUDE", "CLERMONT"], ["IZ1485", "MERIGNAC", "MERIGNAC"], ["IZ1486", "LES TERRASSES DU PORT", "LES TERRASSES"], ["IZ1487", "STRASBOURG", "STRASBOURG"], ["IZ1488", "LA VALENTINE", "LA VALENTINE"], ["IZ1489", "VILLENEUVE LA GARENNE", "VILLENEUVE"], ["IZ1513", "PART DIEU", "LYON PART DIEU"], ["IZ1518", "ECOUFLANT", "ANGERS"], ["IZ1544", "EPAGNY", "EPAGNY"], ["IZ1552", "VALEUROPB", "VAL D'EUROPE"], ["IZ1567", "BORDEAUX", "BORDEAUX"], ["IZ1568", "CARRE SENART", "CARRE SENART"], ["IZ1575", "LA DEFENSE", "LA DEFENSE"], ["IZ1603", "FENOUILLET", "FENOUILLET"], ["IZ1604", "ROSNY2", "ROSNY II"], ["IZ1608", "ANGLETB", "ANGLET BAB 2"], ["IZ1609", "NIMES CAP COSTIERES", "NÎMES CAP"], ["IZ1615", "NANTES CREBILLON", "CREBILLON"], ["IZ1618", "EURALILLE", "EURALILLE"], ["IZ1654", "PRADO", "IZAC - PRADO"], ["IZ1655", "PARLY", "PARLY II"], ["IZ1666", "CAP3000", "CAP 3000"], ["IZ1667", "GRAND VAR", "IZAC TOULON GRA"], ["IZ1668", "NOYELLES", "NOYELLES"], ["IZ1696", "FORUM DES HALLES", "IZAC FORUM"], ["IZ1724", "LES SABLES D OLONNE", "IZAC LES SABLES"], ["IZ1737", "BORDEAUX LAC", "IZAC BORDOLAC"], ["IZ1738", "ECULLY", "ECULLY"], ["IZ1739", "TOULOUSE", "IZAC TOULOUSEAn"], ["IZ1748", "BEAUGRENELLE", "IZAC BEAUGRENEL"], ["IZ1749", "AIX EN PROVENCE", "AIXPROVENCE"], ["IZ1787", "LA ROCHELLE", "LA ROCHELLE"], ["IZ1791", "TOURS", "TOURSTOURS"], ["IZ1792", "GRENOBLE", "Grenoble"], ["IZ1793", "DIJON CV", ""], ["IZ1801", "RENNES CV", "IZACRENNES"], ["IZ1828", "CAEN", "IZAC CAEN"], ["IZ1830", "NEYRPIC", "KoltBruno"], ["IZ1831", "STRASBOURG CENTRE VILLE", "IZAC STRASBOURG"], ["IZ1835", "ORLEANS", "IZAC ORLEANS CV"], ["IZ1840", "AVANT CAP - CABRIES", "IZAC CABRIES"], ["IZ1842", "LE MANS", ""], ["IZ1843", "DEAUVILLE", ""], ["IZ1844", "LE POLYGONE", "IZAC CC POLYGON"], ["IZ1868", "NANCY CV", "IZAC - NANCY CV"], ["IZ1873", "SAINT-TROPEZ", "LidwineMiquel"]], "OUTLET": [["IZ1109", "ST DENIS", "ST DENIS"], ["IZ1377", "PT STE MARIE", "PONT STE MARIE"], ["IZ1498", "NEW GONESSE", "NEW GONESSE"], ["IZ1543", "A13", "A13"], ["IZ1545", "LORMONT", "LORMONT"], ["IZ1627", "MIRAMAS", "MIRAMAS"], ["IZ1648", "ROUBAIX", "ROUBAIX"], ["IZ1665", "MONTPARNASSE", "MONTPARNASSE"], ["IZ1729", "LILLENIUM", "IZAC LILLENIUM"], ["IZ1740", "ROMANS", "ROMANS"], ["IZ1782", "CORBEIL", "CORBEIL"], ["IZ1865", "GIVERNY", "McARTHUR PARIS "]], "AFFILIES": [["IZ1469", "MONTARGIS", "MONTARGIS"], ["IZ1470", "AVIGNON", "AVIGNON"], ["IZ1526", "NIORT", "NIORT"], ["IZ1563", "SAINT OMER", "ST OMER"], ["IZ1597", "AUXERRE", "AUXERRE"], ["IZ1598", "BASTIA", "BASTIA"], ["IZ1621", "AIX LES BAINS", "AIX LES BAINS"], ["IZ1636", "METZ", "METZ"], ["IZ1637", "AJACCIO", "AJACCIO"], ["IZ1651", "PAU", "PAU 3"], ["IZ1669", "VOIRON", "IZAC VOIRON"], ["IZ1670", "BREST", "BREST"], ["IZ1671", "ANDREZIEUX", "ANDREZIEUX"], ["IZ1672", "SAINT ETIENNE B", "ST-ETIENNE"], ["IZ1683", "ARRAS", "ARRAS"], ["IZ1694", "MULHOUSE", "MULHOUSE"], ["IZ1704", "BLOIS", "IZAC BLOIS"], ["IZ1716", "EPINAL", "EPINAL"], ["IZ1732", "HAGUENAU", "HAGUENAU"], ["IZ1742", "THIONVILLE", ""], ["IZ1755", "BESANCON", "IZAC BESANCON"], ["IZ1756", "BOULOGNE", "IZAC BOULOGNE"], ["IZ1779", "ARCUEIL", ""], ["IZ1785", "GAP", "IZAC GAP"], ["IZ1862", "CHAMBERY", "MauletDaniel"]]};
-const COULEURS = { RESEAU:"#1D4ED8", OUTLET:"#DB2777", AFFILIES:"#059669" };
-const LIBELLES = { RESEAU:"Réseau", OUTLET:"Outlet", AFFILIES:"Affiliés" };
+const GROUPES = {"RESEAU": [["IZ1009", "AUBER", "AUBER", "75"], ["IZ1010", "BELLE EPINE", "BELLE EPINE", "94"], ["IZ1011", "HERRIOT", "LYON HERRIOT", "69"], ["IZ1028", "RUE RENNES", "RENNES PARIS", "75"], ["IZ1045", "PARINOR", "PARINOR", "93"], ["IZ1074", "BLAGNAC", "BLAGNAC", "31"], ["IZ1104", "CRETEIL", "CRETEIL", "94"], ["IZ1198", "VELIZY", "VELIZY II", "78"], ["IZ1199", "BEZIERS", "BEZIERS", "34"], ["IZ1215", "ST QUENTIN", "ST QUENTIN", "78"], ["IZ1330", "LYON CONFLUENCE", "LYON CONFLUENCE", "69"], ["IZ1331", "MONTPELLIER", "MONTPELLIER", "34"], ["IZ1334", "ROUEN", "ROUEN", "76"], ["IZ1335", "LILLE", "LILLE", "59"], ["IZ1350", "PERPIGNAN AUCHAN", "AUCHAN", "66"], ["IZ1352", "LEVALLOIS", "LEVALLOIS", "92"], ["IZ1353", "CLAYE SOUILLY", "CLAYE SOUILLY", "77"], ["IZ1355", "NANTES ATLANTIS", "NANTES ATLANTIS", "44"], ["IZ1426", "BEGLES", "BEGLES", "33"], ["IZ1427", "CLAIRA", "CLAIRA", "66"], ["IZ1448", "DIJON TOISON", "DIJON", "21"], ["IZ1449", "AEROVILLE", "AEROVILLE", "93"], ["IZ1450", "RENNES ALMA", "RENNES ALMA", "35"], ["IZ1451", "CLERMONT JAUDE", "CLERMONT", "63"], ["IZ1485", "MERIGNAC", "MERIGNAC", "33"], ["IZ1486", "LES TERRASSES DU PORT", "LES TERRASSES", "13"], ["IZ1487", "STRASBOURG", "STRASBOURG", "67"], ["IZ1488", "LA VALENTINE", "LA VALENTINE", "13"], ["IZ1489", "VILLENEUVE LA GARENNE", "VILLENEUVE", "92"], ["IZ1513", "PART DIEU", "LYON PART DIEU", "69"], ["IZ1518", "ECOUFLANT", "ANGERS", "49"], ["IZ1544", "EPAGNY", "EPAGNY", "74"], ["IZ1552", "VALEUROPB", "VAL D'EUROPE", "77"], ["IZ1567", "BORDEAUX", "BORDEAUX", "33"], ["IZ1568", "CARRE SENART", "CARRE SENART", "77"], ["IZ1575", "LA DEFENSE", "LA DEFENSE", "92"], ["IZ1603", "FENOUILLET", "FENOUILLET", "31"], ["IZ1604", "ROSNY2", "ROSNY II", "93"], ["IZ1608", "ANGLETB", "ANGLET BAB 2", "64"], ["IZ1609", "NIMES CAP COSTIERES", "NÎMES CAP", "30"], ["IZ1615", "NANTES CREBILLON", "CREBILLON", "44"], ["IZ1618", "EURALILLE", "EURALILLE", "59"], ["IZ1654", "PRADO", "IZAC - PRADO", "13"], ["IZ1655", "PARLY", "PARLY II", "78"], ["IZ1666", "CAP3000", "CAP 3000", "06"], ["IZ1667", "GRAND VAR", "IZAC TOULON GRA", "83"], ["IZ1668", "NOYELLES", "NOYELLES", "62"], ["IZ1696", "FORUM DES HALLES", "IZAC FORUM", "75"], ["IZ1724", "LES SABLES D OLONNE", "IZAC LES SABLES", "85"], ["IZ1737", "BORDEAUX LAC", "IZAC BORDOLAC", "33"], ["IZ1738", "ECULLY", "ECULLY", "69"], ["IZ1739", "TOULOUSE", "IZAC TOULOUSEAn", "31"], ["IZ1748", "BEAUGRENELLE", "IZAC BEAUGRENEL", "75"], ["IZ1749", "AIX EN PROVENCE", "AIXPROVENCE", "13"], ["IZ1787", "LA ROCHELLE", "LA ROCHELLE", "17"], ["IZ1791", "TOURS", "TOURSTOURS", "37"], ["IZ1792", "GRENOBLE", "Grenoble", "38"], ["IZ1793", "DIJON CV", "", ""], ["IZ1801", "RENNES CV", "IZACRENNES", "35"], ["IZ1828", "CAEN", "IZAC CAEN", "14"], ["IZ1830", "NEYRPIC", "KoltBruno", "38"], ["IZ1831", "STRASBOURG CENTRE VILLE", "IZAC STRASBOURG", "67"], ["IZ1835", "ORLEANS", "IZAC ORLEANS CV", "45"], ["IZ1840", "AVANT CAP - CABRIES", "IZAC CABRIES", "13"], ["IZ1842", "LE MANS", "", ""], ["IZ1843", "DEAUVILLE", "", ""], ["IZ1844", "LE POLYGONE", "IZAC CC POLYGON", "34"], ["IZ1868", "NANCY CV", "IZAC - NANCY CV", "54"], ["IZ1873", "SAINT-TROPEZ", "LidwineMiquel", "83"]], "OUTLET": [["IZ1109", "ST DENIS", "ST DENIS", "93"], ["IZ1377", "PT STE MARIE", "PONT STE MARIE", "10"], ["IZ1498", "NEW GONESSE", "NEW GONESSE", "95"], ["IZ1543", "A13", "A13", "78"], ["IZ1545", "LORMONT", "LORMONT", "33"], ["IZ1627", "MIRAMAS", "MIRAMAS", "13"], ["IZ1648", "ROUBAIX", "ROUBAIX", "59"], ["IZ1665", "MONTPARNASSE", "MONTPARNASSE", "75"], ["IZ1729", "LILLENIUM", "IZAC LILLENIUM", "59"], ["IZ1740", "ROMANS", "ROMANS", "26"], ["IZ1782", "CORBEIL", "CORBEIL", "91"], ["IZ1865", "GIVERNY", "McARTHUR PARIS ", "27"]], "AFFILIES": [["IZ1469", "MONTARGIS", "MONTARGIS", "45"], ["IZ1470", "AVIGNON", "AVIGNON", "84"], ["IZ1526", "NIORT", "NIORT", "79"], ["IZ1563", "SAINT OMER", "ST OMER", "62"], ["IZ1597", "AUXERRE", "AUXERRE", "89"], ["IZ1598", "BASTIA", "BASTIA", "20"], ["IZ1621", "AIX LES BAINS", "AIX LES BAINS", "73"], ["IZ1636", "METZ", "METZ", "57"], ["IZ1637", "AJACCIO", "AJACCIO", "20"], ["IZ1651", "PAU", "PAU 3", "64"], ["IZ1669", "VOIRON", "IZAC VOIRON", "38"], ["IZ1670", "BREST", "BREST", "29"], ["IZ1671", "ANDREZIEUX", "ANDREZIEUX", "42"], ["IZ1672", "SAINT ETIENNE B", "ST-ETIENNE", "42"], ["IZ1683", "ARRAS", "ARRAS", "62"], ["IZ1694", "MULHOUSE", "MULHOUSE", "68"], ["IZ1704", "BLOIS", "IZAC BLOIS", "41"], ["IZ1716", "EPINAL", "EPINAL", "88"], ["IZ1732", "HAGUENAU", "HAGUENAU", "67"], ["IZ1742", "THIONVILLE", "", ""], ["IZ1755", "BESANCON", "IZAC BESANCON", "25"], ["IZ1756", "BOULOGNE", "IZAC BOULOGNE", "92"], ["IZ1779", "ARCUEIL", "", ""], ["IZ1785", "GAP", "IZAC GAP", "05"], ["IZ1862", "CHAMBERY", "MauletDaniel", "73"]]};
+const IDF = ["75","77","78","91","92","93","94","95"];
+// Groupes affichés : base = groupe de données, filtre = Île-de-France / Province
+const VUES = {
+  RESEAU_IDF:  { base:"RESEAU",   libelle:"Réseau Île-de-France", couleur:"#1D4ED8", filtre:d=>IDF.includes(d) },
+  RESEAU_PROV: { base:"RESEAU",   libelle:"Réseau Province",      couleur:"#7C3AED", filtre:d=>!IDF.includes(d) },
+  OUTLET:      { base:"OUTLET",   libelle:"Outlet",               couleur:"#DB2777", filtre:null },
+  AFFILIES:    { base:"AFFILIES", libelle:"Affiliés",             couleur:"#059669", filtre:null },
+};
+const COULEURS = Object.fromEntries(Object.entries(VUES).map(([k,v])=>[k,v.couleur]));
+const LIBELLES = Object.fromEntries(Object.entries(VUES).map(([k,v])=>[k,v.libelle]));
+const base = g => VUES[g].base;
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
 let CARNET = {}, groupe = "", coches = new Set();
+const LS = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || "null") ?? d; } catch (e) { return d; } };
+const LSset = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+let AJOUTS = LS("izac-env-ajouts", {});        // magasins ajoutés : {groupe: [[code, nom, ref]]}
+let REFS = LS("izac-env-refs", {});            // référence donnée à un magasin absent : {code: ref}
+let ADR = LS("izac-env-adresses", {});         // adresses saisies à la main : {ref: {...}}
+// département d'un magasin : celui du fichier, sinon celui de son adresse dans le carnet
+const depOf = (d, ref) => d || String((CARNET[ref] || {})["Code Postal"] || "").slice(0, 2);
+const liste = g => { const b = base(g), f = VUES[g].filtre;
+  const all = GROUPES[b].map(([c, n, r, d]) => { const ref = r || REFS[c] || ""; return [c, n, ref, false, depOf(d, ref)]; })
+    .concat((AJOUTS[b] || []).map(([c, n, r]) => [c, n, r, true, depOf("", r)]));
+  return f ? all.filter(x => f(x[4])) : all; };
 
 /* ---- carnet (gardé dans ce navigateur) ---- */
 function parseCSV(txt){
@@ -108,6 +162,8 @@ function parseCSV(txt){
 }
 function loadCarnet(){
   try{ CARNET = JSON.parse(localStorage.getItem("izac-carnet-chrono")||"{}"); }catch(e){ CARNET={}; }
+  Object.assign(CARNET, ADR);
+  $("#refs").innerHTML = Object.keys(CARNET).sort().map(r=>`<option value="${esc(r)}">${esc(CARNET[r]["Raison sociale"]||CARNET[r]["Nom"]||"")}</option>`).join("");
   const n = Object.keys(CARNET).length, d = localStorage.getItem("izac-carnet-chrono-date");
   $("#carnetState").innerHTML = n ? `<span class="ok">Carnet chargé : ${n} adresses</span>${d?` (le ${esc(d)})`:""}` : `<span class="ko">Aucun carnet chargé</span>`;
 }
@@ -128,28 +184,30 @@ $("#pDate").value = today();
 ["pPoids","pColis","pProduit"].forEach(id=>{ try{ const v=localStorage.getItem("izac-env-"+id); if(v) $("#"+id).value=v; }catch(e){}
   $("#"+id).addEventListener("change",()=>{ try{ localStorage.setItem("izac-env-"+id,$("#"+id).value); }catch(e){} checkReady(); }); });
 ["pDate","pNom"].forEach(id=>$("#"+id).addEventListener("input",checkReady));
+if(!$("#pProduit").value) $("#pProduit").value="1";   // ancienne valeur invalide (ex. C13)
 
 /* ---- groupes ---- */
 function renderGroups(){
-  $("#groups").innerHTML = Object.keys(GROUPES).map(g=>{ const n=GROUPES[g].length, miss=GROUPES[g].filter(x=>!x[2]).length;
+  $("#groups").innerHTML = Object.keys(VUES).map(g=>{ const L=liste(g), n=L.length, miss=L.filter(x=>!x[2]).length;
     return `<button class="g${g===groupe?" on":""}" style="--c:${COULEURS[g]}" data-g="${g}"><b>${LIBELLES[g]}</b><span>${n} magasins${miss?` · ${miss} absent${miss>1?"s":""} du carnet`:""}</span></button>`; }).join("");
 }
 function renderList(){
   if(!groupe){ $("#list").innerHTML=""; checkReady(); return; }
-  $("#list").innerHTML = GROUPES[groupe].map(([code,nom,ref])=>{
+  $("#list").innerHTML = liste(groupe).map(([code,nom,ref,ajout])=>{
     const ok = ref && (!Object.keys(CARNET).length || CARNET[ref]);
-    return `<label class="it${ok?"":" miss"}"><input type="checkbox" data-code="${code}" ${ok&&coches.has(code)?"checked":""} ${ok?"":"disabled"}>
-      <span>${esc(nom)}<small>${code} · ${ref?("réf. "+esc(ref)):"absent du carnet Chronopost"}${ref&&Object.keys(CARNET).length&&!CARNET[ref]?" · introuvable dans le carnet chargé":""}</small></span></label>`; }).join("");
+    const tag = ok ? "label" : "div";
+    return `<${tag} class="it${ok?"":" miss"}" data-fix="${ok?"":code}" ${ok?"":'role="button" tabindex="0" title="Cliquer pour indiquer la référence Chronopost"'}><input type="checkbox" data-code="${code}" ${ok&&coches.has(code)?"checked":""} ${ok?"":"disabled"}>
+      ${ajout?`<button class="del" data-del="${code}" title="Retirer ce magasin">✕</button>`:""}<span>${esc(nom)}<small>${code} · ${ref?("réf. "+esc(ref)):"absent du carnet · clique pour donner sa référence"}${ref&&Object.keys(CARNET).length&&!CARNET[ref]?" · introuvable dans le carnet chargé":""}</small></span></${tag}>`; }).join("");
   checkReady();
 }
 $("#groups").addEventListener("click",e=>{ const b=e.target.closest("[data-g]"); if(!b) return; groupe=b.dataset.g;
-  coches=new Set(GROUPES[groupe].filter(x=>x[2]).map(x=>x[0])); renderGroups(); renderList(); });
+  coches=new Set(liste(groupe).filter(x=>x[2]).map(x=>x[0])); renderGroups(); renderList(); });
+$("#list").addEventListener("keydown",e=>{ if((e.key==="Enter"||e.key===" ")&&e.target.dataset.fix){ e.preventDefault(); e.target.click(); } });
 $("#list").addEventListener("change",e=>{ const c=e.target.dataset.code; if(!c) return; e.target.checked?coches.add(c):coches.delete(c); checkReady(); });
 
 function checkReady(){
   const prod=$("#pProduit").value.trim();
-  $("#prodWarn").textContent = prod ? "" : "Indique le code produit de ton Chrono 13 (voir « Accéder au Guide » sur la page d'import Chronopost). Il est mémorisé ensuite.";
-  const nb = groupe ? GROUPES[groupe].filter(x=>coches.has(x[0])).length : 0;
+  const nb = groupe ? liste(groupe).filter(x=>coches.has(x[0])).length : 0;
   const ready = !!(groupe && nb && prod && $("#pDate").value && Object.keys(CARNET).length);
   $("#btnGen").disabled = !ready;
   $("#genInfo").textContent = !Object.keys(CARNET).length ? "Charge d'abord le carnet d'adresses." : groupe ? `${nb} magasin${nb>1?"s":""} × ${$("#pColis").value||1} colis` : "Choisis un groupe.";
@@ -164,7 +222,7 @@ $("#btnGen").addEventListener("click",()=>{
   const prod=$("#pProduit").value.trim(), nomEnv=($("#pNom").value.trim()||(LIBELLES[groupe]+" "+date)).slice(0,30);
   const clean = v => String(v??"").replace(/[;\r\n]/g," ").replace(/^null$/i,"").trim();
   const lignes=[ENTETE.join(";")]; let n=0;
-  GROUPES[groupe].filter(x=>coches.has(x[0])).forEach(([code,nom,ref])=>{
+  liste(groupe).filter(x=>coches.has(x[0])).forEach(([code,nom,ref])=>{
     const c=CARNET[ref]; if(!c) return;
     for(let i=0;i<nbc;i++){
       lignes.push([ref, c["Nom"], c["Prénom"], c["Adresse"], c["Suite adresse"], c["Code porte"], c["Code pays"]||"FR", c["Code Postal"], c["Ville"],
@@ -176,6 +234,37 @@ $("#btnGen").addEventListener("click",()=>{
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
   a.download=`chronopost_${groupe.toLowerCase()}_${$("#pDate").value}.csv`; a.click();
   $("#genInfo").textContent=`Fichier généré : ${n} colis.`;
+});
+
+/* ---- ajouts manuels ---- */
+$("#list").addEventListener("click",e=>{
+  const d=e.target.closest("[data-del]");
+  if(d){ e.preventDefault(); AJOUTS[base(groupe)]=(AJOUTS[base(groupe)]||[]).filter(x=>x[0]!==d.dataset.del); LSset("izac-env-ajouts",AJOUTS); coches.delete(d.dataset.del); renderGroups(); renderList(); return; }
+  const f=e.target.closest("[data-fix]"); if(!f||!f.dataset.fix) return;
+  const ref=prompt("Référence de ce magasin dans ton carnet Chronopost :", ""); if(!ref) return;
+  if(Object.keys(CARNET).length && !CARNET[ref.trim()]){ alert("Cette référence n'est pas dans le carnet chargé. Vérifie l'orthographe, ou ajoute l'adresse plus haut."); return; }
+  const code=f.dataset.fix, aj=(AJOUTS[base(groupe)]||[]).find(x=>x[0]===code);
+  if(aj) aj[2]=ref.trim(); else REFS[code]=ref.trim();
+  LSset("izac-env-ajouts",AJOUTS); LSset("izac-env-refs",REFS); coches.add(code); renderGroups(); renderList();
+});
+$("#aBtn").addEventListener("click",()=>{
+  if(!groupe){ alert("Choisis d'abord le groupe."); return; }
+  let code=$("#aCode").value.trim().toUpperCase(); const nom=$("#aNom").value.trim(), ref=$("#aRef").value.trim();
+  if(!code||!nom){ alert("Indique au moins le code client et le nom."); return; }
+  if(!/^IZ/.test(code)) code="IZ"+code;
+  if(GROUPES[base(groupe)].some(x=>x[0]===code)||(AJOUTS[base(groupe)]||[]).some(x=>x[0]===code)){ alert("Ce code est déjà dans le groupe."); return; }
+  if(ref && Object.keys(CARNET).length && !CARNET[ref]){ alert("Cette référence n'est pas dans le carnet chargé."); return; }
+  (AJOUTS[base(groupe)]=AJOUTS[base(groupe)]||[]).push([code,nom.toUpperCase(),ref]); LSset("izac-env-ajouts",AJOUTS);
+  if(ref) coches.add(code); ["aCode","aNom","aRef"].forEach(i=>$("#"+i).value=""); renderGroups(); renderList();
+});
+$("#nBtn").addEventListener("click",()=>{
+  const v=id=>$("#"+id).value.trim(), ref=v("nRef");
+  const need=["nRef","nRs","nAdr","nCp","nVille","nTel","nMail"].filter(i=>!v(i));
+  if(need.length){ alert("Champs obligatoires manquants."); return; }
+  ADR[ref]={ "Référence":ref, "Nom":v("nRs"), "Prénom":"", "Adresse":v("nAdr"), "Suite adresse":v("nSuite"), "Code porte":"", "Code pays":"FR",
+    "Code Postal":v("nCp"), "Ville":v("nVille"), "Téléphone":v("nTel"), "E-mail":v("nMail"), "Raison sociale":v("nRs") };
+  LSset("izac-env-adresses",ADR); ["nRef","nRs","nAdr","nSuite","nCp","nVille","nTel","nMail"].forEach(i=>$("#"+i).value="");
+  loadCarnet(); renderList(); alert(`Adresse « ${ref} » enregistrée. Tu peux maintenant l'utiliser comme référence.`);
 });
 
 loadCarnet(); renderGroups(); checkReady();
